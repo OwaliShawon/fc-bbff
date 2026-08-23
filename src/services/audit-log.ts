@@ -38,3 +38,18 @@ export async function createAuditLog(input: AuditLogInput) {
     console.error("Failed to create audit log:", error);
   }
 }
+
+export async function getAuditLogs(limit = 50) {
+  try {
+    return await db.auditLog.findMany({
+      take: limit,
+      orderBy: { createdAt: "desc" },
+      include: {
+        user: { select: { id: true, name: true, email: true, role: true } },
+      },
+    });
+  } catch (error) {
+    console.error("Failed to get audit logs:", error);
+    return [];
+  }
+}
