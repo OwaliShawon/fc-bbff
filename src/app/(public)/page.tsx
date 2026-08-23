@@ -195,12 +195,25 @@ export default async function HomePage() {
                 <Link
                   key={player.id}
                   href={`/players/${player.slug}`}
-                  className="group overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-4 text-center backdrop-blur-sm transition-all hover:border-emerald-500/30 hover:bg-emerald-500/5"
+                  className="group overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-4 text-center backdrop-blur-sm transition-all hover:border-emerald-500/30 hover:bg-emerald-500/5 flex flex-col items-center"
                 >
-                  <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500/20 to-emerald-600/20 text-2xl font-bold text-emerald-400">
-                    {player.jerseyNumber || "?"}
+                  <div className="relative mb-3 h-20 w-20 overflow-hidden rounded-full border border-white/10 bg-neutral-900 flex items-center justify-center">
+                    {player.photoUrl ? (
+                      <Image
+                        src={player.photoUrl}
+                        alt={`${player.firstName} ${player.lastName}`}
+                        fill
+                        className="object-cover object-top"
+                        sizes="80px"
+                        unoptimized
+                      />
+                    ) : (
+                      <span className="text-2xl font-bold text-emerald-400">
+                        {player.jerseyNumber || "?"}
+                      </span>
+                    )}
                   </div>
-                  <h3 className="text-sm font-bold text-white">
+                  <h3 className="text-sm font-bold text-white group-hover:text-emerald-400 transition-colors line-clamp-1">
                     {player.firstName} {player.lastName}
                   </h3>
                   <Badge variant="secondary" className={`mt-1 text-[10px] ${getPlayerPositionColor(player.position)}`}>

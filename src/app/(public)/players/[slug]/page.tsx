@@ -1,9 +1,10 @@
 import { notFound } from "next/navigation";
+import Image from "next/image";
+import Link from "next/link";
 import { getPlayerBySlug } from "@/actions/player-actions";
 import { Badge } from "@/components/ui/badge";
 import { getPlayerPositionColor, formatDate } from "@/lib/utils";
 import { Calendar, MapPin, Ruler, Weight, Footprints, Star, ArrowLeft } from "lucide-react";
-import Link from "next/link";
 
 export default async function PlayerPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -28,13 +29,34 @@ export default async function PlayerPage({ params }: { params: Promise<{ slug: s
             <ArrowLeft className="h-4 w-4" /> Back to Players
           </Link>
           <div className="flex flex-col items-center gap-8 md:flex-row md:items-start">
-            <div className="flex h-32 w-32 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500/20 to-emerald-600/20 text-6xl font-black text-emerald-400">
-              {player.jerseyNumber || "?"}
+            <div className="relative h-44 w-44 shrink-0 overflow-hidden rounded-3xl border border-white/10 bg-neutral-900 shadow-2xl shadow-emerald-500/20 flex items-center justify-center">
+              {player.photoUrl ? (
+                <Image
+                  src={player.photoUrl}
+                  alt={`${player.firstName} ${player.lastName}`}
+                  fill
+                  className="object-cover object-top"
+                  sizes="176px"
+                  priority
+                  unoptimized
+                />
+              ) : (
+                <span className="text-6xl font-black text-emerald-400">
+                  {player.jerseyNumber || "?"}
+                </span>
+              )}
             </div>
             <div>
-              <h1 className="text-4xl font-black text-white md:text-5xl">
-                {player.firstName} {player.lastName}
-              </h1>
+              <div className="flex items-center gap-3">
+                {player.jerseyNumber && (
+                  <span className="font-mono text-2xl font-bold text-emerald-400">
+                    #{player.jerseyNumber}
+                  </span>
+                )}
+                <h1 className="text-4xl font-black text-white md:text-5xl">
+                  {player.firstName} {player.lastName}
+                </h1>
+              </div>
               <div className="mt-3 flex flex-wrap items-center gap-3">
                 <Badge className={`${getPlayerPositionColor(player.position)} text-sm`}>
                   {player.position}

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { getPlayers } from "@/actions/player-actions";
 import { Badge } from "@/components/ui/badge";
 import { UserCircle } from "lucide-react";
@@ -15,14 +16,16 @@ export default async function PlayersPage() {
 
   return (
     <div className="min-h-screen">
+      {/* Hero */}
       <section className="relative overflow-hidden bg-gradient-to-br from-neutral-950 via-emerald-950/20 to-neutral-950 py-20">
         <div className="absolute -right-32 -top-32 h-96 w-96 rounded-full bg-emerald-500/10 blur-3xl" />
         <div className="relative mx-auto max-w-7xl px-4 text-center lg:px-8">
           <h1 className="text-4xl font-black text-white md:text-6xl">Our Players</h1>
-          <p className="mt-4 text-neutral-400">Meet the squad that represents the club</p>
+          <p className="mt-4 text-neutral-400">Meet the squad that represents FC BBFF</p>
         </div>
       </section>
 
+      {/* Players List */}
       <section className="bg-neutral-950 py-16">
         <div className="mx-auto max-w-7xl px-4 lg:px-8">
           {grouped.map((group) => (
@@ -38,20 +41,41 @@ export default async function PlayersPage() {
                     <Link
                       key={player.id}
                       href={`/players/${player.slug}`}
-                      className="group overflow-hidden rounded-2xl border border-white/10 bg-white/5 transition-all hover:border-emerald-500/30 hover:bg-emerald-500/5"
+                      className="group overflow-hidden rounded-2xl border border-white/10 bg-white/5 transition-all hover:border-emerald-500/30 hover:bg-emerald-500/5 flex flex-col"
                     >
-                      <div className="flex h-40 items-center justify-center bg-gradient-to-br from-emerald-900/20 to-neutral-900">
-                        <span className="text-5xl font-black text-emerald-500/30">{player.jerseyNumber || "?"}</span>
+                      <div className="relative h-56 w-full overflow-hidden bg-gradient-to-br from-emerald-950/40 via-neutral-900 to-neutral-950 flex items-center justify-center">
+                        {player.photoUrl ? (
+                          <Image
+                            src={player.photoUrl}
+                            alt={`${player.firstName} ${player.lastName}`}
+                            fill
+                            className="object-cover object-top transition-transform duration-300 group-hover:scale-105"
+                            sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 20vw"
+                            unoptimized
+                          />
+                        ) : (
+                          <span className="text-5xl font-black text-emerald-500/20 group-hover:text-emerald-500/30 transition-colors">
+                            {player.jerseyNumber || "?"}
+                          </span>
+                        )}
+                        {player.jerseyNumber && (
+                          <div className="absolute top-2 right-2 flex h-8 w-8 items-center justify-center rounded-lg bg-black/60 backdrop-blur-sm border border-white/10 font-mono text-xs font-bold text-emerald-400">
+                            #{player.jerseyNumber}
+                          </div>
+                        )}
                       </div>
-                      <div className="p-4 text-center">
-                        <h3 className="font-bold text-white group-hover:text-emerald-400">
-                          {player.firstName} {player.lastName}
-                        </h3>
-                        <Badge variant="secondary" className={`mt-1 text-xs ${getPlayerPositionColor(player.position)}`}>
-                          {player.position}
-                        </Badge>
+
+                      <div className="p-4 text-center flex-1 flex flex-col justify-between">
+                        <div>
+                          <h3 className="font-bold text-white group-hover:text-emerald-400 transition-colors">
+                            {player.firstName} {player.lastName}
+                          </h3>
+                          <Badge variant="secondary" className={`mt-1.5 text-xs ${getPlayerPositionColor(player.position)}`}>
+                            {player.position}
+                          </Badge>
+                        </div>
                         {player.nationality && (
-                          <p className="mt-1 text-xs text-neutral-500">{player.nationality}</p>
+                          <p className="mt-2 text-xs text-neutral-500">{player.nationality}</p>
                         )}
                       </div>
                     </Link>

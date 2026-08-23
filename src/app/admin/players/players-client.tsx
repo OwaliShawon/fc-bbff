@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import {
   Dialog,
   DialogContent,
@@ -318,10 +319,19 @@ export function PlayersClient({
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-3">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-neutral-100 text-sm font-medium dark:bg-neutral-800">
-                          {player.firstName[0]}
-                          {player.lastName[0]}
-                        </div>
+                        <Avatar className="h-9 w-9 border border-neutral-200 dark:border-neutral-800">
+                          {player.photoUrl && (
+                            <AvatarImage
+                              src={player.photoUrl}
+                              alt={`${player.firstName} ${player.lastName}`}
+                              className="object-cover"
+                            />
+                          )}
+                          <AvatarFallback className="bg-neutral-100 text-xs font-bold text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300">
+                            {player.firstName[0]}
+                            {player.lastName[0]}
+                          </AvatarFallback>
+                        </Avatar>
                         <div>
                           <p className="font-medium">
                             {player.firstName} {player.lastName}
