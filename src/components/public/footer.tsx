@@ -89,6 +89,7 @@ export function PublicFooter({ settings }: { settings: SiteSettingsMap }) {
             <ul className="space-y-3">
               {[
                 { href: "/about", label: "About Us" },
+                { href: "/management", label: "Management" },
                 { href: "/players", label: "Players" },
                 { href: "/teams", label: "Teams" },
                 { href: "/matches", label: "Matches" },

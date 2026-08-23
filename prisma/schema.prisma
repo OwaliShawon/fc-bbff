@@ -17,6 +17,12 @@ enum UserRole {
   VIEWER
 }
 
+enum ManagementRole {
+  MANAGER
+  CAPTAIN
+  VICE_CAPTAIN
+}
+
 enum UserStatus {
   ACTIVE
   INACTIVE
@@ -188,6 +194,7 @@ model Player {
   relatedEvents   MatchEvent[]   @relation("MatchEventRelatedPlayer")
   matchLineups    MatchLineup[]
   playerOfMatch   Match[]        @relation("PlayerOfTheMatch")
+  managementMembers ManagementMember[]
 
   @@index([status])
   @@index([position])
@@ -552,3 +559,28 @@ model SiteSetting {
 
   @@map("site_settings")
 }
+
+// ============================================================================
+// MANAGEMENT & LEADERSHIP
+// ============================================================================
+
+model ManagementMember {
+  id          String          @id @default(uuid())
+  name        String
+  role        ManagementRole
+  tenure      String          // e.g. "2014 - 2025", "2025 - Present"
+  isCurrent   Boolean         @default(false)
+  bio         String?         @db.Text
+  photoUrl    String?
+  playerId    String?
+  player      Player?         @relation(fields: [playerId], references: [id], onDelete: SetNull)
+  sortOrder   Int             @default(0)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  deletedAt   DateTime?
+
+  @@index([role])
+  @@index([isCurrent])
+  @@map("management_members")
+}
+
