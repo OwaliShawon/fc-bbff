@@ -201,7 +201,7 @@ export function AdminSidebar({
           </div>
           <div>
             <h1 className="text-sm font-bold text-neutral-900 dark:text-white">
-              BBFF FC
+              FC BBFF
             </h1>
             <p className="text-xs text-neutral-500">Admin Dashboard</p>
           </div>

@@ -22,7 +22,7 @@ export async function getSiteSettings(): Promise<SiteSettingsMap> {
     map[setting.key] = setting.value;
   }
   return {
-    clubName: map.clubName || "BBFF FC",
+    clubName: map.clubName || "FC BBFF",
     clubMotto: map.clubMotto || "Excellence in Football",
     clubLogo: map.clubLogo || "",
     favicon: map.favicon || "",

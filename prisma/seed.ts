@@ -1,7 +1,7 @@
 import "dotenv/config";
 import { neonConfig } from "@neondatabase/serverless";
 import { PrismaNeon } from "@prisma/adapter-neon";
-import { PrismaClient, UserRole, PlayerPosition, PlayerStatus, MatchStatus, EventType, EventStatus, NewsStatus, CompetitionStatus, TeamStatus } from "@prisma/client";
+import { PrismaClient, PlayerPosition } from "@prisma/client";
 import { hash } from "bcryptjs";
 import ws from "ws";
 
@@ -166,7 +166,7 @@ async function main() {
   console.log("  Creating teams...");
   const teamA = await prisma.team.create({
     data: {
-      name: "BBFF FC First XI",
+      name: "FC BBFF First XI",
       slug: "bbff-fc-first-xi",
       description: "The main first team of BBFF Football Club competing in the premier league.",
       manager: "Coach Rahman",
@@ -176,7 +176,7 @@ async function main() {
 
   const teamB = await prisma.team.create({
     data: {
-      name: "BBFF FC Reserves",
+      name: "FC BBFF Reserves",
       slug: "bbff-fc-reserves",
       description: "The reserve team developing future stars for the first team.",
       manager: "Coach Karim",
@@ -319,7 +319,7 @@ async function main() {
       matchDay: 1,
       referee: "Referee Alam",
       playerOfMatchId: players[9].id, // Fahim
-      matchReport: "A dominant display from BBFF FC First XI. Fahim Chowdhury scored a brace and Imran Khan added a stunning free kick.",
+      matchReport: "A dominant display from FC BBFF First XI. Fahim Chowdhury scored a brace and Imran Khan added a stunning free kick.",
     },
   });
 
@@ -451,7 +451,7 @@ async function main() {
         isPublished: true,
       },
       {
-        title: "BBFF FC Award Night 2025",
+        title: "FC BBFF Award Night 2025",
         slug: "bbff-fc-award-night-2025",
         description: "Celebrating our players and supporters. Awards include Player of the Season, Golden Boot, Golden Glove, and Young Player of the Year.",
         eventType: "AWARD_CEREMONY",
@@ -496,13 +496,13 @@ async function main() {
   await prisma.news.createMany({
     data: [
       {
-        title: "BBFF FC Secure Dominant Victory Over Rival United",
+        title: "FC BBFF Secure Dominant Victory Over Rival United",
         slug: "bbff-fc-secure-dominant-victory-over-rival-united",
-        excerpt: "A stunning performance from the First XI saw BBFF FC cruise to a 3-1 victory over Rival United in the season opener.",
+        excerpt: "A stunning performance from the First XI saw FC BBFF cruise to a 3-1 victory over Rival United in the season opener.",
         content: `
-# BBFF FC 3 - 1 Rival United
+# FC BBFF 3 - 1 Rival United
 
-What a start to the season! BBFF FC First XI delivered a commanding performance at BBFF Stadium to kick off the 2025/2026 campaign in style.
+What a start to the season! FC BBFF First XI delivered a commanding performance at BBFF Stadium to kick off the 2025/2026 campaign in style.
 
 ## First Half
 
@@ -533,7 +533,7 @@ A perfect start to the season. Up the BBFF! 🏆
       {
         title: "Club Announces New Training Facility Development",
         slug: "club-announces-new-training-facility-development",
-        excerpt: "BBFF FC is investing in a state-of-the-art training facility to enhance player development and performance.",
+        excerpt: "FC BBFF is investing in a state-of-the-art training facility to enhance player development and performance.",
         content: `
 # New Training Facility Announcement
 
@@ -566,9 +566,9 @@ Stay tuned for further updates on this exciting project!
         isFeatured: true,
       },
       {
-        title: "Exciting Young Talent Joins BBFF FC Reserves",
+        title: "Exciting Young Talent Joins FC BBFF Reserves",
         slug: "exciting-young-talent-joins-bbff-fc-reserves",
-        excerpt: "BBFF FC welcomes a promising young midfielder to strengthen the reserve team squad.",
+        excerpt: "FC BBFF welcomes a promising young midfielder to strengthen the reserve team squad.",
         content: `
 # New Signing Announcement
 
@@ -586,7 +586,7 @@ Reserve Team Manager Coach Karim commented: "We're very happy to bring in this y
 
 The player will link up with the Reserve squad immediately and will be available for selection in the upcoming fixtures.
 
-Welcome to BBFF FC! 💚
+Welcome to FC BBFF! 💚
         `.trim(),
         featuredImageUrl: null,
         categoryId: transfers.id,
@@ -603,13 +603,13 @@ Welcome to BBFF FC! 💚
   // ============================================================================
   console.log("  Creating site settings...");
   const settings = [
-    { key: "clubName", value: "BBFF FC" },
+    { key: "clubName", value: "FC BBFF" },
     { key: "clubMotto", value: "Excellence in Football, Unity in Spirit" },
     { key: "contactEmail", value: "info@bbfffc.com" },
     { key: "contactPhone", value: "+880 1234 567890" },
     { key: "address", value: "BBFF Stadium, Dhaka, Bangladesh" },
     { key: "aboutText", value: "BBFF Football Club is a community-based football club dedicated to developing talent, building character, and promoting the beautiful game." },
-    { key: "footerText", value: "© 2026 BBFF FC. All rights reserved." },
+    { key: "footerText", value: "© 2026 FC BBFF. All rights reserved." },
     { key: "facebookUrl", value: "https://facebook.com/bbfffc" },
     { key: "twitterUrl", value: "https://twitter.com/bbfffc" },
     { key: "instagramUrl", value: "https://instagram.com/bbfffc" },

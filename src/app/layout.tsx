@@ -9,12 +9,12 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: "BBFF FC - Football Club Management",
-    template: "%s | BBFF FC",
+    default: "FC BBFF - Football Club Management",
+    template: "%s | FC BBFF",
   },
   description:
-    "Official website of BBFF Football Club. Follow fixtures, results, news, and everything about the club.",
-  keywords: ["football", "BBFF FC", "club", "matches", "players", "results"],
+    "Official website of FC BBFF Football Club. Follow fixtures, results, news, and everything about the club.",
+  keywords: ["football", "FC BBFF", "club", "matches", "players", "results"],
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

@@ -54,7 +54,7 @@ export default function LoginPage() {
           </div>
           <div>
             <CardTitle className="text-2xl font-bold text-white">
-              BBFF FC Admin
+              FC BBFF Admin
             </CardTitle>
             <p className="text-sm text-neutral-400">
               Sign in to manage your football club
