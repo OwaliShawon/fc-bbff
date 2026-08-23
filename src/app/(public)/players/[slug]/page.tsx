@@ -1,0 +1,87 @@
+import { notFound } from "next/navigation";
+import { getPlayerBySlug } from "@/actions/player-actions";
+import { Badge } from "@/components/ui/badge";
+import { getPlayerPositionColor, formatDate } from "@/lib/utils";
+import { Calendar, MapPin, Ruler, Weight, Footprints, Star, ArrowLeft } from "lucide-react";
+import Link from "next/link";
+
+export default async function PlayerPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const player = await getPlayerBySlug(slug);
+  if (!player) notFound();
+
+  const details = [
+    { icon: Calendar, label: "Date of Birth", value: player.dateOfBirth ? formatDate(player.dateOfBirth) : null },
+    { icon: MapPin, label: "Nationality", value: player.nationality },
+    { icon: Ruler, label: "Height", value: player.height },
+    { icon: Weight, label: "Weight", value: player.weight },
+    { icon: Footprints, label: "Preferred Foot", value: player.preferredFoot },
+    { icon: Calendar, label: "Date Joined", value: player.dateJoined ? formatDate(player.dateJoined) : null },
+  ].filter((d) => d.value);
+
+  return (
+    <div className="min-h-screen bg-neutral-950">
+      <section className="relative overflow-hidden bg-gradient-to-br from-neutral-950 via-emerald-950/20 to-neutral-950 py-20">
+        <div className="absolute -left-32 -top-32 h-96 w-96 rounded-full bg-emerald-500/10 blur-3xl" />
+        <div className="relative mx-auto max-w-7xl px-4 lg:px-8">
+          <Link href="/players" className="mb-6 inline-flex items-center gap-2 text-sm text-neutral-400 hover:text-white">
+            <ArrowLeft className="h-4 w-4" /> Back to Players
+          </Link>
+          <div className="flex flex-col items-center gap-8 md:flex-row md:items-start">
+            <div className="flex h-32 w-32 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500/20 to-emerald-600/20 text-6xl font-black text-emerald-400">
+              {player.jerseyNumber || "?"}
+            </div>
+            <div>
+              <h1 className="text-4xl font-black text-white md:text-5xl">
+                {player.firstName} {player.lastName}
+              </h1>
+              <div className="mt-3 flex flex-wrap items-center gap-3">
+                <Badge className={`${getPlayerPositionColor(player.position)} text-sm`}>
+                  {player.position}
+                </Badge>
+                <Badge className={player.status === "ACTIVE" ? "bg-emerald-500/10 text-emerald-400" : "bg-red-500/10 text-red-400"}>
+                  {player.status}
+                </Badge>
+                {player.isFeatured && (
+                  <Badge className="bg-amber-500/10 text-amber-400">
+                    <Star className="mr-1 h-3 w-3" /> Featured
+                  </Badge>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="py-12">
+        <div className="mx-auto max-w-7xl px-4 lg:px-8">
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+            <div className="lg:col-span-2">
+              {player.bio && (
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-8">
+                  <h2 className="mb-4 text-xl font-bold text-white">About</h2>
+                  <p className="leading-relaxed text-neutral-300">{player.bio}</p>
+                </div>
+              )}
+            </div>
+            <div className="space-y-4">
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
+                <h3 className="mb-4 text-lg font-bold text-white">Player Details</h3>
+                <div className="space-y-3">
+                  {details.map((d) => (
+                    <div key={d.label} className="flex items-center justify-between border-b border-white/5 pb-3 last:border-0">
+                      <span className="flex items-center gap-2 text-sm text-neutral-400">
+                        <d.icon className="h-4 w-4 text-emerald-500" /> {d.label}
+                      </span>
+                      <span className="text-sm font-medium text-white">{d.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}

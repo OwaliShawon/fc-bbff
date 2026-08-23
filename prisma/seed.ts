@@ -1,7 +1,15 @@
+import "dotenv/config";
+import { neonConfig } from "@neondatabase/serverless";
+import { PrismaNeon } from "@prisma/adapter-neon";
 import { PrismaClient, UserRole, PlayerPosition, PlayerStatus, MatchStatus, EventType, EventStatus, NewsStatus, CompetitionStatus, TeamStatus } from "@prisma/client";
 import { hash } from "bcryptjs";
+import ws from "ws";
 
-const prisma = new PrismaClient();
+neonConfig.webSocketConstructor = ws;
+
+const connectionString = process.env.DATABASE_URL!;
+const adapter = new PrismaNeon({ connectionString });
+const prisma = new PrismaClient({ adapter });
 
 async function main() {
   console.log("🌱 Starting seed...");
