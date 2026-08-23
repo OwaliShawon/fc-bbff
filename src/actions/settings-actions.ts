@@ -23,9 +23,9 @@ export async function getSiteSettings(): Promise<SiteSettingsMap> {
   }
   return {
     clubName: map.clubName || "FC BBFF",
-    clubMotto: map.clubMotto || "Excellence in Football",
-    clubLogo: map.clubLogo || "",
-    favicon: map.favicon || "",
+    clubMotto: map.clubMotto || "One for All, All for One",
+    clubLogo: map.clubLogo || "/logo.png",
+    favicon: map.favicon || "/logo.png",
     contactEmail: map.contactEmail || "",
     contactPhone: map.contactPhone || "",
     address: map.address || "",

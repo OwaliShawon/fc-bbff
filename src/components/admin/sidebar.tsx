@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { hasPermission, PERMISSIONS } from "@/lib/permissions";
@@ -196,8 +197,13 @@ export function AdminSidebar({
       >
         {/* Logo */}
         <div className="flex h-16 items-center gap-3 border-b border-neutral-200 px-6 dark:border-neutral-800">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-600 font-bold text-white">
-            BB
+          <div className="relative h-9 w-9 overflow-hidden rounded-lg border border-neutral-200 bg-neutral-900 shadow-sm dark:border-neutral-800">
+            <Image
+              src="/logo.png"
+              alt="FC BBFF Logo"
+              fill
+              className="object-cover"
+            />
           </div>
           <div>
             <h1 className="text-sm font-bold text-neutral-900 dark:text-white">

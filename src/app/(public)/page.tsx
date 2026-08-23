@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { getSiteSettings } from "@/actions/settings-actions";
 import { getLatestNews } from "@/actions/news-actions";
 import { getUpcomingMatches, getRecentResults } from "@/actions/match-actions";
@@ -44,14 +45,20 @@ export default async function HomePage() {
         </div>
 
         <div className="relative mx-auto max-w-7xl px-4 text-center lg:px-8">
-          <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-400 to-emerald-600 shadow-2xl shadow-emerald-500/30">
-            <Shield className="h-10 w-10 text-white" />
+          <div className="relative mx-auto mb-8 h-28 w-28 md:h-36 md:w-36 overflow-hidden rounded-3xl border border-white/10 bg-neutral-900 shadow-2xl shadow-emerald-500/20">
+            <Image
+              src="/logo.png"
+              alt="FC BBFF Crest"
+              fill
+              className="object-cover"
+              priority
+            />
           </div>
           <h1 className="mb-4 text-5xl font-black tracking-tight text-white md:text-7xl lg:text-8xl">
             {settings.clubName}
           </h1>
           <p className="mx-auto mb-8 max-w-2xl text-lg text-emerald-200/80 md:text-xl">
-            {settings.clubMotto || "Excellence in Football, Unity in Spirit"}
+            {settings.clubMotto || "One for All, All for One"}
           </p>
           <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
             <Link

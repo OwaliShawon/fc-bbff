@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { Shield, Mail, Phone, MapPin } from "lucide-react";
+import Image from "next/image";
+import { Mail, Phone, MapPin } from "lucide-react";
 import type { SiteSettingsMap } from "@/types";
 
 function FacebookIcon(props: React.SVGProps<SVGSVGElement>) {
@@ -45,13 +46,18 @@ export function PublicFooter({ settings }: { settings: SiteSettingsMap }) {
           {/* Brand */}
           <div className="space-y-4">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 font-bold text-white">
-                <Shield className="h-5 w-5" />
+              <div className="relative h-10 w-10 overflow-hidden rounded-xl bg-neutral-900 border border-white/10 shadow-lg shadow-emerald-500/10">
+                <Image
+                  src="/logo.png"
+                  alt="FC BBFF Logo"
+                  fill
+                  className="object-cover"
+                />
               </div>
               <span className="text-lg font-bold text-white">{settings.clubName}</span>
             </div>
             <p className="text-sm leading-relaxed text-neutral-400">
-              {settings.clubMotto || "Excellence in Football, Unity in Spirit"}
+              {settings.clubMotto || "One for All, All for One"}
             </p>
             <div className="flex gap-3">
               {settings.facebookUrl && (

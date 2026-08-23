@@ -3,11 +3,12 @@
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Shield, Eye, EyeOff, Loader2 } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -49,8 +50,14 @@ export default function LoginPage() {
 
       <Card className="relative w-full max-w-md border-neutral-800 bg-neutral-900/90 shadow-2xl backdrop-blur-sm">
         <CardHeader className="space-y-4 text-center">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-600 shadow-lg shadow-emerald-600/30">
-            <Shield className="h-8 w-8 text-white" />
+          <div className="relative mx-auto h-20 w-20 overflow-hidden rounded-2xl border border-white/10 bg-neutral-950 shadow-xl shadow-emerald-600/20">
+            <Image
+              src="/logo.png"
+              alt="FC BBFF Logo"
+              fill
+              className="object-cover"
+              priority
+            />
           </div>
           <div>
             <CardTitle className="text-2xl font-bold text-white">

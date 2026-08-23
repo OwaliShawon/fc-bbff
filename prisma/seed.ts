@@ -604,7 +604,9 @@ Welcome to FC BBFF! 💚
   console.log("  Creating site settings...");
   const settings = [
     { key: "clubName", value: "FC BBFF" },
-    { key: "clubMotto", value: "Excellence in Football, Unity in Spirit" },
+    { key: "clubMotto", value: "One for All, All for One" },
+    { key: "clubLogo", value: "/logo.png" },
+    { key: "favicon", value: "/logo.png" },
     { key: "contactEmail", value: "info@bbfffc.com" },
     { key: "contactPhone", value: "+880 1234 567890" },
     { key: "address", value: "BBFF Stadium, Dhaka, Bangladesh" },
