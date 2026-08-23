@@ -2,6 +2,7 @@ import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { compare } from "bcryptjs";
 import { db } from "@/lib/db";
+import { authConfig } from "./auth.config";
 import type { UserRole } from "@prisma/client";
 
 declare module "next-auth" {
@@ -27,9 +28,7 @@ declare module "@auth/core/jwt" {
 }
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  pages: {
-    signIn: "/login",
-  },
+  ...authConfig,
   session: {
     strategy: "jwt",
     maxAge: 24 * 60 * 60, // 24 hours
@@ -90,6 +89,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     }),
   ],
   callbacks: {
+    ...authConfig.callbacks,
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id!;
@@ -103,21 +103,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         session.user.role = token.role;
       }
       return session;
-    },
-    async authorized({ auth: session, request }) {
-      const isLoggedIn = !!session?.user;
-      const isOnAdmin = request.nextUrl.pathname.startsWith("/admin");
-      const isOnLogin = request.nextUrl.pathname === "/login";
-
-      if (isOnAdmin) {
-        return isLoggedIn;
-      }
-
-      if (isOnLogin && isLoggedIn) {
-        return Response.redirect(new URL("/admin", request.nextUrl));
-      }
-
-      return true;
     },
   },
 });
