@@ -45,27 +45,36 @@ export const updateUserSchema = z.object({
 export const createPlayerSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
-  jerseyNumber: z.coerce.number().int().min(1).max(99).optional().nullable(),
+  jerseyNumber: z.preprocess(
+    (val) => (val === "" || val === null || val === undefined || Number.isNaN(Number(val)) ? null : Number(val)),
+    z.number().int().min(1, "Jersey number must be between 1 and 99").max(99, "Jersey number must be between 1 and 99").nullable().optional()
+  ),
   position: z.enum(["GOALKEEPER", "DEFENDER", "MIDFIELDER", "FORWARD"]),
   secondaryPosition: z
     .enum(["GOALKEEPER", "DEFENDER", "MIDFIELDER", "FORWARD"])
     .optional()
     .nullable()
-    .or(z.literal("").transform(() => null)),
-  currentCity: z.string().optional().nullable(),
-  dateOfBirth: z.string().optional().nullable(),
-  nationality: z.string().optional().nullable(),
-  height: z.string().optional().nullable(),
-  weight: z.string().optional().nullable(),
-  preferredFoot: z.string().optional().nullable(),
-  dateJoined: z.string().optional().nullable(),
-  bio: z.string().optional().nullable(),
-  photoUrl: z.string().optional().nullable(),
+    .or(z.literal("").transform(() => null))
+    .or(z.literal("NONE").transform(() => null)),
+  currentCity: z.string().optional().nullable().or(z.literal("").transform(() => null)),
+  dateOfBirth: z.string().optional().nullable().or(z.literal("").transform(() => null)),
+  nationality: z.string().optional().nullable().or(z.literal("").transform(() => null)),
+  height: z.string().optional().nullable().or(z.literal("").transform(() => null)),
+  weight: z.string().optional().nullable().or(z.literal("").transform(() => null)),
+  preferredFoot: z.string().optional().nullable().or(z.literal("").transform(() => null)),
+  dateJoined: z.string().optional().nullable().or(z.literal("").transform(() => null)),
+  bio: z.string().optional().nullable().or(z.literal("").transform(() => null)),
+  photoUrl: z.string().optional().nullable().or(z.literal("").transform(() => null)),
   status: z
     .enum(["ACTIVE", "INJURED", "SUSPENDED", "INACTIVE", "TRANSFERRED"])
     .default("ACTIVE"),
   isFeatured: z.boolean().default(false),
-  teamId: z.string().optional().nullable().or(z.literal("").transform(() => null)),
+  teamId: z
+    .string()
+    .optional()
+    .nullable()
+    .or(z.literal("").transform(() => null))
+    .or(z.literal("NONE").transform(() => null)),
   isCaptain: z.boolean().default(false),
   isViceCaptain: z.boolean().default(false),
 });

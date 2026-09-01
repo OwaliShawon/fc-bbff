@@ -34,6 +34,7 @@ export function PublicNavbar({ clubName }: { clubName: string }) {
               src="/logo.png"
               alt="FC BBFF Logo"
               fill
+              sizes="40px"
               className="object-cover"
               priority
             />
@@ -45,20 +46,27 @@ export function PublicNavbar({ clubName }: { clubName: string }) {
 
         {/* Desktop Nav */}
         <nav className="hidden items-center gap-1 lg:flex">
-          {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={cn(
-                "rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-                pathname === link.href
-                  ? "bg-white/10 text-emerald-400"
-                  : "text-neutral-300 hover:bg-white/5 hover:text-white"
-              )}
-            >
-              {link.label}
-            </Link>
-          ))}
+          {navLinks.map((link) => {
+            const isActive =
+              link.href === "/"
+                ? pathname === "/"
+                : pathname === link.href || pathname.startsWith(link.href + "/");
+
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={cn(
+                  "rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                  isActive
+                    ? "bg-white/10 text-emerald-400 font-semibold"
+                    : "text-neutral-300 hover:bg-white/5 hover:text-white"
+                )}
+              >
+                {link.label}
+              </Link>
+            );
+          })}
         </nav>
 
         {/* Mobile Toggle */}
@@ -74,21 +82,28 @@ export function PublicNavbar({ clubName }: { clubName: string }) {
       {mobileOpen && (
         <div className="border-t border-white/10 bg-neutral-950/95 backdrop-blur-xl lg:hidden">
           <nav className="mx-auto max-w-7xl space-y-1 px-4 py-4">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                onClick={() => setMobileOpen(false)}
-                className={cn(
-                  "block rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
-                  pathname === link.href
-                    ? "bg-emerald-500/10 text-emerald-400"
-                    : "text-neutral-300 hover:bg-white/5 hover:text-white"
-                )}
-              >
-                {link.label}
-              </Link>
-            ))}
+            {navLinks.map((link) => {
+              const isActive =
+                link.href === "/"
+                  ? pathname === "/"
+                  : pathname === link.href || pathname.startsWith(link.href + "/");
+
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setMobileOpen(false)}
+                  className={cn(
+                    "block rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+                    isActive
+                      ? "bg-emerald-500/10 text-emerald-400 font-semibold"
+                      : "text-neutral-300 hover:bg-white/5 hover:text-white"
+                  )}
+                >
+                  {link.label}
+                </Link>
+              );
+            })}
           </nav>
         </div>
       )}

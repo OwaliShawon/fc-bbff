@@ -77,6 +77,16 @@ export async function getTeamBySlug(slug: string) {
         include: { player: true },
         orderBy: { player: { jerseyNumber: "asc" } },
       },
+      homeMatches: {
+        include: { awayTeam: true, competition: true },
+        orderBy: { matchDate: "desc" },
+        take: 5,
+      },
+      awayMatches: {
+        include: { homeTeam: true, competition: true },
+        orderBy: { matchDate: "desc" },
+        take: 5,
+      },
     },
   });
 }

@@ -51,6 +51,7 @@ export function PublicFooter({ settings }: { settings: SiteSettingsMap }) {
                   src="/logo.png"
                   alt="FC BBFF Logo"
                   fill
+                  sizes="40px"
                   className="object-cover"
                 />
               </div>

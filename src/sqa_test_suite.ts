@@ -216,7 +216,96 @@ async function main() {
     if (!Array.isArray(logs)) throw new Error("Audit logs query failed");
   });
 
-  // 10. SECURITY & AUTHENTICATION TESTS
+  // 10. PUBLIC PAGES HTTP 200 RENDERING TESTS
+  const publicRoutes = [
+    "/",
+    "/about",
+    "/players",
+    "/teams",
+    "/management",
+    "/matches",
+    "/competitions",
+    "/events",
+    "/news",
+    "/statistics",
+    "/login",
+  ];
+
+  for (const route of publicRoutes) {
+    await runTest("PUBLIC_PAGES", `Live HTTP GET: ${route} renders with 200 OK`, async () => {
+      const res = await fetch(`http://localhost:3000${route}`);
+      if (res.status !== 200) {
+        throw new Error(`Expected HTTP 200 for ${route}, got ${res.status}`);
+      }
+      const html = await res.text();
+      if (!html.includes("FC BBFF") && !html.includes("html")) {
+        throw new Error(`Unexpected page content for ${route}`);
+      }
+    });
+  }
+
+  // 11. DYNAMIC SLUG RENDERING TESTS
+  await runTest("PUBLIC_PAGES", "Live HTTP GET: /players/[slug] dynamic routes render with 200 OK", async () => {
+    const players = await db.player.findMany({ where: { deletedAt: null }, take: 3 });
+    for (const p of players) {
+      const res = await fetch(`http://localhost:3000/players/${p.slug}`);
+      if (res.status !== 200) throw new Error(`Failed to render /players/${p.slug}: ${res.status}`);
+    }
+  });
+
+  await runTest("PUBLIC_PAGES", "Live HTTP GET: /teams/[slug] dynamic routes render with 200 OK", async () => {
+    const teams = await db.team.findMany({ where: { deletedAt: null }, take: 3 });
+    for (const t of teams) {
+      const res = await fetch(`http://localhost:3000/teams/${t.slug}`);
+      if (res.status !== 200) throw new Error(`Failed to render /teams/${t.slug}: ${res.status}`);
+    }
+  });
+
+  await runTest("PUBLIC_PAGES", "Live HTTP GET: /matches/[id] dynamic routes render with 200 OK", async () => {
+    const matches = await db.match.findMany({ take: 3 });
+    for (const m of matches) {
+      const res = await fetch(`http://localhost:3000/matches/${m.id}`);
+      if (res.status !== 200) throw new Error(`Failed to render /matches/${m.id}: ${res.status}`);
+    }
+  });
+
+  // 12. VALIDATION ENGINE & EDGE CASE TESTS
+  await runTest("DATABASE", "Validation Schema Tolerates Empty Strings for Optional UUIDs", async () => {
+    const { matchResultSchema, createMatchSchema, createNewsSchema } = await import("./lib/validations");
+    
+    // Test matchResultSchema with empty playerOfMatchId
+    const resResult = matchResultSchema.parse({
+      homeScore: 3,
+      awayScore: 1,
+      playerOfMatchId: "",
+      matchReport: "Great match",
+      status: "COMPLETED",
+    });
+    if (resResult.playerOfMatchId !== null) throw new Error("Expected empty playerOfMatchId to transform to null");
+
+    // Test matchResultSchema with NONE
+    const resResultNone = matchResultSchema.parse({
+      homeScore: 2,
+      awayScore: 0,
+      playerOfMatchId: "NONE",
+      status: "COMPLETED",
+    });
+    if (resResultNone.playerOfMatchId !== null) throw new Error("Expected NONE to transform to null");
+
+    // Test createMatchSchema with empty competitionId and seasonId
+    const resMatch = createMatchSchema.parse({
+      homeTeamId: "5f14d95c-198f-467d-ad4b-6dc43a277ee6",
+      awayTeamId: "5f14d95c-198f-467d-ad4b-6dc43a277ee7",
+      matchDate: "2026-09-02T15:00:00Z",
+      competitionId: "",
+      seasonId: "NONE",
+    });
+    if (resMatch.competitionId !== null || resMatch.seasonId !== null) {
+      throw new Error("Expected empty string/NONE to transform to null in match schema");
+    }
+  });
+
+  // 13. SECURITY & AUTHENTICATION TESTS
   const protectedAdminRoutes = [
     "/admin",
     "/admin/players",

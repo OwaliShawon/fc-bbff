@@ -11,7 +11,10 @@ export default async function PlayerPage({ params }: { params: Promise<{ slug: s
   const player = await getPlayerBySlug(slug);
   if (!player) notFound();
 
+  const currentTeam = player.teamPlayers?.[0];
+
   const details = [
+    { icon: Shield, label: "Current Team", value: currentTeam?.team?.name },
     { icon: Calendar, label: "Date of Birth", value: player.dateOfBirth ? formatDate(player.dateOfBirth) : null },
     { icon: MapPin, label: "Nationality", value: player.nationality },
     { icon: Building2, label: "Current City", value: player.currentCity },
@@ -60,6 +63,23 @@ export default async function PlayerPage({ params }: { params: Promise<{ slug: s
                 </h1>
               </div>
               <div className="mt-3 flex flex-wrap items-center gap-3">
+                {currentTeam?.team && (
+                  <Link href={`/teams/${currentTeam.team.slug}`}>
+                    <Badge className="bg-emerald-600/20 border border-emerald-500/30 text-emerald-300 text-sm hover:bg-emerald-600/30 transition-colors">
+                      🛡️ {currentTeam.team.name}
+                    </Badge>
+                  </Link>
+                )}
+                {currentTeam?.isCaptain && (
+                  <Badge className="bg-amber-500/20 border border-amber-500/30 text-amber-300 text-sm">
+                    👑 Captain
+                  </Badge>
+                )}
+                {currentTeam?.isViceCaptain && (
+                  <Badge className="bg-cyan-500/20 border border-cyan-500/30 text-cyan-300 text-sm">
+                    🛡️ Vice-Captain
+                  </Badge>
+                )}
                 <Badge className={`${getPlayerPositionColor(player.position)} text-sm`}>
                   {player.position}
                 </Badge>
@@ -85,11 +105,40 @@ export default async function PlayerPage({ params }: { params: Promise<{ slug: s
       <section className="py-12">
         <div className="mx-auto max-w-7xl px-4 lg:px-8">
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-            <div className="lg:col-span-2">
+            <div className="lg:col-span-2 space-y-8">
               {player.bio && (
                 <div className="rounded-2xl border border-white/10 bg-white/5 p-8">
                   <h2 className="mb-4 text-xl font-bold text-white">About</h2>
                   <p className="leading-relaxed text-neutral-300">{player.bio}</p>
+                </div>
+              )}
+
+              {player.matchLineups && player.matchLineups.length > 0 && (
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-8">
+                  <h2 className="mb-4 text-xl font-bold text-white">Recent Match Appearances</h2>
+                  <div className="space-y-3">
+                    {player.matchLineups.map((lineup) => (
+                      <Link
+                        key={lineup.id}
+                        href={`/matches/${lineup.matchId}`}
+                        className="flex items-center justify-between p-3 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] transition-colors border border-white/5"
+                      >
+                        <div>
+                          <p className="text-sm font-semibold text-white">
+                            {lineup.match?.homeTeam?.name} vs {lineup.match?.awayTeam?.name}
+                          </p>
+                          <p className="text-xs text-neutral-400">
+                            {lineup.match?.competition?.name || "Match"} • {lineup.type === "STARTING" ? "Starter" : "Substitute"}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-xs font-mono text-emerald-400">
+                            {lineup.match?.status === "COMPLETED" ? `${lineup.match.homeScore} - ${lineup.match.awayScore}` : lineup.match?.status}
+                          </span>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
