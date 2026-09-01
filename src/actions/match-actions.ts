@@ -221,6 +221,9 @@ export async function updateMatchResult(
     revalidatePath("/admin/matches");
     revalidatePath("/matches");
     revalidatePath(`/matches/${matchId}`);
+    revalidatePath("/statistics");
+    revalidatePath("/admin/statistics");
+    revalidatePath("/admin/league-tables");
     revalidatePath("/");
     revalidatePath("/competitions");
     return { success: true, data: match };
@@ -256,6 +259,8 @@ export async function addMatchEvent(
 
     revalidatePath("/admin/matches");
     revalidatePath(`/matches/${matchId}`);
+    revalidatePath("/statistics");
+    revalidatePath("/admin/statistics");
     return { success: true };
   } catch (error) {
     return {
@@ -276,6 +281,8 @@ export async function removeMatchEvent(eventId: string): Promise<ActionResponse>
 
     revalidatePath("/admin/matches");
     revalidatePath(`/matches/${event.matchId}`);
+    revalidatePath("/statistics");
+    revalidatePath("/admin/statistics");
     return { success: true };
   } catch (error) {
     return {
@@ -289,20 +296,37 @@ export async function deleteMatch(id: string): Promise<ActionResponse> {
   try {
     await requirePermission(PERMISSIONS.MATCHES_DELETE);
 
-    const match = await db.match.findUnique({ where: { id } });
+    const match = await db.match.findUnique({
+      where: { id },
+      include: { homeTeam: true, awayTeam: true },
+    });
     if (!match) return { success: false, error: "Match not found" };
 
-    await db.match.delete({ where: { id } });
+    // Explicitly delete all related data in a transaction to guarantee complete cascading removal
+    await db.$transaction([
+      db.matchEvent.deleteMany({ where: { matchId: id } }),
+      db.matchLineup.deleteMany({ where: { matchId: id } }),
+      db.matchPhoto.deleteMany({ where: { matchId: id } }),
+      db.match.delete({ where: { id } }),
+    ]);
 
     await createAuditLog({
       action: "DELETE",
       module: "matches",
       recordId: id,
-      description: `Deleted match`,
+      description: `Deleted match (${match.homeTeam?.name} vs ${match.awayTeam?.name}) and all related data (goals, assists, cards, lineups, photos)`,
     });
 
     revalidatePath("/admin/matches");
     revalidatePath("/matches");
+    revalidatePath(`/matches/${id}`);
+    revalidatePath("/statistics");
+    revalidatePath("/admin/statistics");
+    revalidatePath("/admin/league-tables");
+    revalidatePath("/competitions");
+    revalidatePath("/teams");
+    revalidatePath("/players");
+    revalidatePath("/");
     return { success: true };
   } catch (error) {
     return {
