@@ -236,6 +236,98 @@ export default async function AdminStatisticsPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Full Squad Performance (Sorted by Goals Max to Min) */}
+      <Card className="border-neutral-200 dark:border-neutral-800">
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle className="text-base flex items-center gap-2 text-white">
+              <Flame className="h-5 w-5 text-amber-400" /> Full Squad Performance
+            </CardTitle>
+            <p className="text-xs text-neutral-400 mt-1">Sorted by total goals scored (max to min)</p>
+          </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-12 text-center">Rank</TableHead>
+                <TableHead className="w-12 text-center">#</TableHead>
+                <TableHead>Player</TableHead>
+                <TableHead>Position</TableHead>
+                <TableHead className="text-center">Team</TableHead>
+                <TableHead className="text-center">Matches</TableHead>
+                <TableHead className="text-center font-bold text-amber-400">Goals</TableHead>
+                <TableHead className="text-center font-bold text-blue-400">Assists</TableHead>
+                <TableHead className="text-center font-bold text-emerald-400">POTM</TableHead>
+                <TableHead className="text-center font-bold text-yellow-400">Yellow</TableHead>
+                <TableHead className="text-center font-bold text-red-400">Red</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {stats.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={11} className="py-8 text-center text-neutral-500">
+                    No squad statistics available yet.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                [...stats]
+                  .sort((a, b) => {
+                    if (b.goals !== a.goals) return b.goals - a.goals;
+                    if (b.assists !== a.assists) return b.assists - a.assists;
+                    if (b.playerOfMatchAwards !== a.playerOfMatchAwards)
+                      return b.playerOfMatchAwards - a.playerOfMatchAwards;
+                    return b.matchesPlayed - a.matchesPlayed;
+                  })
+                  .map((item, idx) => (
+                    <TableRow key={item.playerId} className="hover:bg-white/5">
+                      <TableCell className="text-center font-bold text-neutral-400">
+                        {idx + 1}
+                      </TableCell>
+                      <TableCell className="text-center font-mono text-xs text-neutral-500">
+                        {item.jerseyNumber ? `#${item.jerseyNumber}` : "—"}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <Avatar className="h-7 w-7">
+                            {item.playerPhoto && <AvatarImage src={item.playerPhoto} />}
+                            <AvatarFallback className="text-xs">
+                              {item.playerName.charAt(0)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span className="font-semibold text-white">{item.playerName}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-xs text-neutral-400">{item.position}</TableCell>
+                      <TableCell className="text-center text-xs text-neutral-400">
+                        {item.teamName || "—"}
+                      </TableCell>
+                      <TableCell className="text-center font-mono text-neutral-300 text-xs">
+                        {item.matchesPlayed}
+                      </TableCell>
+                      <TableCell className="text-center font-mono font-bold text-amber-400 text-sm">
+                        {item.goals}
+                      </TableCell>
+                      <TableCell className="text-center font-mono font-bold text-blue-400 text-sm">
+                        {item.assists}
+                      </TableCell>
+                      <TableCell className="text-center font-mono text-emerald-400 text-sm">
+                        {item.playerOfMatchAwards}
+                      </TableCell>
+                      <TableCell className="text-center font-mono text-yellow-400 text-sm">
+                        {item.yellowCards}
+                      </TableCell>
+                      <TableCell className="text-center font-mono text-red-400 text-sm">
+                        {item.redCards}
+                      </TableCell>
+                    </TableRow>
+                  ))
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
     </div>
   );
 }

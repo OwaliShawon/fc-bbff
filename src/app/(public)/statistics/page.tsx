@@ -2,11 +2,19 @@ import Link from "next/link";
 import { getPlayerStatistics } from "@/actions/settings-actions";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { BarChart3, Trophy, Flame, ShieldAlert, Award } from "lucide-react";
+import { BarChart3, Trophy, Flame, ShieldAlert, Award, Star } from "lucide-react";
 import { getPlayerPositionColor } from "@/lib/utils";
 
 export default async function StatisticsPage() {
   const stats = await getPlayerStatistics();
+
+  // Full squad sorted strictly by goals max to min, then assists, then POTM
+  const squadPerformance = [...stats].sort((a, b) => {
+    if (b.goals !== a.goals) return b.goals - a.goals;
+    if (b.assists !== a.assists) return b.assists - a.assists;
+    if (b.playerOfMatchAwards !== a.playerOfMatchAwards) return b.playerOfMatchAwards - a.playerOfMatchAwards;
+    return b.matchesPlayed - a.matchesPlayed;
+  });
 
   // Top Scorers
   const topScorers = [...stats].sort((a, b) => b.goals - a.goals);
@@ -25,7 +33,7 @@ export default async function StatisticsPage() {
             <BarChart3 className="h-8 w-8" />
           </div>
           <h1 className="text-4xl font-black text-white md:text-6xl">Club Statistics</h1>
-          <p className="mt-4 text-neutral-400">Leaderboards, top goalscorers, playmakers, and disciplinary records</p>
+          <p className="mt-4 text-neutral-400">Squad performance leaderboards, top goalscorers, playmakers, and disciplinary records</p>
         </div>
       </section>
 
@@ -42,13 +50,13 @@ export default async function StatisticsPage() {
                 </div>
                 <div>
                   <h3 className="font-bold text-white">Top Goalscorer</h3>
-                  <p className="text-xs text-neutral-400">Club Leaders</p>
+                  <p className="text-xs text-neutral-400">Golden Boot Leader</p>
                 </div>
               </div>
               {topScorers[0] && (
                 <div className="flex items-center justify-between border-t border-white/5 pt-4">
                   <div>
-                    <Link href={`/players/${topScorers[0].playerSlug}`} className="font-bold text-lg text-white hover:text-emerald-400">
+                    <Link href={`/players/${topScorers[0].playerSlug}`} className="font-bold text-lg text-white hover:text-emerald-400 transition-colors">
                       {topScorers[0].playerName}
                     </Link>
                     <p className="text-xs text-neutral-400">{topScorers[0].position}</p>
@@ -72,7 +80,7 @@ export default async function StatisticsPage() {
               {topAssists[0] && (
                 <div className="flex items-center justify-between border-t border-white/5 pt-4">
                   <div>
-                    <Link href={`/players/${topAssists[0].playerSlug}`} className="font-bold text-lg text-white hover:text-emerald-400">
+                    <Link href={`/players/${topAssists[0].playerSlug}`} className="font-bold text-lg text-white hover:text-emerald-400 transition-colors">
                       {topAssists[0].playerName}
                     </Link>
                     <p className="text-xs text-neutral-400">{topAssists[0].position}</p>
@@ -96,7 +104,7 @@ export default async function StatisticsPage() {
               {topAwards[0] && (
                 <div className="flex items-center justify-between border-t border-white/5 pt-4">
                   <div>
-                    <Link href={`/players/${topAwards[0].playerSlug}`} className="font-bold text-lg text-white hover:text-emerald-400">
+                    <Link href={`/players/${topAwards[0].playerSlug}`} className="font-bold text-lg text-white hover:text-emerald-400 transition-colors">
                       {topAwards[0].playerName}
                     </Link>
                     <p className="text-xs text-neutral-400">{topAwards[0].position}</p>
@@ -107,44 +115,100 @@ export default async function StatisticsPage() {
             </div>
           </div>
 
-          {/* Full Player Statistics Table */}
+          {/* Full Squad Performance (Sorted by Goals Max to Min) */}
           <div className="rounded-2xl border border-white/10 bg-white/5 p-6 lg:p-8">
-            <h2 className="mb-6 text-xl font-bold text-white">Full Squad Performance</h2>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-6">
+              <div>
+                <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                  <Flame className="h-5 w-5 text-amber-400" /> Full Squad Performance
+                </h2>
+                <p className="text-xs text-neutral-400 mt-1">Ranked by total goals scored (max to min)</p>
+              </div>
+              <Badge variant="secondary" className="bg-amber-500/10 text-amber-400 w-fit">
+                {squadPerformance.length} Squad Members
+              </Badge>
+            </div>
+
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow className="border-white/10 hover:bg-transparent">
-                    <TableHead className="w-12 text-neutral-400">#</TableHead>
+                    <TableHead className="w-12 text-center text-neutral-400">Rank</TableHead>
+                    <TableHead className="w-12 text-center text-neutral-400">#</TableHead>
                     <TableHead className="text-neutral-400">Player</TableHead>
                     <TableHead className="text-neutral-400">Position</TableHead>
                     <TableHead className="text-center text-neutral-400">Team</TableHead>
-                    <TableHead className="text-center text-neutral-400">Goals</TableHead>
-                    <TableHead className="text-center text-neutral-400">Assists</TableHead>
-                    <TableHead className="text-center text-neutral-400">POTM</TableHead>
+                    <TableHead className="text-center text-neutral-400">Apps</TableHead>
+                    <TableHead className="text-center font-bold text-amber-400">⚽ Goals</TableHead>
+                    <TableHead className="text-center font-bold text-blue-400">🅰️ Assists</TableHead>
+                    <TableHead className="text-center text-neutral-400">⭐ POTM</TableHead>
                     <TableHead className="text-center text-neutral-400">🟨 Yellow</TableHead>
                     <TableHead className="text-center text-neutral-400">🟥 Red</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {stats.map((p) => (
-                    <TableRow key={p.playerId} className="border-white/5 hover:bg-white/5">
-                      <TableCell className="font-mono text-xs text-neutral-500">{p.jerseyNumber || "-"}</TableCell>
+                  {squadPerformance.map((p, index) => (
+                    <TableRow
+                      key={p.playerId}
+                      className={`border-white/5 transition-colors ${
+                        index === 0 && p.goals > 0
+                          ? "bg-amber-500/10 hover:bg-amber-500/15"
+                          : index < 3 && p.goals > 0
+                          ? "bg-white/[0.03] hover:bg-white/[0.07]"
+                          : "hover:bg-white/5"
+                      }`}
+                    >
+                      <TableCell className="text-center font-mono font-bold text-xs text-neutral-400">
+                        {index === 0 && p.goals > 0 ? (
+                          <span className="text-base">🥇</span>
+                        ) : index === 1 && p.goals > 0 ? (
+                          <span className="text-base">🥈</span>
+                        ) : index === 2 && p.goals > 0 ? (
+                          <span className="text-base">🥉</span>
+                        ) : (
+                          index + 1
+                        )}
+                      </TableCell>
+                      <TableCell className="text-center font-mono text-xs text-neutral-500">
+                        {p.jerseyNumber ? `#${p.jerseyNumber}` : "—"}
+                      </TableCell>
                       <TableCell>
-                        <Link href={`/players/${p.playerSlug}`} className="font-medium text-white hover:text-emerald-400">
+                        <Link
+                          href={`/players/${p.playerSlug}`}
+                          className="font-medium text-white hover:text-emerald-400 transition-colors"
+                        >
                           {p.playerName}
                         </Link>
                       </TableCell>
                       <TableCell>
-                        <Badge variant="secondary" className={`text-[10px] ${getPlayerPositionColor(p.position)}`}>
+                        <Badge
+                          variant="secondary"
+                          className={`text-[10px] ${getPlayerPositionColor(p.position)}`}
+                        >
                           {p.position}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-center text-xs text-neutral-400">{p.teamName || "—"}</TableCell>
-                      <TableCell className="text-center font-mono font-bold text-amber-400">{p.goals}</TableCell>
-                      <TableCell className="text-center font-mono font-bold text-blue-400">{p.assists}</TableCell>
-                      <TableCell className="text-center font-mono text-emerald-400">{p.playerOfMatchAwards}</TableCell>
-                      <TableCell className="text-center font-mono text-yellow-500">{p.yellowCards}</TableCell>
-                      <TableCell className="text-center font-mono text-red-500">{p.redCards}</TableCell>
+                      <TableCell className="text-center text-xs text-neutral-400">
+                        {p.teamName || "—"}
+                      </TableCell>
+                      <TableCell className="text-center font-mono text-xs text-neutral-300">
+                        {p.matchesPlayed}
+                      </TableCell>
+                      <TableCell className="text-center font-mono font-black text-amber-400 text-base">
+                        {p.goals}
+                      </TableCell>
+                      <TableCell className="text-center font-mono font-bold text-blue-400">
+                        {p.assists}
+                      </TableCell>
+                      <TableCell className="text-center font-mono text-emerald-400">
+                        {p.playerOfMatchAwards}
+                      </TableCell>
+                      <TableCell className="text-center font-mono text-yellow-500">
+                        {p.yellowCards}
+                      </TableCell>
+                      <TableCell className="text-center font-mono text-red-500">
+                        {p.redCards}
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
