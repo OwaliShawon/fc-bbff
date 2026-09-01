@@ -44,7 +44,7 @@ export default async function AdminLeagueTablesPage(props: {
       </div>
 
       {selectedComp && (
-        <Card className="border-neutral-200 dark:border-neutral-800 p-6">
+        <Card className="border-neutral-200 dark:border-neutral-800 p-4 sm:p-6 flex items-center justify-center">
           <DownloadableStandingsCard competition={selectedComp} leagueTable={table} />
         </Card>
       )}

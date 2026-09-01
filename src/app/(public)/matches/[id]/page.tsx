@@ -70,11 +70,11 @@ export default async function MatchDetailPage({ params }: { params: Promise<{ id
       </section>
 
       <section className="py-12">
-        <div className="mx-auto max-w-5xl px-4 lg:px-8">
-          <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+        <div className="mx-auto max-w-7xl px-4 lg:px-8">
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
 
-            {/* Left Column — Events breakdown */}
-            <div className="space-y-6 lg:col-span-2">
+            {/* Left Column — Events breakdown & Match Report (7 cols) */}
+            <div className="space-y-6 lg:col-span-7">
               {/* Goalscorers */}
               {goals.length > 0 && (
                 <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
@@ -188,10 +188,10 @@ export default async function MatchDetailPage({ params }: { params: Promise<{ id
               )}
             </div>
 
-            {/* Right Column — Official Match Card, Player of the Match + info */}
-            <div className="space-y-6">
+            {/* Right Column — Official Match Card, POTM + Stats (5 cols) */}
+            <div className="space-y-6 lg:col-span-5">
               {/* Official Downloadable Match Card */}
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
+              <div className="rounded-3xl border border-white/10 bg-white/[0.02] p-2 sm:p-4">
                 <DownloadableMatchCard match={match} />
               </div>
 

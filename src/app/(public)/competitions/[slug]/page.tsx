@@ -55,7 +55,7 @@ export default async function CompetitionDetailPage({
       <section className="bg-neutral-950 py-12">
         <div className="mx-auto max-w-7xl px-4 lg:px-8 space-y-12">
           {/* Official Downloadable Standings Card */}
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-6 lg:p-8">
+          <div className="rounded-3xl border border-white/10 bg-white/[0.02] p-4 sm:p-6 flex items-center justify-center">
             <DownloadableStandingsCard competition={competition} leagueTable={leagueTable} />
           </div>
 

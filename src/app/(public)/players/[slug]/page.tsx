@@ -145,7 +145,7 @@ export default async function PlayerPage({ params }: { params: Promise<{ slug: s
             </div>
             <div className="space-y-6">
               {/* Official Downloadable Player Card */}
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
+              <div className="rounded-3xl border border-white/10 bg-white/[0.02] p-2 sm:p-4 flex items-center justify-center">
                 <DownloadablePlayerCard player={player} team={currentTeam} />
               </div>
 
