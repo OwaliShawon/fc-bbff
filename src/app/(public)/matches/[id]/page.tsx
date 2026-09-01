@@ -30,8 +30,17 @@ export default async function MatchDetailPage({ params }: { params: Promise<{ id
           <Link href="/matches" className="mb-6 inline-flex items-center gap-2 text-sm text-neutral-400 hover:text-white">
             <ArrowLeft className="h-4 w-4" /> Back to Matches
           </Link>
-          {match.competition && (
-            <p className="mb-4 text-sm font-medium uppercase tracking-wider text-emerald-400">{match.competition.name}</p>
+          {match.competition ? (
+            <Link
+              href={`/competitions/${match.competition.slug}`}
+              className="mb-4 inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-emerald-400 hover:text-emerald-300 hover:underline"
+            >
+              🏆 {match.competition.name}
+            </Link>
+          ) : (
+            <p className="mb-4 text-xs font-bold uppercase tracking-wider text-amber-400">
+              🤝 Independent / Friendly Match
+            </p>
           )}
           <div className="flex flex-col items-center gap-8 md:flex-row md:justify-center">
             <div className="text-center md:flex-1 md:text-right">

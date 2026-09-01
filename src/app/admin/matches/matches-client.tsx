@@ -31,7 +31,7 @@ import {
 } from "lucide-react";
 import { formatDateTime, getMatchStatusColor } from "@/lib/utils";
 import type { PaginatedResponse, Match, Season } from "@/types";
-import type { Team } from "@prisma/client";
+import type { Team, Competition } from "@prisma/client";
 
 const EVENT_LABELS: Record<string, { label: string; icon: string; color: string }> = {
   GOAL: { label: "Goal", icon: "⚽", color: "bg-emerald-500/20 text-emerald-400" },
@@ -39,21 +39,32 @@ const EVENT_LABELS: Record<string, { label: string; icon: string; color: string 
   YELLOW_CARD: { label: "Yellow Card", icon: "🟨", color: "bg-yellow-500/20 text-yellow-400" },
   RED_CARD: { label: "Red Card", icon: "🟥", color: "bg-red-500/20 text-red-400" },
   OWN_GOAL: { label: "Own Goal", icon: "⚽", color: "bg-orange-500/20 text-orange-400" },
-  PENALTY: { label: "Penalty", icon: "⚽", color: "bg-emerald-500/20 text-emerald-400" },
-  PENALTY_MISSED: { label: "Penalty Missed", icon: "❌", color: "bg-red-500/20 text-red-400" },
-  SUBSTITUTION: { label: "Substitution", icon: "🔄", color: "bg-neutral-500/20 text-neutral-400" },
+  PENALTY: { label: "Penalty Goal", icon: "⚽", color: "bg-emerald-500/20 text-emerald-400" },
+  PENALTY_MISSED: { label: "Penalty Missed", icon: "❌", color: "bg-neutral-500/20 text-neutral-400" },
+  SUBSTITUTION: { label: "Substitution", icon: "🔄", color: "bg-cyan-500/20 text-cyan-400" },
 };
 
-export function MatchesClient({
-  initialData, teams, seasons, currentPage, currentStatus, currentSearch,
-}: {
+interface MatchesClientProps {
   initialData: PaginatedResponse<Match>;
   teams: Team[];
   seasons: Season[];
+  competitions?: Competition[];
   currentPage: number;
   currentStatus: string;
   currentSearch: string;
-}) {
+  currentCompetitionId?: string;
+}
+
+export function MatchesClient({
+  initialData,
+  teams,
+  seasons,
+  competitions = [],
+  currentPage,
+  currentStatus,
+  currentSearch,
+  currentCompetitionId = "",
+}: MatchesClientProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [showDialog, setShowDialog] = useState(false);
@@ -282,9 +293,30 @@ export function MatchesClient({
             </div>
             <Button type="submit" variant="secondary">Search</Button>
           </form>
+
+          {/* Competition / Independent Filter */}
+          <Select value={currentCompetitionId || "all"} onValueChange={(v) => {
+            const p = new URLSearchParams();
+            if (currentStatus) p.set("status", currentStatus);
+            if (v !== "all") p.set("competitionId", v);
+            if (searchInput) p.set("search", searchInput);
+            router.push(`/admin/matches?${p.toString()}`);
+          }}>
+            <SelectTrigger className="w-[210px]"><SelectValue placeholder="All Competitions" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Competitions & Independent</SelectItem>
+              <SelectItem value="INDEPENDENT">🤝 Independent / Friendly Matches</SelectItem>
+              {competitions.map((c) => (
+                <SelectItem key={c.id} value={c.id}>🏆 {c.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {/* Status Filter */}
           <Select value={currentStatus || "all"} onValueChange={(v) => {
             const p = new URLSearchParams();
             if (v !== "all") p.set("status", v);
+            if (currentCompetitionId) p.set("competitionId", currentCompetitionId);
             if (searchInput) p.set("search", searchInput);
             router.push(`/admin/matches?${p.toString()}`);
           }}>
@@ -327,7 +359,15 @@ export function MatchesClient({
                   <TableRow key={match.id}>
                     <TableCell>
                       <p className="font-medium">{match.homeTeam?.name} vs {match.awayTeam?.name}</p>
-                      <p className="text-xs text-neutral-500">{match.competition?.name || "Friendly"}</p>
+                      {match.competition ? (
+                        <span className="inline-flex items-center text-xs font-semibold text-emerald-400 mt-0.5">
+                          🏆 {match.competition.name}
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center text-xs font-semibold text-amber-400 mt-0.5">
+                          🤝 Independent / Friendly Match
+                        </span>
+                      )}
                     </TableCell>
                     <TableCell>
                       {match.status === "COMPLETED" ? (
@@ -382,6 +422,30 @@ export function MatchesClient({
         <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
           <DialogHeader><DialogTitle>{editingMatch ? "Edit Match" : "Create Match"}</DialogTitle></DialogHeader>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            {/* Match Type / Competition Selector */}
+            <div className="col-span-full space-y-2 rounded-xl border border-white/10 bg-white/[0.03] p-3">
+              <Label className="font-bold text-white flex items-center gap-2">
+                <Trophy className="h-4 w-4 text-emerald-400" /> Match Type / Competition
+              </Label>
+              <Select
+                value={formData.competitionId || "none"}
+                onValueChange={(v) => setFormData({ ...formData, competitionId: v === "none" ? "" : v })}
+              >
+                <SelectTrigger className="w-full bg-neutral-900 border-white/10">
+                  <SelectValue placeholder="Select Competition or Independent Match" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">🤝 Independent / Friendly Match (No Competition)</SelectItem>
+                  {competitions.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>🏆 {c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-[11px] text-neutral-400">
+                Create match independently (e.g. friendly/exhibition match) or link to an official competition.
+              </p>
+            </div>
+
             <div className="space-y-2">
               <Label>Home Team *</Label>
               <Select value={formData.homeTeamId} onValueChange={(v) => setFormData({ ...formData, homeTeamId: v })}>

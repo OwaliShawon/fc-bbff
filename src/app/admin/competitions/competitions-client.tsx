@@ -11,6 +11,7 @@ import {
   removeTeamFromCompetition,
   setCompetitionTeams,
 } from "@/actions/competition-actions";
+import { createMatch } from "@/actions/match-actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -49,7 +50,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Edit, Trash2, Trophy, Calendar, Shield, X, Users, Loader2 } from "lucide-react";
+import { Plus, Edit, Trash2, Trophy, Calendar, Shield, X, Users, Loader2, Swords } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import type { Competition, Season, Team, PaginatedResponse } from "@/types";
 
@@ -68,8 +69,11 @@ export function CompetitionsClient({
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [teamsDialogOpen, setTeamsDialogOpen] = useState(false);
+  const [createMatchDialogOpen, setCreateMatchDialogOpen] = useState(false);
+
   const [selectedComp, setSelectedComp] = useState<Competition | null>(null);
   const [managingComp, setManagingComp] = useState<any>(null);
+  const [targetCompForMatch, setTargetCompForMatch] = useState<any>(null);
   const [selectedTeamToAdd, setSelectedTeamToAdd] = useState<string>("");
 
   const [formData, setFormData] = useState({
@@ -82,6 +86,18 @@ export function CompetitionsClient({
     pointsForLoss: 0,
     startDate: new Date().toISOString().split("T")[0],
     endDate: new Date(Date.now() + 180 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+  });
+
+  const [matchFormData, setMatchFormData] = useState({
+    homeTeamId: "",
+    awayTeamId: "",
+    matchDate: new Date().toISOString().slice(0, 16),
+    venue: "",
+    seasonId: "",
+    matchDay: "",
+    referee: "",
+    notes: "",
+    status: "SCHEDULED",
   });
 
   const handleOpenCreate = () => {
@@ -105,95 +121,137 @@ export function CompetitionsClient({
     setFormData({
       name: comp.name,
       description: comp.description || "",
-      seasonId: comp.seasonId,
-      status: comp.status as "UPCOMING" | "ONGOING" | "COMPLETED" | "CANCELLED",
+      seasonId: comp.seasonId || seasons[0]?.id || "",
+      status: comp.status,
       pointsForWin: comp.pointsForWin,
       pointsForDraw: comp.pointsForDraw,
       pointsForLoss: comp.pointsForLoss,
-      startDate: comp.startDate ? new Date(comp.startDate).toISOString().split("T")[0] : "",
-      endDate: comp.endDate ? new Date(comp.endDate).toISOString().split("T")[0] : "",
+      startDate: comp.startDate
+        ? new Date(comp.startDate).toISOString().split("T")[0]
+        : new Date().toISOString().split("T")[0],
+      endDate: comp.endDate
+        ? new Date(comp.endDate).toISOString().split("T")[0]
+        : new Date().toISOString().split("T")[0],
     });
     setDialogOpen(true);
   };
 
-  const handleOpenTeams = (comp: any) => {
+  const handleOpenTeams = (comp: Competition) => {
     setManagingComp(comp);
     setSelectedTeamToAdd("");
     setTeamsDialogOpen(true);
   };
 
-  const handleAddTeam = (teamId: string) => {
-    if (!managingComp || !teamId) return;
+  const handleOpenCreateMatch = (comp: Competition) => {
+    setTargetCompForMatch(comp);
+    setMatchFormData({
+      homeTeamId: "",
+      awayTeamId: "",
+      matchDate: new Date().toISOString().slice(0, 16),
+      venue: "",
+      seasonId: comp.seasonId || "",
+      matchDay: "",
+      referee: "",
+      notes: "",
+      status: "SCHEDULED",
+    });
+    setCreateMatchDialogOpen(true);
+  };
+
+  const handleCreateMatchSubmit = async () => {
+    if (!matchFormData.homeTeamId || !matchFormData.awayTeamId) {
+      toast.error("Please select both Home and Away teams");
+      return;
+    }
+    if (matchFormData.homeTeamId === matchFormData.awayTeamId) {
+      toast.error("Home and Away teams must be different");
+      return;
+    }
+
     startTransition(async () => {
-      const result = await addTeamToCompetition(managingComp.id, teamId);
+      const payload = {
+        ...matchFormData,
+        competitionId: targetCompForMatch?.id || null,
+        matchDay: matchFormData.matchDay ? parseInt(matchFormData.matchDay) : null,
+      };
+
+      const result = await createMatch(payload);
       if (result.success) {
-        toast.success("Team added to competition!");
-        setSelectedTeamToAdd("");
-        // Update local state
-        const addedTeam = teams.find((t) => t.id === teamId);
-        if (addedTeam) {
-          const updatedTeams = [
-            ...(managingComp.competitionTeams || []),
-            { competitionId: managingComp.id, teamId, team: addedTeam },
-          ];
-          setManagingComp({
-            ...managingComp,
-            competitionTeams: updatedTeams,
-            _count: {
-              ...managingComp._count,
-              competitionTeams: updatedTeams.length,
-            },
-          });
-        }
+        toast.success(`Match created for ${targetCompForMatch?.name}!`);
+        setCreateMatchDialogOpen(false);
         router.refresh();
       } else {
-        toast.error(result.error || "Failed to add team");
+        toast.error(result.error || "Failed to create match");
       }
     });
   };
 
-  const handleRemoveTeam = (teamId: string) => {
-    if (!managingComp || !teamId) return;
+  const handleAddTeam = async () => {
+    if (!selectedTeamToAdd || !managingComp) return;
     startTransition(async () => {
-      const result = await removeTeamFromCompetition(managingComp.id, teamId);
-      if (result.success) {
-        toast.success("Team removed from competition!");
-        const updatedTeams = (managingComp.competitionTeams || []).filter(
-          (ct: any) => ct.teamId !== teamId
-        );
+      const res = await addTeamToCompetition(managingComp.id, selectedTeamToAdd);
+      if (res.success) {
+        toast.success("Team added to competition!");
         setManagingComp({
           ...managingComp,
-          competitionTeams: updatedTeams,
-          _count: {
-            ...managingComp._count,
-            competitionTeams: updatedTeams.length,
-          },
+          competitionTeams: [
+            ...(managingComp.competitionTeams || []),
+            { teamId: selectedTeamToAdd, team: teams.find((t) => t.id === selectedTeamToAdd) },
+          ],
+        });
+        setSelectedTeamToAdd("");
+        router.refresh();
+      } else {
+        toast.error(res.error || "Failed to add team");
+      }
+    });
+  };
+
+  const handleRemoveTeam = async (teamId: string) => {
+    if (!managingComp) return;
+    startTransition(async () => {
+      const res = await removeTeamFromCompetition(managingComp.id, teamId);
+      if (res.success) {
+        toast.success("Team removed from competition!");
+        setManagingComp({
+          ...managingComp,
+          competitionTeams: (managingComp.competitionTeams || []).filter(
+            (ct: any) => ct.teamId !== teamId
+          ),
         });
         router.refresh();
       } else {
-        toast.error(result.error || "Failed to remove team");
+        toast.error(res.error || "Failed to remove team");
       }
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData.name.trim()) {
+      toast.error("Competition name is required");
+      return;
+    }
+
     startTransition(async () => {
-      const result = selectedComp
-        ? await updateCompetition(selectedComp.id, formData)
-        : await createCompetition(formData);
+      let result;
+      if (selectedComp) {
+        result = await updateCompetition(selectedComp.id, formData);
+      } else {
+        result = await createCompetition(formData);
+      }
 
       if (result.success) {
         toast.success(selectedComp ? "Competition updated!" : "Competition created!");
         setDialogOpen(false);
         router.refresh();
       } else {
-        toast.error(result.error || "Failed to save competition");
+        toast.error(result.error || "Something went wrong");
       }
     });
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!selectedComp) return;
     startTransition(async () => {
       const result = await deleteCompetition(selectedComp.id);
@@ -213,6 +271,10 @@ export function CompetitionsClient({
   );
   const availableTeams = teams.filter((t) => !enrolledTeamIds.has(t.id));
 
+  // Teams enrolled in targetCompForMatch (fall back to all teams if < 2)
+  const compEnrolledTeams = (targetCompForMatch?.competitionTeams || []).map((ct: any) => ct.team).filter(Boolean);
+  const compTeams = compEnrolledTeams.length >= 2 ? compEnrolledTeams : teams;
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -222,7 +284,7 @@ export function CompetitionsClient({
             Competitions & Tournaments
           </h1>
           <p className="text-sm text-neutral-500 dark:text-neutral-400">
-            Manage leagues, cups, points rules, and participating teams.
+            Manage leagues, cups, points rules, participating teams, and competition fixtures.
           </p>
         </div>
         <Button onClick={handleOpenCreate} className="bg-emerald-600 hover:bg-emerald-500">
@@ -302,12 +364,23 @@ export function CompetitionsClient({
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-1">
+                        <div className="flex items-center justify-end gap-1.5">
+                          {/* Create Match for Competition Quick Action */}
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleOpenCreateMatch(comp)}
+                            title="Create Match Fixture for Competition"
+                            className="h-8 px-2.5 text-xs gap-1 border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/15"
+                          >
+                            <Swords className="h-3.5 w-3.5" />
+                            <span>Add Match</span>
+                          </Button>
                           <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => handleOpenTeams(comp)}
-                            title="Manage Teams"
+                            title="Manage Enrolled Teams"
                             className="h-8 px-2 text-xs"
                           >
                             <Users className="h-4 w-4 mr-1 text-emerald-500" /> Teams
@@ -337,101 +410,69 @@ export function CompetitionsClient({
         </CardContent>
       </Card>
 
-      {/* Manage Teams in Competition Dialog */}
+      {/* Manage Teams Dialog */}
       <Dialog open={teamsDialogOpen} onOpenChange={setTeamsDialogOpen}>
-        <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Shield className="h-5 w-5 text-emerald-500" />
-              Manage Teams: {managingComp?.name}
+              Participating Teams — {managingComp?.name}
             </DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-6 py-2">
-            {/* Add Team Dropdown */}
-            <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-4 dark:border-neutral-800 dark:bg-neutral-900/50 space-y-3">
-              <Label className="text-xs font-semibold uppercase text-neutral-500">
-                Add Team to this Competition
-              </Label>
-              <div className="flex gap-2">
-                <Select
-                  value={selectedTeamToAdd}
-                  onValueChange={setSelectedTeamToAdd}
-                >
-                  <SelectTrigger className="flex-1">
-                    <SelectValue placeholder={availableTeams.length > 0 ? "Select a team to add..." : "All teams already added"} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availableTeams.length === 0 ? (
-                      <SelectItem value="none" disabled>No remaining teams to add</SelectItem>
-                    ) : (
-                      availableTeams.map((team) => (
-                        <SelectItem key={team.id} value={team.id}>
-                          {team.name}
-                        </SelectItem>
-                      ))
-                    )}
-                  </SelectContent>
-                </Select>
-                <Button
-                  onClick={() => selectedTeamToAdd && handleAddTeam(selectedTeamToAdd)}
-                  disabled={isPending || !selectedTeamToAdd}
-                  className="bg-emerald-600 hover:bg-emerald-700"
-                >
-                  {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4 mr-1" />}
-                  Add
-                </Button>
-              </div>
+          <div className="space-y-4 py-2">
+            {/* Add Team */}
+            <div className="flex gap-2">
+              <Select value={selectedTeamToAdd} onValueChange={setSelectedTeamToAdd}>
+                <SelectTrigger className="flex-1">
+                  <SelectValue placeholder="Add team to competition..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableTeams.length === 0 ? (
+                    <SelectItem value="_empty" disabled>
+                      All active teams already added
+                    </SelectItem>
+                  ) : (
+                    availableTeams.map((t) => (
+                      <SelectItem key={t.id} value={t.id}>
+                        {t.name}
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+              <Button
+                onClick={handleAddTeam}
+                disabled={!selectedTeamToAdd || isPending}
+                className="bg-emerald-600 hover:bg-emerald-500"
+              >
+                Add
+              </Button>
             </div>
 
-            {/* Participating Teams List */}
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-semibold uppercase tracking-wider text-neutral-500">
-                  Participating Teams ({(managingComp?.competitionTeams || []).length})
-                </h3>
-              </div>
-
+            {/* List Enrolled Teams */}
+            <div className="space-y-2 max-h-60 overflow-y-auto border-t border-neutral-800 pt-3">
               {(managingComp?.competitionTeams || []).length === 0 ? (
-                <div className="rounded-xl border border-dashed border-neutral-200 p-8 text-center text-neutral-500 dark:border-neutral-800">
-                  <Shield className="mx-auto mb-2 h-8 w-8 text-neutral-400 opacity-50" />
-                  <p className="text-sm font-medium">No teams added yet</p>
-                  <p className="text-xs text-neutral-400 mt-1">Select a team above to register them in this competition.</p>
-                </div>
+                <p className="text-center text-xs text-neutral-500 py-4">
+                  No teams assigned to this competition yet.
+                </p>
               ) : (
-                <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
-                  {(managingComp?.competitionTeams || []).map((ct: any) => (
-                    <div
-                      key={ct.teamId}
-                      className="flex items-center justify-between rounded-lg border border-neutral-200 bg-white px-4 py-3 dark:border-neutral-800 dark:bg-neutral-900 shadow-sm"
+                managingComp?.competitionTeams?.map((ct: any) => (
+                  <div
+                    key={ct.teamId}
+                    className="flex items-center justify-between p-2.5 rounded-lg bg-neutral-900 border border-neutral-800 text-sm"
+                  >
+                    <span className="font-medium text-white">{ct.team?.name || "Team"}</span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleRemoveTeam(ct.teamId)}
+                      className="h-7 w-7 p-0 text-red-400 hover:text-red-300 hover:bg-red-950/40"
                     >
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/10 font-bold text-emerald-400 text-sm">
-                          {ct.team?.name?.charAt(0) || "T"}
-                        </div>
-                        <div>
-                          <p className="font-semibold text-sm text-neutral-900 dark:text-white">
-                            {ct.team?.name}
-                          </p>
-                          <p className="text-xs text-neutral-500">
-                            Status: <span className="text-emerald-500">{ct.team?.status || "ACTIVE"}</span>
-                          </p>
-                        </div>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleRemoveTeam(ct.teamId)}
-                        disabled={isPending}
-                        className="text-red-500 hover:text-red-600 hover:bg-red-500/10 h-8 px-2"
-                        title="Remove team from competition"
-                      >
-                        <X className="h-4 w-4 mr-1" />
-                        <span className="text-xs">Remove</span>
-                      </Button>
-                    </div>
-                  ))}
-                </div>
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))
               )}
             </div>
           </div>
@@ -444,134 +485,240 @@ export function CompetitionsClient({
         </DialogContent>
       </Dialog>
 
-      {/* Create/Edit Dialog */}
+      {/* Create Match for Competition Dialog */}
+      <Dialog open={createMatchDialogOpen} onOpenChange={setCreateMatchDialogOpen}>
+        <DialogContent className="max-h-[90vh] max-w-xl overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-emerald-400">
+              <Swords className="h-5 w-5" /> Add Match Fixture for &quot;{targetCompForMatch?.name}&quot;
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 py-2">
+            <div className="space-y-2">
+              <Label>Home Team *</Label>
+              <Select
+                value={matchFormData.homeTeamId}
+                onValueChange={(v) => setMatchFormData({ ...matchFormData, homeTeamId: v })}
+              >
+                <SelectTrigger><SelectValue placeholder="Select home team" /></SelectTrigger>
+                <SelectContent>
+                  {compTeams.map((t: any) => (
+                    <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Away Team *</Label>
+              <Select
+                value={matchFormData.awayTeamId}
+                onValueChange={(v) => setMatchFormData({ ...matchFormData, awayTeamId: v })}
+              >
+                <SelectTrigger><SelectValue placeholder="Select away team" /></SelectTrigger>
+                <SelectContent>
+                  {compTeams.map((t: any) => (
+                    <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Date & Time *</Label>
+              <Input
+                type="datetime-local"
+                value={matchFormData.matchDate}
+                onChange={(e) => setMatchFormData({ ...matchFormData, matchDate: e.target.value })}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Venue</Label>
+              <Input
+                placeholder="e.g. Bangabandhu National Stadium"
+                value={matchFormData.venue}
+                onChange={(e) => setMatchFormData({ ...matchFormData, venue: e.target.value })}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Match Day / Round</Label>
+              <Input
+                type="number"
+                placeholder="e.g. 1"
+                value={matchFormData.matchDay}
+                onChange={(e) => setMatchFormData({ ...matchFormData, matchDay: e.target.value })}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Referee</Label>
+              <Input
+                placeholder="Referee name"
+                value={matchFormData.referee}
+                onChange={(e) => setMatchFormData({ ...matchFormData, referee: e.target.value })}
+              />
+            </div>
+
+            <div className="col-span-full space-y-2">
+              <Label>Notes</Label>
+              <Textarea
+                placeholder="Fixture notes..."
+                value={matchFormData.notes}
+                onChange={(e) => setMatchFormData({ ...matchFormData, notes: e.target.value })}
+                rows={2}
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCreateMatchDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleCreateMatchSubmit} disabled={isPending} className="bg-emerald-600 hover:bg-emerald-500">
+              {isPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Creating Fixture...</> : "Create Match"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Create / Edit Competition Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-xl">
-          <form onSubmit={handleSubmit}>
-            <DialogHeader>
-              <DialogTitle>{selectedComp ? "Edit Competition" : "Create Competition"}</DialogTitle>
-            </DialogHeader>
+        <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {selectedComp ? "Edit Competition" : "Create New Competition"}
+            </DialogTitle>
+          </DialogHeader>
 
-            <div className="grid gap-4 py-4">
-              <div>
-                <Label htmlFor="name">Competition Name *</Label>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Competition Name *</Label>
+              <Input
+                id="name"
+                placeholder="e.g. Premier Division League 2026"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                required
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="seasonId">Season</Label>
+                <Select
+                  value={formData.seasonId}
+                  onValueChange={(v) => setFormData({ ...formData, seasonId: v })}
+                >
+                  <SelectTrigger id="seasonId">
+                    <SelectValue placeholder="Select season" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {seasons.map((s) => (
+                      <SelectItem key={s.id} value={s.id}>
+                        {s.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="status">Status</Label>
+                <Select
+                  value={formData.status}
+                  onValueChange={(v: any) => setFormData({ ...formData, status: v })}
+                >
+                  <SelectTrigger id="status">
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="UPCOMING">Upcoming</SelectItem>
+                    <SelectItem value="ONGOING">Ongoing</SelectItem>
+                    <SelectItem value="COMPLETED">Completed</SelectItem>
+                    <SelectItem value="CANCELLED">Cancelled</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Points Rules */}
+            <div className="grid grid-cols-3 gap-3 border-t border-neutral-800 pt-3">
+              <div className="space-y-1">
+                <Label htmlFor="pointsWin" className="text-xs">
+                  Win Points
+                </Label>
                 <Input
-                  id="name"
-                  required
-                  placeholder="e.g. BBFF Premier League"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  id="pointsWin"
+                  type="number"
+                  value={formData.pointsForWin}
+                  onChange={(e) =>
+                    setFormData({ ...formData, pointsForWin: Number(e.target.value) })
+                  }
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="season">Season *</Label>
-                  <Select
-                    value={formData.seasonId}
-                    onValueChange={(v) => setFormData({ ...formData, seasonId: v })}
-                  >
-                    <SelectTrigger id="season">
-                      <SelectValue placeholder="Select Season" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {seasons.map((s) => (
-                        <SelectItem key={s.id} value={s.id}>
-                          {s.name} {s.isCurrent ? "(Current)" : ""}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label htmlFor="status">Status</Label>
-                  <Select
-                    value={formData.status}
-                    onValueChange={(v: "UPCOMING" | "ONGOING" | "COMPLETED" | "CANCELLED") =>
-                      setFormData({ ...formData, status: v })
-                    }
-                  >
-                    <SelectTrigger id="status">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="ONGOING">Ongoing</SelectItem>
-                      <SelectItem value="UPCOMING">Upcoming</SelectItem>
-                      <SelectItem value="COMPLETED">Completed</SelectItem>
-                      <SelectItem value="CANCELLED">Cancelled</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <Label htmlFor="pointsForWin">Pts for Win</Label>
-                  <Input
-                    id="pointsForWin"
-                    type="number"
-                    value={formData.pointsForWin}
-                    onChange={(e) =>
-                      setFormData({ ...formData, pointsForWin: parseInt(e.target.value) || 0 })
-                    }
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="pointsForDraw">Pts for Draw</Label>
-                  <Input
-                    id="pointsForDraw"
-                    type="number"
-                    value={formData.pointsForDraw}
-                    onChange={(e) =>
-                      setFormData({ ...formData, pointsForDraw: parseInt(e.target.value) || 0 })
-                    }
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="pointsForLoss">Pts for Loss</Label>
-                  <Input
-                    id="pointsForLoss"
-                    type="number"
-                    value={formData.pointsForLoss}
-                    onChange={(e) =>
-                      setFormData({ ...formData, pointsForLoss: parseInt(e.target.value) || 0 })
-                    }
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="startDate">Start Date</Label>
-                  <Input
-                    id="startDate"
-                    type="date"
-                    value={formData.startDate}
-                    onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="endDate">End Date</Label>
-                  <Input
-                    id="endDate"
-                    type="date"
-                    value={formData.endDate}
-                    onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  rows={3}
-                  placeholder="Details about this tournament, format, rules..."
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              <div className="space-y-1">
+                <Label htmlFor="pointsDraw" className="text-xs">
+                  Draw Points
+                </Label>
+                <Input
+                  id="pointsDraw"
+                  type="number"
+                  value={formData.pointsForDraw}
+                  onChange={(e) =>
+                    setFormData({ ...formData, pointsForDraw: Number(e.target.value) })
+                  }
                 />
               </div>
+
+              <div className="space-y-1">
+                <Label htmlFor="pointsLoss" className="text-xs">
+                  Loss Points
+                </Label>
+                <Input
+                  id="pointsLoss"
+                  type="number"
+                  value={formData.pointsForLoss}
+                  onChange={(e) =>
+                    setFormData({ ...formData, pointsForLoss: Number(e.target.value) })
+                  }
+                />
+              </div>
+            </div>
+
+            {/* Dates */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="startDate">Start Date</Label>
+                <Input
+                  id="startDate"
+                  type="date"
+                  value={formData.startDate}
+                  onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="endDate">End Date</Label>
+                <Input
+                  id="endDate"
+                  type="date"
+                  value={formData.endDate}
+                  onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                rows={3}
+                placeholder="Details about this tournament, format, rules..."
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              />
             </div>
 
             <DialogFooter>

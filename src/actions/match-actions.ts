@@ -40,7 +40,11 @@ export async function getMatches(params?: {
     where.status = params.status;
   }
   if (params?.competitionId) {
-    where.competitionId = params.competitionId;
+    if (params.competitionId === "INDEPENDENT" || params.competitionId === "FRIENDLY") {
+      where.competitionId = null;
+    } else {
+      where.competitionId = params.competitionId;
+    }
   }
   if (params?.seasonId) {
     where.seasonId = params.seasonId;
