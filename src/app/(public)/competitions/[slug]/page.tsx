@@ -162,6 +162,36 @@ export default async function CompetitionDetailPage({
               </div>
             </div>
           )}
+
+          {/* Participating Teams */}
+          {competition.competitionTeams && competition.competitionTeams.length > 0 && (
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-6 lg:p-8">
+              <h2 className="mb-6 text-xl font-bold text-white flex items-center gap-2">
+                <Trophy className="h-5 w-5 text-emerald-400" /> Participating Clubs ({competition.competitionTeams.length})
+              </h2>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                {competition.competitionTeams.map((ct: any) => (
+                  <Link
+                    key={ct.teamId}
+                    href={`/teams/${ct.team?.slug}`}
+                    className="flex items-center gap-3 rounded-xl border border-white/5 bg-white/5 p-4 transition-all hover:bg-emerald-500/10 hover:border-emerald-500/30 group"
+                  >
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 font-bold text-emerald-400 group-hover:scale-105 transition-transform">
+                      {ct.team?.name?.charAt(0) || "T"}
+                    </div>
+                    <div>
+                      <p className="font-semibold text-sm text-white group-hover:text-emerald-400 transition-colors">
+                        {ct.team?.name}
+                      </p>
+                      <p className="text-xs text-neutral-400">
+                        {ct.team?.status || "ACTIVE"}
+                      </p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </section>
     </div>

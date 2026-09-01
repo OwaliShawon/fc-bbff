@@ -7,6 +7,9 @@ import {
   createCompetition,
   updateCompetition,
   deleteCompetition,
+  addTeamToCompetition,
+  removeTeamFromCompetition,
+  setCompetitionTeams,
 } from "@/actions/competition-actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,7 +49,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Edit, Trash2, Trophy, Calendar } from "lucide-react";
+import { Plus, Edit, Trash2, Trophy, Calendar, Shield, X, Users, Loader2 } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import type { Competition, Season, Team, PaginatedResponse } from "@/types";
 
@@ -64,7 +67,10 @@ export function CompetitionsClient({
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [teamsDialogOpen, setTeamsDialogOpen] = useState(false);
   const [selectedComp, setSelectedComp] = useState<Competition | null>(null);
+  const [managingComp, setManagingComp] = useState<any>(null);
+  const [selectedTeamToAdd, setSelectedTeamToAdd] = useState<string>("");
 
   const [formData, setFormData] = useState({
     name: "",
@@ -110,6 +116,66 @@ export function CompetitionsClient({
     setDialogOpen(true);
   };
 
+  const handleOpenTeams = (comp: any) => {
+    setManagingComp(comp);
+    setSelectedTeamToAdd("");
+    setTeamsDialogOpen(true);
+  };
+
+  const handleAddTeam = (teamId: string) => {
+    if (!managingComp || !teamId) return;
+    startTransition(async () => {
+      const result = await addTeamToCompetition(managingComp.id, teamId);
+      if (result.success) {
+        toast.success("Team added to competition!");
+        setSelectedTeamToAdd("");
+        // Update local state
+        const addedTeam = teams.find((t) => t.id === teamId);
+        if (addedTeam) {
+          const updatedTeams = [
+            ...(managingComp.competitionTeams || []),
+            { competitionId: managingComp.id, teamId, team: addedTeam },
+          ];
+          setManagingComp({
+            ...managingComp,
+            competitionTeams: updatedTeams,
+            _count: {
+              ...managingComp._count,
+              competitionTeams: updatedTeams.length,
+            },
+          });
+        }
+        router.refresh();
+      } else {
+        toast.error(result.error || "Failed to add team");
+      }
+    });
+  };
+
+  const handleRemoveTeam = (teamId: string) => {
+    if (!managingComp || !teamId) return;
+    startTransition(async () => {
+      const result = await removeTeamFromCompetition(managingComp.id, teamId);
+      if (result.success) {
+        toast.success("Team removed from competition!");
+        const updatedTeams = (managingComp.competitionTeams || []).filter(
+          (ct: any) => ct.teamId !== teamId
+        );
+        setManagingComp({
+          ...managingComp,
+          competitionTeams: updatedTeams,
+          _count: {
+            ...managingComp._count,
+            competitionTeams: updatedTeams.length,
+          },
+        });
+        router.refresh();
+      } else {
+        toast.error(result.error || "Failed to remove team");
+      }
+    });
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     startTransition(async () => {
@@ -141,6 +207,12 @@ export function CompetitionsClient({
     });
   };
 
+  // List of teams not yet enrolled in managingComp
+  const enrolledTeamIds = new Set(
+    (managingComp?.competitionTeams || []).map((ct: any) => ct.teamId)
+  );
+  const availableTeams = teams.filter((t) => !enrolledTeamIds.has(t.id));
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -150,7 +222,7 @@ export function CompetitionsClient({
             Competitions & Tournaments
           </h1>
           <p className="text-sm text-neutral-500 dark:text-neutral-400">
-            Manage leagues, cups, points rules, and tournament brackets.
+            Manage leagues, cups, points rules, and participating teams.
           </p>
         </div>
         <Button onClick={handleOpenCreate} className="bg-emerald-600 hover:bg-emerald-500">
@@ -166,6 +238,7 @@ export function CompetitionsClient({
               <TableRow>
                 <TableHead>Competition Name</TableHead>
                 <TableHead>Season</TableHead>
+                <TableHead>Teams</TableHead>
                 <TableHead>Points (W/D/L)</TableHead>
                 <TableHead>Duration</TableHead>
                 <TableHead>Status</TableHead>
@@ -175,73 +248,203 @@ export function CompetitionsClient({
             <TableBody>
               {initialData.data.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="py-12 text-center text-neutral-500">
+                  <TableCell colSpan={7} className="py-12 text-center text-neutral-500">
                     <Trophy className="mx-auto mb-2 h-8 w-8 text-neutral-400" />
                     No competitions found
                   </TableCell>
                 </TableRow>
               ) : (
-                initialData.data.map((comp: any) => (
-                  <TableRow key={comp.id}>
-                    <TableCell>
-                      <div>
-                        <p className="font-semibold text-neutral-900 dark:text-white">{comp.name}</p>
-                        {comp.description && (
-                          <p className="text-xs text-neutral-500 line-clamp-1 max-w-md">{comp.description}</p>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="secondary" className="text-xs">
-                        {comp.season?.name || "Current"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="font-mono text-sm">
-                      {comp.pointsForWin} / {comp.pointsForDraw} / {comp.pointsForLoss}
-                    </TableCell>
-                    <TableCell className="text-xs text-neutral-500">
-                      {comp.startDate ? formatDate(comp.startDate) : "TBD"} -{" "}
-                      {comp.endDate ? formatDate(comp.endDate) : "TBD"}
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant="secondary"
-                        className={
-                          comp.status === "ONGOING"
-                            ? "bg-emerald-500/20 text-emerald-300"
-                            : "bg-neutral-800 text-neutral-400"
-                        }
-                      >
-                        {comp.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <Button variant="ghost" size="sm" onClick={() => handleOpenEdit(comp)}>
-                          <Edit className="h-4 w-4" />
-                        </Button>
+                initialData.data.map((comp: any) => {
+                  const teamCount = comp.competitionTeams?.length ?? comp._count?.competitionTeams ?? 0;
+                  return (
+                    <TableRow key={comp.id}>
+                      <TableCell>
+                        <div>
+                          <p className="font-semibold text-neutral-900 dark:text-white">{comp.name}</p>
+                          {comp.description && (
+                            <p className="text-xs text-neutral-500 line-clamp-1 max-w-md">{comp.description}</p>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="secondary" className="text-xs">
+                          {comp.season?.name || "Current"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
                         <Button
-                          variant="ghost"
+                          variant="outline"
                           size="sm"
-                          onClick={() => {
-                            setSelectedComp(comp);
-                            setDeleteDialogOpen(true);
-                          }}
-                          className="text-red-500 hover:text-red-600"
+                          onClick={() => handleOpenTeams(comp)}
+                          className="h-7 text-xs gap-1.5 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Shield className="h-3.5 w-3.5" />
+                          <span>{teamCount} Teams</span>
                         </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
+                      </TableCell>
+                      <TableCell className="font-mono text-sm">
+                        {comp.pointsForWin} / {comp.pointsForDraw} / {comp.pointsForLoss}
+                      </TableCell>
+                      <TableCell className="text-xs text-neutral-500">
+                        {comp.startDate ? formatDate(comp.startDate) : "TBD"} -{" "}
+                        {comp.endDate ? formatDate(comp.endDate) : "TBD"}
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant="secondary"
+                          className={
+                            comp.status === "ONGOING"
+                              ? "bg-emerald-500/20 text-emerald-300"
+                              : "bg-neutral-800 text-neutral-400"
+                          }
+                        >
+                          {comp.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleOpenTeams(comp)}
+                            title="Manage Teams"
+                            className="h-8 px-2 text-xs"
+                          >
+                            <Users className="h-4 w-4 mr-1 text-emerald-500" /> Teams
+                          </Button>
+                          <Button variant="ghost" size="sm" onClick={() => handleOpenEdit(comp)}>
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedComp(comp);
+                              setDeleteDialogOpen(true);
+                            }}
+                            className="text-red-500 hover:text-red-600"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
               )}
             </TableBody>
           </Table>
         </CardContent>
       </Card>
 
-      {/* Dialog */}
+      {/* Manage Teams in Competition Dialog */}
+      <Dialog open={teamsDialogOpen} onOpenChange={setTeamsDialogOpen}>
+        <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Shield className="h-5 w-5 text-emerald-500" />
+              Manage Teams: {managingComp?.name}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-6 py-2">
+            {/* Add Team Dropdown */}
+            <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-4 dark:border-neutral-800 dark:bg-neutral-900/50 space-y-3">
+              <Label className="text-xs font-semibold uppercase text-neutral-500">
+                Add Team to this Competition
+              </Label>
+              <div className="flex gap-2">
+                <Select
+                  value={selectedTeamToAdd}
+                  onValueChange={setSelectedTeamToAdd}
+                >
+                  <SelectTrigger className="flex-1">
+                    <SelectValue placeholder={availableTeams.length > 0 ? "Select a team to add..." : "All teams already added"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableTeams.length === 0 ? (
+                      <SelectItem value="none" disabled>No remaining teams to add</SelectItem>
+                    ) : (
+                      availableTeams.map((team) => (
+                        <SelectItem key={team.id} value={team.id}>
+                          {team.name}
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+                <Button
+                  onClick={() => selectedTeamToAdd && handleAddTeam(selectedTeamToAdd)}
+                  disabled={isPending || !selectedTeamToAdd}
+                  className="bg-emerald-600 hover:bg-emerald-700"
+                >
+                  {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4 mr-1" />}
+                  Add
+                </Button>
+              </div>
+            </div>
+
+            {/* Participating Teams List */}
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-semibold uppercase tracking-wider text-neutral-500">
+                  Participating Teams ({(managingComp?.competitionTeams || []).length})
+                </h3>
+              </div>
+
+              {(managingComp?.competitionTeams || []).length === 0 ? (
+                <div className="rounded-xl border border-dashed border-neutral-200 p-8 text-center text-neutral-500 dark:border-neutral-800">
+                  <Shield className="mx-auto mb-2 h-8 w-8 text-neutral-400 opacity-50" />
+                  <p className="text-sm font-medium">No teams added yet</p>
+                  <p className="text-xs text-neutral-400 mt-1">Select a team above to register them in this competition.</p>
+                </div>
+              ) : (
+                <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+                  {(managingComp?.competitionTeams || []).map((ct: any) => (
+                    <div
+                      key={ct.teamId}
+                      className="flex items-center justify-between rounded-lg border border-neutral-200 bg-white px-4 py-3 dark:border-neutral-800 dark:bg-neutral-900 shadow-sm"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/10 font-bold text-emerald-400 text-sm">
+                          {ct.team?.name?.charAt(0) || "T"}
+                        </div>
+                        <div>
+                          <p className="font-semibold text-sm text-neutral-900 dark:text-white">
+                            {ct.team?.name}
+                          </p>
+                          <p className="text-xs text-neutral-500">
+                            Status: <span className="text-emerald-500">{ct.team?.status || "ACTIVE"}</span>
+                          </p>
+                        </div>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleRemoveTeam(ct.teamId)}
+                        disabled={isPending}
+                        className="text-red-500 hover:text-red-600 hover:bg-red-500/10 h-8 px-2"
+                        title="Remove team from competition"
+                      >
+                        <X className="h-4 w-4 mr-1" />
+                        <span className="text-xs">Remove</span>
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setTeamsDialogOpen(false)}>
+              Done
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Create/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-xl">
           <form onSubmit={handleSubmit}>

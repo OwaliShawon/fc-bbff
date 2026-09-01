@@ -149,6 +149,9 @@ export async function getCompetitions(params?: {
       orderBy: { createdAt: "desc" },
       include: {
         season: true,
+        competitionTeams: {
+          include: { team: true },
+        },
         _count: { select: { matches: true, competitionTeams: true } },
       },
     }),
@@ -283,6 +286,34 @@ export async function deleteCompetition(id: string): Promise<ActionResponse> {
   }
 }
 
+export async function setCompetitionTeams(
+  competitionId: string,
+  teamIds: string[]
+): Promise<ActionResponse> {
+  try {
+    await requirePermission(PERMISSIONS.COMPETITIONS_UPDATE);
+
+    await db.$transaction([
+      db.competitionTeam.deleteMany({ where: { competitionId } }),
+      ...teamIds.map((teamId) =>
+        db.competitionTeam.create({
+          data: { competitionId, teamId },
+        })
+      ),
+    ]);
+
+    revalidatePath("/admin/competitions");
+    revalidatePath("/competitions");
+    revalidatePath("/admin/league-tables");
+    return { success: true };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to update competition teams",
+    };
+  }
+}
+
 export async function addTeamToCompetition(
   competitionId: string,
   teamId: string
@@ -296,6 +327,7 @@ export async function addTeamToCompetition(
 
     revalidatePath("/admin/competitions");
     revalidatePath("/competitions");
+    revalidatePath("/admin/league-tables");
     return { success: true };
   } catch (error) {
     return { success: false, error: error instanceof Error ? error.message : "Failed to add team" };
@@ -315,6 +347,7 @@ export async function removeTeamFromCompetition(
 
     revalidatePath("/admin/competitions");
     revalidatePath("/competitions");
+    revalidatePath("/admin/league-tables");
     return { success: true };
   } catch (error) {
     return { success: false, error: error instanceof Error ? error.message : "Failed to remove team" };
