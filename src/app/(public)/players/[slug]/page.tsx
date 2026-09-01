@@ -5,6 +5,7 @@ import { getPlayerBySlug } from "@/actions/player-actions";
 import { Badge } from "@/components/ui/badge";
 import { getPlayerPositionColor, formatDate } from "@/lib/utils";
 import { Calendar, MapPin, Ruler, Weight, Footprints, Star, ArrowLeft, Building2, Shield } from "lucide-react";
+import { DownloadablePlayerCard } from "@/components/cards/downloadable-player-card";
 
 export default async function PlayerPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -142,7 +143,12 @@ export default async function PlayerPage({ params }: { params: Promise<{ slug: s
                 </div>
               )}
             </div>
-            <div className="space-y-4">
+            <div className="space-y-6">
+              {/* Official Downloadable Player Card */}
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
+                <DownloadablePlayerCard player={player} team={currentTeam} />
+              </div>
+
               <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
                 <h3 className="mb-4 text-lg font-bold text-white">Player Details</h3>
                 <div className="space-y-3">

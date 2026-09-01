@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { formatDateTime, getMatchStatusColor } from "@/lib/utils";
 import { ArrowLeft, MapPin, User, Clock } from "lucide-react";
 import Link from "next/link";
+import { DownloadableMatchCard } from "@/components/cards/downloadable-match-card";
 
 export default async function MatchDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -187,8 +188,13 @@ export default async function MatchDetailPage({ params }: { params: Promise<{ id
               )}
             </div>
 
-            {/* Right Column — Player of the Match + info */}
+            {/* Right Column — Official Match Card, Player of the Match + info */}
             <div className="space-y-6">
+              {/* Official Downloadable Match Card */}
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
+                <DownloadableMatchCard match={match} />
+              </div>
+
               {/* Player of the Match */}
               {match.playerOfMatch && (
                 <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-amber-900/20 to-amber-800/10 p-6">

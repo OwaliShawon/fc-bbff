@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Trophy, Calendar, ArrowLeft, Swords, Clock, MapPin } from "lucide-react";
 import { formatDateTime, getMatchStatusColor } from "@/lib/utils";
+import { DownloadableStandingsCard } from "@/components/cards/downloadable-standings-card";
 
 export default async function CompetitionDetailPage({
   params,
@@ -53,6 +54,11 @@ export default async function CompetitionDetailPage({
       {/* Main Content */}
       <section className="bg-neutral-950 py-12">
         <div className="mx-auto max-w-7xl px-4 lg:px-8 space-y-12">
+          {/* Official Downloadable Standings Card */}
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-6 lg:p-8">
+            <DownloadableStandingsCard competition={competition} leagueTable={leagueTable} />
+          </div>
+
           {/* League Standings */}
           <div className="rounded-2xl border border-white/10 bg-white/5 p-6 lg:p-8">
             <h2 className="mb-6 text-xl font-bold text-white flex items-center gap-2">

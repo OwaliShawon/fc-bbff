@@ -4,6 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Trophy } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { DownloadableStandingsCard } from "@/components/cards/downloadable-standings-card";
 
 export default async function AdminLeagueTablesPage(props: {
   searchParams: Promise<{ competitionId?: string }>;
@@ -17,13 +18,15 @@ export default async function AdminLeagueTablesPage(props: {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-neutral-900 dark:text-white">
-          League Tables & Standings
-        </h1>
-        <p className="text-sm text-neutral-500 dark:text-neutral-400">
-          Live point standings auto-calculated from match results.
-        </p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-neutral-900 dark:text-white">
+            League Tables & Standings
+          </h1>
+          <p className="text-sm text-neutral-500 dark:text-neutral-400">
+            Live point standings auto-calculated from match results.
+          </p>
+        </div>
       </div>
 
       {/* Select Competition Tabs */}
@@ -39,6 +42,12 @@ export default async function AdminLeagueTablesPage(props: {
           </Link>
         ))}
       </div>
+
+      {selectedComp && (
+        <Card className="border-neutral-200 dark:border-neutral-800 p-6">
+          <DownloadableStandingsCard competition={selectedComp} leagueTable={table} />
+        </Card>
+      )}
 
       <Card className="border-neutral-200 dark:border-neutral-800">
         <CardHeader>
