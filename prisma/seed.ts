@@ -3,6 +3,7 @@ import { neonConfig } from "@neondatabase/serverless";
 import { PrismaNeon } from "@prisma/adapter-neon";
 import { PrismaClient, PlayerPosition } from "@prisma/client";
 import { hash } from "bcryptjs";
+import slugify from "slugify";
 import ws from "ws";
 
 neonConfig.webSocketConstructor = ws;
@@ -12,11 +13,12 @@ const adapter = new PrismaNeon({ connectionString });
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
-  console.log("🌱 Starting seed...");
+  console.log("🌱 Starting seed with specific teams and players...");
 
   // ============================================================================
   // CLEAN UP (for re-seeding)
   // ============================================================================
+  console.log("  Cleaning up old database records...");
   await prisma.auditLog.deleteMany();
   await prisma.matchEvent.deleteMany();
   await prisma.matchLineup.deleteMany();
@@ -26,6 +28,7 @@ async function main() {
   await prisma.competition.deleteMany();
   await prisma.season.deleteMany();
   await prisma.teamPlayer.deleteMany();
+  await prisma.managementMember.deleteMany();
   await prisma.team.deleteMany();
   await prisma.player.deleteMany();
   await prisma.eventGallery.deleteMany();
@@ -115,7 +118,7 @@ async function main() {
   }
 
   // ============================================================================
-  // USERS (Development only - change credentials for production!)
+  // USERS
   // ============================================================================
   console.log("  Creating users...");
   const hashedPassword = await hash("password123", 12);
@@ -161,132 +164,270 @@ async function main() {
   });
 
   // ============================================================================
-  // TEAMS
+  // TEAMS & PLAYERS DATA
+  // 1. Sydney - BBFF BULLS
+  // 2. Omi Azad - BBFF Hilful Fuzul
+  // 3. Shaishab - BBFF Warlords
+  // 4. Niloy - BBFF AL JULFIKAR
+  // 5. Utsho - BBFF REVOLUTION
+  // 6. Sujon - BBFF Calm Storm
+  // 7. Shawon - BBFF THUNDER
+  // 8. Kabbo - BBFF Viperz
+  // 9. Nakib - BBFF Brutal Bros
+  // 10. Himel - BBFF Lone Wolves
   // ============================================================================
-  console.log("  Creating teams...");
-  const teamA = await prisma.team.create({
-    data: {
-      name: "FC BBFF First XI",
-      slug: "bbff-fc-first-xi",
-      description: "The main first team of BBFF Football Club competing in the premier league.",
-      manager: "Coach Rahman",
-      status: "ACTIVE",
-    },
-  });
+  console.log("  Creating 10 teams and 10 players...");
 
-  const teamB = await prisma.team.create({
-    data: {
-      name: "FC BBFF Reserves",
-      slug: "bbff-fc-reserves",
-      description: "The reserve team developing future stars for the first team.",
-      manager: "Coach Karim",
-      status: "ACTIVE",
+  const seedPairs = [
+    {
+      player: {
+        firstName: "Sydney",
+        lastName: "",
+        jerseyNumber: 1,
+        position: "GOALKEEPER" as PlayerPosition,
+        secondaryPosition: null,
+        currentCity: "Dhaka",
+        bio: "Agile shot-stopper with superb reflexes and leadership from the back.",
+        nationality: "Bangladeshi",
+        height: "6'1\"",
+        weight: "80kg",
+        preferredFoot: "Right",
+        isFeatured: true,
+      },
+      team: {
+        name: "BBFF BULLS",
+        description: "Power, determination, and unyielding strength on the pitch.",
+        manager: "Coach Sydney",
+      },
     },
-  });
-
-  const teamC = await prisma.team.create({
-    data: {
-      name: "Rival United",
-      slug: "rival-united",
-      description: "A strong competing team in the local league.",
-      manager: "Coach Hasan",
-      status: "ACTIVE",
+    {
+      player: {
+        firstName: "Omi",
+        lastName: "Azad",
+        jerseyNumber: 10,
+        position: "MIDFIELDER" as PlayerPosition,
+        secondaryPosition: "FORWARD" as PlayerPosition,
+        currentCity: "Dhaka",
+        bio: "Master tactician and midfield maestro known for precision passing.",
+        nationality: "Bangladeshi",
+        height: "5'9\"",
+        weight: "72kg",
+        preferredFoot: "Right",
+        isFeatured: true,
+      },
+      team: {
+        name: "BBFF Hilful Fuzul",
+        description: "Built on unity, discipline, and tactical brilliance.",
+        manager: "Coach Omi Azad",
+      },
     },
-  });
-
-  const teamD = await prisma.team.create({
-    data: {
-      name: "City Stars FC",
-      slug: "city-stars-fc",
-      description: "An established club with a rich history.",
-      manager: "Coach Ali",
-      status: "ACTIVE",
+    {
+      player: {
+        firstName: "Shaishab",
+        lastName: "",
+        jerseyNumber: 11,
+        position: "FORWARD" as PlayerPosition,
+        secondaryPosition: "MIDFIELDER" as PlayerPosition,
+        currentCity: "Chittagong",
+        bio: "Prolific attacker with blistering pace and lethal finishing skills.",
+        nationality: "Bangladeshi",
+        height: "5'10\"",
+        weight: "74kg",
+        preferredFoot: "Left",
+        isFeatured: true,
+      },
+      team: {
+        name: "BBFF Warlords",
+        description: "Aggressive, commanding, and relentless in pursuit of victory.",
+        manager: "Coach Shaishab",
+      },
     },
-  });
-
-  // ============================================================================
-  // PLAYERS
-  // ============================================================================
-  console.log("  Creating players...");
-  const playersData = [
-    { firstName: "Emran", lastName: "", jerseyNumber: 1, position: "GOALKEEPER" as PlayerPosition, currentCity: "Dhaka", bio: "Experienced goalkeeper with excellent reflexes and commanding presence.", nationality: "Bangladeshi", height: "6'1\"", weight: "82kg", preferredFoot: "Right" },
-    { firstName: "Rokibul", lastName: "", jerseyNumber: 2, position: "DEFENDER" as PlayerPosition, secondaryPosition: "MIDFIELDER" as PlayerPosition, currentCity: "Chittagong", bio: "Solid defender known for tactical discipline and overlapping runs.", nationality: "Bangladeshi", height: "5'10\"", weight: "75kg", preferredFoot: "Right" },
-    { firstName: "Shushmoy", lastName: "", jerseyNumber: 3, position: "DEFENDER" as PlayerPosition, currentCity: "Sylhet", bio: "Agile left-sided defender with reliable tackling and quick recovery.", nationality: "Bangladeshi", height: "5'9\"", weight: "72kg", preferredFoot: "Left" },
-    { firstName: "Tiash", lastName: "", jerseyNumber: 4, position: "DEFENDER" as PlayerPosition, secondaryPosition: "MIDFIELDER" as PlayerPosition, currentCity: "Dhaka", bio: "Composed center-back with great aerial ability and leadership qualities.", nationality: "Bangladeshi", height: "6'0\"", weight: "80kg", preferredFoot: "Right" },
-    { firstName: "Kaizen", lastName: "", jerseyNumber: 5, position: "DEFENDER" as PlayerPosition, currentCity: "Dhaka", bio: "Tenacious defender who reads opponent moves exceptionally well.", nationality: "Bangladeshi", height: "5'11\"", weight: "78kg", preferredFoot: "Right" },
-    { firstName: "Masud", lastName: "", jerseyNumber: 6, position: "MIDFIELDER" as PlayerPosition, secondaryPosition: "DEFENDER" as PlayerPosition, currentCity: "Rajshahi", bio: "Box-to-box midfielder with tireless work rate and physical presence.", nationality: "Bangladeshi", height: "5'10\"", weight: "74kg", preferredFoot: "Right", isFeatured: true },
-    { firstName: "Himel", lastName: "", jerseyNumber: 7, position: "FORWARD" as PlayerPosition, secondaryPosition: "MIDFIELDER" as PlayerPosition, currentCity: "Sylhet", bio: "Dynamic winger with lightning pace and clinical finishing.", nationality: "Bangladeshi", height: "5'8\"", weight: "68kg", preferredFoot: "Right", isFeatured: true },
-    { firstName: "Riyad", lastName: "", jerseyNumber: 8, position: "MIDFIELDER" as PlayerPosition, currentCity: "Dhaka", bio: "Creative central playmaker with visionary passing and flair.", nationality: "Bangladeshi", height: "5'8\"", weight: "70kg", preferredFoot: "Left", isFeatured: true },
-    { firstName: "Mahim", lastName: "", jerseyNumber: 9, position: "FORWARD" as PlayerPosition, currentCity: "Dhaka", bio: "Lethal goal scorer with sharp positioning inside the penalty box.", nationality: "Bangladeshi", height: "5'11\"", weight: "76kg", preferredFoot: "Right", isFeatured: true },
-    { firstName: "Nakib", lastName: "", jerseyNumber: 10, position: "MIDFIELDER" as PlayerPosition, secondaryPosition: "FORWARD" as PlayerPosition, currentCity: "Dhaka", bio: "Attacking talisman who creates game-winning chances and set pieces.", nationality: "Bangladeshi", height: "5'9\"", weight: "71kg", preferredFoot: "Right", isFeatured: true },
-    { firstName: "Shaishab", lastName: "", jerseyNumber: 11, position: "FORWARD" as PlayerPosition, secondaryPosition: "MIDFIELDER" as PlayerPosition, currentCity: "Chittagong", bio: "Skillful attacker capable of playing across the entire front line.", nationality: "Bangladeshi", height: "5'10\"", weight: "73kg", preferredFoot: "Left", isFeatured: true },
-    { firstName: "Sidni", lastName: "", jerseyNumber: 12, position: "GOALKEEPER" as PlayerPosition, currentCity: "Khulna", bio: "Agile shot-stopper with great penalty saving record.", nationality: "Bangladeshi", height: "6'0\"", weight: "79kg", preferredFoot: "Right" },
-    { firstName: "Arifin", lastName: "", jerseyNumber: 13, position: "DEFENDER" as PlayerPosition, currentCity: "Dhaka", bio: "Consistent and disciplined full-back providing defensive stability.", nationality: "Bangladeshi", height: "5'11\"", weight: "77kg", preferredFoot: "Right" },
-    { firstName: "Tanzil", lastName: "", jerseyNumber: 14, position: "DEFENDER" as PlayerPosition, secondaryPosition: "MIDFIELDER" as PlayerPosition, currentCity: "Chittagong", bio: "Versatile backline defender who excels in aerial duels.", nationality: "Bangladeshi", height: "6'0\"", weight: "78kg", preferredFoot: "Right" },
-    { firstName: "Tushar", lastName: "", jerseyNumber: 15, position: "DEFENDER" as PlayerPosition, currentCity: "Barisal", bio: "Hard-tackling defender with high work ethic and team spirit.", nationality: "Bangladeshi", height: "5'10\"", weight: "75kg", preferredFoot: "Left" },
-    { firstName: "Anash", lastName: "", jerseyNumber: 16, position: "MIDFIELDER" as PlayerPosition, secondaryPosition: "DEFENDER" as PlayerPosition, currentCity: "Dhaka", bio: "Hardworking midfield anchor who breaks up opposition play effectively.", nationality: "Bangladeshi", height: "5'10\"", weight: "76kg", preferredFoot: "Right" },
-    { firstName: "Sagor", lastName: "", jerseyNumber: 17, position: "MIDFIELDER" as PlayerPosition, secondaryPosition: "FORWARD" as PlayerPosition, currentCity: "Rangpur", bio: "Energetic midfielder with great long-range shooting ability.", nationality: "Bangladeshi", height: "5'9\"", weight: "71kg", preferredFoot: "Right" },
-    { firstName: "Nazim", lastName: "", jerseyNumber: 18, position: "FORWARD" as PlayerPosition, currentCity: "Dhaka", bio: "Pacy forward with sharp offensive instincts and direct running.", nationality: "Bangladeshi", height: "5'9\"", weight: "70kg", preferredFoot: "Right" },
-    { firstName: "Porag", lastName: "", jerseyNumber: 19, position: "FORWARD" as PlayerPosition, secondaryPosition: "MIDFIELDER" as PlayerPosition, currentCity: "Sylhet", bio: "Clever attacker who excels in tight spaces and rapid link-up play.", nationality: "Bangladeshi", height: "5'8\"", weight: "67kg", preferredFoot: "Left" },
-    { firstName: "Kawsar", lastName: "", jerseyNumber: 20, position: "MIDFIELDER" as PlayerPosition, currentCity: "Dhaka", bio: "Controlled midfielder with excellent passing accuracy and tempo control.", nationality: "Bangladeshi", height: "5'10\"", weight: "74kg", preferredFoot: "Right" },
-    { firstName: "Sayed", lastName: "", jerseyNumber: 21, position: "DEFENDER" as PlayerPosition, currentCity: "Comilla", bio: "Dependable center-back with strong physical presence.", nationality: "Bangladeshi", height: "6'1\"", weight: "81kg", preferredFoot: "Right" },
-    { firstName: "Utsho", lastName: "", jerseyNumber: 22, position: "GOALKEEPER" as PlayerPosition, currentCity: "Dhaka", bio: "Promising young goalkeeper with sharp reflexes and high agility.", nationality: "Bangladeshi", height: "6'0\"", weight: "78kg", preferredFoot: "Right" },
-    { firstName: "Fahimul", lastName: "", jerseyNumber: 23, position: "MIDFIELDER" as PlayerPosition, secondaryPosition: "FORWARD" as PlayerPosition, currentCity: "Mymensingh", bio: "Creative wide midfielder with dangerous crossing deliveries.", nationality: "Bangladeshi", height: "5'9\"", weight: "70kg", preferredFoot: "Right" },
-    { firstName: "Jahid H", lastName: "", jerseyNumber: 24, position: "DEFENDER" as PlayerPosition, currentCity: "Dhaka", bio: "Tough-tackling fullback with endurance and defensive grit.", nationality: "Bangladeshi", height: "5'11\"", weight: "76kg", preferredFoot: "Right" },
-    { firstName: "Imam", lastName: "", jerseyNumber: 25, position: "MIDFIELDER" as PlayerPosition, currentCity: "Rajshahi", bio: "Technical midfielder who distributes possession smoothly.", nationality: "Bangladeshi", height: "5'8\"", weight: "69kg", preferredFoot: "Left" },
-    { firstName: "Sohan", lastName: "", jerseyNumber: 26, position: "FORWARD" as PlayerPosition, currentCity: "Dhaka", bio: "Explosive attacker who creates scoring chances out of nowhere.", nationality: "Bangladeshi", height: "5'10\"", weight: "73kg", preferredFoot: "Right" },
-    { firstName: "Kawsar", lastName: "", jerseyNumber: 27, position: "DEFENDER" as PlayerPosition, secondaryPosition: "MIDFIELDER" as PlayerPosition, currentCity: "Khulna", bio: "Disciplined defender capable of shielding the backline.", nationality: "Bangladeshi", height: "5'10\"", weight: "75kg", preferredFoot: "Right" },
-    { firstName: "Antorr", lastName: "", jerseyNumber: 28, position: "MIDFIELDER" as PlayerPosition, currentCity: "Sylhet", bio: "Agile midfielder who keeps the midfield energetic and focused.", nationality: "Bangladeshi", height: "5'9\"", weight: "71kg", preferredFoot: "Right" },
-    { firstName: "Shishir", lastName: "", jerseyNumber: 29, position: "FORWARD" as PlayerPosition, currentCity: "Dhaka", bio: "Fast and opportunistic forward always on the hunt for rebounds.", nationality: "Bangladeshi", height: "5'8\"", weight: "68kg", preferredFoot: "Left" },
-    { firstName: "Sambil", lastName: "", jerseyNumber: 30, position: "DEFENDER" as PlayerPosition, currentCity: "Barisal", bio: "Sturdy defensive pillar with consistent performance.", nationality: "Bangladeshi", height: "5'11\"", weight: "77kg", preferredFoot: "Right" },
-    { firstName: "Hasib", lastName: "", jerseyNumber: 31, position: "GOALKEEPER" as PlayerPosition, currentCity: "Dhaka", bio: "Confident goalkeeper with great aerial reach and distribution.", nationality: "Bangladeshi", height: "6'2\"", weight: "83kg", preferredFoot: "Right" },
-    { firstName: "Youji", lastName: "", jerseyNumber: 32, position: "MIDFIELDER" as PlayerPosition, secondaryPosition: "FORWARD" as PlayerPosition, currentCity: "Chittagong", bio: "Quick-thinking playmaker who adds speed and rhythm to the attack.", nationality: "Bangladeshi", height: "5'8\"", weight: "69kg", preferredFoot: "Right" },
-    { firstName: "Sabbir", lastName: "", jerseyNumber: 33, position: "FORWARD" as PlayerPosition, currentCity: "Dhaka", bio: "Instinctive goalscorer with strong aerial threat.", nationality: "Bangladeshi", height: "5'11\"", weight: "75kg", preferredFoot: "Right" },
-    { firstName: "Niaz", lastName: "", jerseyNumber: 34, position: "DEFENDER" as PlayerPosition, currentCity: "Dhaka", bio: "Solid defender with exceptional work rate and tactical vision.", nationality: "Bangladeshi", height: "5'10\"", weight: "74kg", preferredFoot: "Right" },
+    {
+      player: {
+        firstName: "Niloy",
+        lastName: "",
+        jerseyNumber: 4,
+        position: "DEFENDER" as PlayerPosition,
+        secondaryPosition: "MIDFIELDER" as PlayerPosition,
+        currentCity: "Dhaka",
+        bio: "Rock-solid center back with supreme aerial dominance and tackling precision.",
+        nationality: "Bangladeshi",
+        height: "6'0\"",
+        weight: "78kg",
+        preferredFoot: "Right",
+        isFeatured: true,
+      },
+      team: {
+        name: "BBFF AL JULFIKAR",
+        description: "Steadfast defense coupled with decisive attacking strikes.",
+        manager: "Coach Niloy",
+      },
+    },
+    {
+      player: {
+        firstName: "Utsho",
+        lastName: "",
+        jerseyNumber: 22,
+        position: "GOALKEEPER" as PlayerPosition,
+        secondaryPosition: "DEFENDER" as PlayerPosition,
+        currentCity: "Dhaka",
+        bio: "Commanding goalkeeper with sharp distribution and fearless presence.",
+        nationality: "Bangladeshi",
+        height: "6'0\"",
+        weight: "77kg",
+        preferredFoot: "Right",
+        isFeatured: true,
+      },
+      team: {
+        name: "BBFF REVOLUTION",
+        description: "Dynamic and innovative squad redefining football excellence.",
+        manager: "Coach Utsho",
+      },
+    },
+    {
+      player: {
+        firstName: "Sujon",
+        lastName: "",
+        jerseyNumber: 8,
+        position: "MIDFIELDER" as PlayerPosition,
+        secondaryPosition: "DEFENDER" as PlayerPosition,
+        currentCity: "Rajshahi",
+        bio: "Composed playmaker capable of orchestrating the game's rhythm.",
+        nationality: "Bangladeshi",
+        height: "5'10\"",
+        weight: "73kg",
+        preferredFoot: "Right",
+        isFeatured: true,
+      },
+      team: {
+        name: "BBFF Calm Storm",
+        description: "Patient buildup play transitioning into devastating attacks.",
+        manager: "Coach Sujon",
+      },
+    },
+    {
+      player: {
+        firstName: "Shawon",
+        lastName: "",
+        jerseyNumber: 7,
+        position: "FORWARD" as PlayerPosition,
+        secondaryPosition: "MIDFIELDER" as PlayerPosition,
+        currentCity: "Dhaka",
+        bio: "Explosive winger with dazzling dribbling skills and thunderous strikes.",
+        nationality: "Bangladeshi",
+        height: "5'8\"",
+        weight: "69kg",
+        preferredFoot: "Right",
+        isFeatured: true,
+      },
+      team: {
+        name: "BBFF THUNDER",
+        description: "Lightning-quick counter-attacks and electrifying performances.",
+        manager: "Coach Shawon",
+      },
+    },
+    {
+      player: {
+        firstName: "Kabbo",
+        lastName: "",
+        jerseyNumber: 3,
+        position: "DEFENDER" as PlayerPosition,
+        secondaryPosition: "MIDFIELDER" as PlayerPosition,
+        currentCity: "Sylhet",
+        bio: "Tenacious and agile defender who shuts down opposing wingers.",
+        nationality: "Bangladeshi",
+        height: "5'9\"",
+        weight: "71kg",
+        preferredFoot: "Left",
+        isFeatured: true,
+      },
+      team: {
+        name: "BBFF Viperz",
+        description: "Swift, dangerous, and striking when least expected.",
+        manager: "Coach Kabbo",
+      },
+    },
+    {
+      player: {
+        firstName: "Nakib",
+        lastName: "",
+        jerseyNumber: 9,
+        position: "FORWARD" as PlayerPosition,
+        secondaryPosition: "MIDFIELDER" as PlayerPosition,
+        currentCity: "Dhaka",
+        bio: "Natural goalscorer and set-piece specialist with clinical accuracy.",
+        nationality: "Bangladeshi",
+        height: "5'11\"",
+        weight: "75kg",
+        preferredFoot: "Right",
+        isFeatured: true,
+      },
+      team: {
+        name: "BBFF Brutal Bros",
+        description: "Physical, relentless, and united brothers in competition.",
+        manager: "Coach Nakib",
+      },
+    },
+    {
+      player: {
+        firstName: "Himel",
+        lastName: "",
+        jerseyNumber: 17,
+        position: "FORWARD" as PlayerPosition,
+        secondaryPosition: "MIDFIELDER" as PlayerPosition,
+        currentCity: "Sylhet",
+        bio: "Cunning attacker with great positioning, speed, and finishing.",
+        nationality: "Bangladeshi",
+        height: "5'8\"",
+        weight: "68kg",
+        preferredFoot: "Right",
+        isFeatured: true,
+      },
+      team: {
+        name: "BBFF Lone Wolves",
+        description: "Fierce fighters with high adaptability and indomitable spirit.",
+        manager: "Coach Himel",
+      },
+    },
   ];
 
-  const players = [];
-  const usedSlugs = new Set<string>();
-  for (const p of playersData) {
-    const baseSlug = `${p.firstName}${p.lastName ? `-${p.lastName}` : ""}`.toLowerCase().replace(/\s+/g, "-");
-    let slug = baseSlug;
-    let counter = 1;
-    while (usedSlugs.has(slug)) {
-      counter++;
-      slug = `${baseSlug}-${counter}`;
-    }
-    usedSlugs.add(slug);
+  const createdTeams = [];
+  const createdPlayers = [];
+
+  for (const pair of seedPairs) {
+    const teamSlug = slugify(pair.team.name, { lower: true, strict: true });
+    const team = await prisma.team.create({
+      data: {
+        name: pair.team.name,
+        slug: teamSlug,
+        description: pair.team.description,
+        manager: pair.team.manager,
+        status: "ACTIVE",
+      },
+    });
+    createdTeams.push(team);
+
+    const playerNameStr = `${pair.player.firstName}${pair.player.lastName ? ` ${pair.player.lastName}` : ""}`;
+    const playerSlug = slugify(playerNameStr, { lower: true, strict: true });
 
     const player = await prisma.player.create({
       data: {
-        ...p,
-        slug,
+        ...pair.player,
+        slug: playerSlug,
         status: "ACTIVE",
-        isFeatured: (p as { isFeatured?: boolean }).isFeatured || false,
-        dateOfBirth: new Date(1996 + Math.floor(Math.random() * 7), Math.floor(Math.random() * 12), 1 + Math.floor(Math.random() * 28)),
-        dateJoined: new Date(2022 + Math.floor(Math.random() * 3), Math.floor(Math.random() * 12), 1),
+        dateOfBirth: new Date(1996 + Math.floor(Math.random() * 6), Math.floor(Math.random() * 12), 1 + Math.floor(Math.random() * 28)),
+        dateJoined: new Date(2023, 0, 1),
       },
     });
-    players.push(player);
-  }
+    createdPlayers.push(player);
 
-  // Assign players to teams (First XI & Squad)
-  for (let i = 0; i < 18; i++) {
+    // Assign player to their team as Captain
     await prisma.teamPlayer.create({
       data: {
-        teamId: teamA.id,
-        playerId: players[i].id,
-        isCaptain: i === 9, // Nakib as captain (#10)
-        isViceCaptain: i === 5, // Masud as vice captain (#6)
-      },
-    });
-  }
-
-  for (let i = 18; i < players.length; i++) {
-    await prisma.teamPlayer.create({
-      data: {
-        teamId: teamB.id,
-        playerId: players[i].id,
+        teamId: team.id,
+        playerId: player.id,
+        isCaptain: true,
+        isViceCaptain: false,
       },
     });
   }
@@ -306,9 +447,9 @@ async function main() {
 
   const league = await prisma.competition.create({
     data: {
-      name: "BBFF Premier League",
-      slug: "bbff-premier-league",
-      description: "The top-flight football competition featuring the best local teams.",
+      name: "BBFF Championship League",
+      slug: "bbff-championship-league",
+      description: "The official championship league featuring all 10 BBFF teams.",
       seasonId: season.id,
       startDate: new Date("2025-09-15"),
       endDate: new Date("2026-05-30"),
@@ -319,102 +460,114 @@ async function main() {
     },
   });
 
-  // Add teams to competition
-  for (const team of [teamA, teamB, teamC, teamD]) {
+  // Add all 10 teams to the competition
+  for (const team of createdTeams) {
     await prisma.competitionTeam.create({
-      data: { competitionId: league.id, teamId: team.id },
+      data: {
+        competitionId: league.id,
+        teamId: team.id,
+      },
     });
   }
 
   // ============================================================================
-  // MATCHES
+  // MATCHES & EVENTS
   // ============================================================================
   console.log("  Creating matches...");
 
-  // Completed matches with results
+  // Match 1: BBFF BULLS vs BBFF Hilful Fuzul
   const match1 = await prisma.match.create({
     data: {
       competitionId: league.id,
       seasonId: season.id,
-      homeTeamId: teamA.id,
-      awayTeamId: teamC.id,
+      homeTeamId: createdTeams[0].id, // BBFF BULLS
+      awayTeamId: createdTeams[1].id, // BBFF Hilful Fuzul
       matchDate: new Date("2025-09-20T15:00:00"),
-      venue: "BBFF Stadium",
-      homeScore: 3,
+      venue: "BBFF Central Arena",
+      homeScore: 2,
       awayScore: 1,
       status: "COMPLETED",
       isPublished: true,
       matchDay: 1,
       referee: "Referee Alam",
-      playerOfMatchId: players[8].id, // Mahim
-      matchReport: "A dominant display from FC BBFF First XI. Mahim scored a brace and Nakib added a stunning free kick.",
+      playerOfMatchId: createdPlayers[0].id, // Sydney
+      matchReport: "BBFF BULLS secured a thrilling 2-1 victory against BBFF Hilful Fuzul in an electric opening fixture.",
     },
   });
 
-  // Match events for match 1
   await prisma.matchEvent.createMany({
     data: [
-      { matchId: match1.id, playerId: players[8].id, eventType: "GOAL", minute: 15, description: "Header from corner" },
-      { matchId: match1.id, playerId: players[9].id, eventType: "ASSIST", minute: 15, relatedPlayerId: players[8].id },
-      { matchId: match1.id, playerId: players[9].id, eventType: "GOAL", minute: 42, description: "Stunning free kick" },
-      { matchId: match1.id, playerId: players[8].id, eventType: "GOAL", minute: 67, description: "Clinical finish from close range" },
-      { matchId: match1.id, playerId: players[6].id, eventType: "ASSIST", minute: 67, relatedPlayerId: players[8].id },
-      { matchId: match1.id, playerId: players[3].id, eventType: "YELLOW_CARD", minute: 55 },
+      { matchId: match1.id, playerId: createdPlayers[0].id, eventType: "GOAL", minute: 18, description: "Powerful header from set piece" },
+      { matchId: match1.id, playerId: createdPlayers[1].id, eventType: "GOAL", minute: 44, description: "Calculated curling finish" },
+      { matchId: match1.id, playerId: createdPlayers[0].id, eventType: "GOAL", minute: 76, description: "Match-winning strike from the edge of the box" },
     ],
   });
 
+  // Match 2: BBFF Warlords vs BBFF AL JULFIKAR
   const match2 = await prisma.match.create({
     data: {
       competitionId: league.id,
       seasonId: season.id,
-      homeTeamId: teamD.id,
-      awayTeamId: teamA.id,
-      matchDate: new Date("2025-10-05T16:00:00"),
-      venue: "City Stars Arena",
-      homeScore: 1,
+      homeTeamId: createdTeams[2].id, // BBFF Warlords
+      awayTeamId: createdTeams[3].id, // BBFF AL JULFIKAR
+      matchDate: new Date("2025-09-27T16:00:00"),
+      venue: "Warlords Fortress",
+      homeScore: 3,
       awayScore: 2,
       status: "COMPLETED",
       isPublished: true,
-      matchDay: 2,
-      referee: "Referee Bhuiyan",
-      playerOfMatchId: players[7].id, // Riyad
+      matchDay: 1,
+      referee: "Referee Hasan",
+      playerOfMatchId: createdPlayers[2].id, // Shaishab
+      matchReport: "Shaishab led BBFF Warlords to victory with an outstanding performance against Niloy's AL JULFIKAR.",
     },
   });
 
   await prisma.matchEvent.createMany({
     data: [
-      { matchId: match2.id, playerId: players[6].id, eventType: "GOAL", minute: 23, description: "Counter-attack goal" },
-      { matchId: match2.id, playerId: players[10].id, eventType: "GOAL", minute: 78, description: "Tap-in from cross" },
-      { matchId: match2.id, playerId: players[7].id, eventType: "ASSIST", minute: 78, relatedPlayerId: players[10].id },
+      { matchId: match2.id, playerId: createdPlayers[2].id, eventType: "GOAL", minute: 12, description: "Speedy counter-attack goal" },
+      { matchId: match2.id, playerId: createdPlayers[3].id, eventType: "GOAL", minute: 35, description: "Solid defensive header converted into goal" },
+      { matchId: match2.id, playerId: createdPlayers[2].id, eventType: "GOAL", minute: 61, description: "Sensational solo run and finish" },
+      { matchId: match2.id, playerId: createdPlayers[2].id, eventType: "ASSIST", minute: 82, relatedPlayerId: createdPlayers[3].id },
     ],
   });
 
+  // Match 3: BBFF THUNDER vs BBFF Viperz
   const match3 = await prisma.match.create({
     data: {
       competitionId: league.id,
       seasonId: season.id,
-      homeTeamId: teamC.id,
-      awayTeamId: teamD.id,
-      matchDate: new Date("2025-10-12T15:00:00"),
-      venue: "Rival Ground",
+      homeTeamId: createdTeams[6].id, // BBFF THUNDER
+      awayTeamId: createdTeams[7].id, // BBFF Viperz
+      matchDate: new Date("2025-10-05T15:30:00"),
+      venue: "Thunder Dome",
       homeScore: 2,
       awayScore: 2,
       status: "COMPLETED",
       isPublished: true,
       matchDay: 2,
-      referee: "Referee Hossain",
+      referee: "Referee Karim",
+      playerOfMatchId: createdPlayers[6].id, // Shawon
+      matchReport: "A pulsating 2-2 draw between BBFF THUNDER and BBFF Viperz.",
     },
   });
 
-  // Upcoming matches
+  await prisma.matchEvent.createMany({
+    data: [
+      { matchId: match3.id, playerId: createdPlayers[6].id, eventType: "GOAL", minute: 23, description: "Thunderbolt strike from 25 yards" },
+      { matchId: match3.id, playerId: createdPlayers[7].id, eventType: "GOAL", minute: 58, description: "Stealthy finish into the bottom corner" },
+    ],
+  });
+
+  // Upcoming Matches
   await prisma.match.create({
     data: {
       competitionId: league.id,
       seasonId: season.id,
-      homeTeamId: teamA.id,
-      awayTeamId: teamD.id,
+      homeTeamId: createdTeams[4].id, // BBFF REVOLUTION
+      awayTeamId: createdTeams[5].id, // BBFF Calm Storm
       matchDate: new Date("2026-09-15T16:00:00"),
-      venue: "BBFF Stadium",
+      venue: "Revolution Stadium",
       status: "SCHEDULED",
       matchDay: 3,
     },
@@ -424,25 +577,12 @@ async function main() {
     data: {
       competitionId: league.id,
       seasonId: season.id,
-      homeTeamId: teamB.id,
-      awayTeamId: teamC.id,
-      matchDate: new Date("2026-09-22T15:00:00"),
-      venue: "Training Ground",
+      homeTeamId: createdTeams[8].id, // BBFF Brutal Bros
+      awayTeamId: createdTeams[9].id, // BBFF Lone Wolves
+      matchDate: new Date("2026-09-22T17:00:00"),
+      venue: "Brutal Grounds",
       status: "SCHEDULED",
       matchDay: 3,
-    },
-  });
-
-  await prisma.match.create({
-    data: {
-      competitionId: league.id,
-      seasonId: season.id,
-      homeTeamId: teamC.id,
-      awayTeamId: teamA.id,
-      matchDate: new Date("2026-10-01T16:00:00"),
-      venue: "Rival Ground",
-      status: "SCHEDULED",
-      matchDay: 4,
     },
   });
 
@@ -453,54 +593,28 @@ async function main() {
   await prisma.event.createMany({
     data: [
       {
-        title: "Annual General Meeting 2026",
-        slug: "annual-general-meeting-2026",
-        description: "The club's annual general meeting to discuss the season's progress, finances, and future plans. All members are invited to attend.",
-        eventType: "AGM",
+        title: "BBFF Championship 2026 Opening Ceremony",
+        slug: "bbff-championship-2026-opening-ceremony",
+        description: "Official kickoff and banner presentation for all 10 BBFF teams.",
+        eventType: "CELEBRATION",
         eventDate: new Date("2026-09-10T18:00:00"),
         startTime: "6:00 PM",
         endTime: "9:00 PM",
-        venue: "BBFF Community Hall",
-        organizer: "Club Management",
+        venue: "BBFF Central Arena",
+        organizer: "BBFF Board",
         status: "UPCOMING",
         isPublished: true,
       },
       {
-        title: "Pre-Season Training Camp",
-        slug: "pre-season-training-camp",
-        description: "Intensive pre-season training camp for all registered players. Focus on fitness, tactical drills, and team building.",
-        eventType: "TRAINING",
-        eventDate: new Date("2026-08-25T06:00:00"),
-        startTime: "6:00 AM",
-        endTime: "12:00 PM",
-        venue: "BBFF Training Ground",
-        organizer: "Coaching Staff",
-        status: "UPCOMING",
-        isPublished: true,
-      },
-      {
-        title: "FC BBFF Award Night 2025",
-        slug: "bbff-fc-award-night-2025",
-        description: "Celebrating our players and supporters. Awards include Player of the Season, Golden Boot, Golden Glove, and Young Player of the Year.",
-        eventType: "AWARD_CEREMONY",
-        eventDate: new Date("2025-07-15T19:00:00"),
-        startTime: "7:00 PM",
-        endTime: "11:00 PM",
-        venue: "Grand Ballroom, Hotel Royal",
-        organizer: "Club Management",
-        status: "COMPLETED",
-        isPublished: true,
-      },
-      {
-        title: "Community Football Festival",
-        slug: "community-football-festival",
-        description: "A fun-filled community football festival with mini-tournaments, skills challenges, and food stalls. Open to all ages.",
-        eventType: "COMMUNITY",
-        eventDate: new Date("2026-10-05T10:00:00"),
+        title: "Captains & Leaders Strategy Conclave",
+        slug: "captains-leaders-strategy-conclave",
+        description: "Exclusive strategy and sportsmanship summit for the 10 team captains.",
+        eventType: "CLUB_MEETING",
+        eventDate: new Date("2026-09-18T10:00:00"),
         startTime: "10:00 AM",
-        endTime: "5:00 PM",
-        venue: "BBFF Public Ground",
-        organizer: "Community Relations",
+        endTime: "1:00 PM",
+        venue: "BBFF Conference Hall",
+        organizer: "BBFF Committee",
         status: "UPCOMING",
         isPublished: true,
       },
@@ -508,120 +622,43 @@ async function main() {
   });
 
   // ============================================================================
-  // NEWS CATEGORIES & NEWS
+  // NEWS
   // ============================================================================
   console.log("  Creating news...");
-  const matchDay = await prisma.newsCategory.create({
-    data: { name: "Match Day", slug: "match-day" },
-  });
-  const transfers = await prisma.newsCategory.create({
-    data: { name: "Transfers", slug: "transfers" },
-  });
-  const clubUpdates = await prisma.newsCategory.create({
-    data: { name: "Club Updates", slug: "club-updates" },
+  const categoryGeneral = await prisma.newsCategory.create({
+    data: { name: "Tournament News", slug: "tournament-news" },
   });
 
   await prisma.news.createMany({
     data: [
       {
-        title: "FC BBFF Secure Dominant Victory Over Rival United",
-        slug: "bbff-fc-secure-dominant-victory-over-rival-united",
-        excerpt: "A stunning performance from the First XI saw FC BBFF cruise to a 3-1 victory over Rival United in the season opener.",
+        title: "10 Titans Face Off: BBFF Championship Season Begins",
+        slug: "10-titans-face-off-bbff-championship-season-begins",
+        excerpt: "The ultimate showdown begins as BULLS, Hilful Fuzul, Warlords, AL JULFIKAR, REVOLUTION, Calm Storm, THUNDER, Viperz, Brutal Bros, and Lone Wolves lock horns.",
         content: `
-# FC BBFF 3 - 1 Rival United
+# BBFF Championship Season Officially Kickstarted!
 
-What a start to the season! FC BBFF First XI delivered a commanding performance at BBFF Stadium to kick off the 2025/2026 campaign in style.
+The stage is set for the most competitive season yet. Ten incredible teams led by their inspirational captains are ready to battle for supremacy:
 
-## First Half
+1. **Sydney** - BBFF BULLS
+2. **Omi Azad** - BBFF Hilful Fuzul
+3. **Shaishab** - BBFF Warlords
+4. **Niloy** - BBFF AL JULFIKAR
+5. **Utsho** - BBFF REVOLUTION
+6. **Sujon** - BBFF Calm Storm
+7. **Shawon** - BBFF THUNDER
+8. **Kabbo** - BBFF Viperz
+9. **Nakib** - BBFF Brutal Bros
+10. **Himel** - BBFF Lone Wolves
 
-The match started with high intensity from both sides, but it was BBFF who drew first blood in the 15th minute. **Mahim** rose highest to head in a pin-point corner delivery from **Nakib**.
-
-The lead was doubled before half-time when **Nakib** himself stepped up to curl a magnificent free kick into the top corner from 25 yards, leaving the goalkeeper rooted to the spot.
-
-## Second Half
-
-The second half saw more of the same dominance. **Mahim** completed his brace in the 67th minute, finishing clinically from a delightful through ball by **Himel**.
-
-Rival United pulled one back late on but it was nothing more than a consolation.
-
-## Player of the Match
-
-**Mahim** - Two goals and a tireless performance made him the obvious choice.
-
-A perfect start to the season. Up the BBFF! 🏆
+Stay tuned for live scores, match reports, and fixture updates!
         `.trim(),
-        featuredImageUrl: null,
-        categoryId: matchDay.id,
+        categoryId: categoryGeneral.id,
         authorId: superAdmin.id,
-        tags: ["match-report", "victory", "premier-league"],
+        tags: ["bbff", "tournament", "teams"],
         status: "PUBLISHED",
-        publishedAt: new Date("2025-09-20T18:00:00"),
+        publishedAt: new Date("2025-09-15T12:00:00"),
         isFeatured: true,
-      },
-      {
-        title: "Club Announces New Training Facility Development",
-        slug: "club-announces-new-training-facility-development",
-        excerpt: "FC BBFF is investing in a state-of-the-art training facility to enhance player development and performance.",
-        content: `
-# New Training Facility Announcement
-
-BBFF Football Club is thrilled to announce plans for a brand-new training facility that will significantly enhance our player development capabilities.
-
-## Key Features
-
-- **Full-size synthetic pitch** with floodlights for evening training
-- **Modern gymnasium** with state-of-the-art equipment
-- **Recovery center** including ice baths and physiotherapy rooms
-- **Video analysis room** for tactical preparation
-- **Changing rooms** with premium amenities
-
-## Timeline
-
-Construction is expected to begin in early 2026, with the facility ready for use by the start of the 2026/2027 season.
-
-## Club Statement
-
-Club Chairman said: "This investment represents our commitment to excellence and long-term growth. We want to provide our players and coaching staff with the best possible environment to succeed."
-
-Stay tuned for further updates on this exciting project!
-        `.trim(),
-        featuredImageUrl: null,
-        categoryId: clubUpdates.id,
-        authorId: superAdmin.id,
-        tags: ["facility", "development", "investment"],
-        status: "PUBLISHED",
-        publishedAt: new Date("2025-10-01T10:00:00"),
-        isFeatured: true,
-      },
-      {
-        title: "Exciting Young Talent Joins FC BBFF Reserves",
-        slug: "exciting-young-talent-joins-bbff-fc-reserves",
-        excerpt: "FC BBFF welcomes a promising young midfielder to strengthen the reserve team squad.",
-        content: `
-# New Signing Announcement
-
-BBFF Football Club is delighted to announce the signing of a promising young midfielder who joins our Reserve team.
-
-## About the Player
-
-The new signing comes highly recommended from the local youth football circuit, where he has impressed scouts with his technical ability, vision, and maturity beyond his years.
-
-## Manager's Comments
-
-Reserve Team Manager Coach Karim commented: "We're very happy to bring in this young player. He has all the qualities we look for - technical skill, a great attitude, and the hunger to improve every day."
-
-## What's Next
-
-The player will link up with the Reserve squad immediately and will be available for selection in the upcoming fixtures.
-
-Welcome to FC BBFF! 💚
-        `.trim(),
-        featuredImageUrl: null,
-        categoryId: transfers.id,
-        authorId: editor.id,
-        tags: ["transfer", "signing", "reserves"],
-        status: "PUBLISHED",
-        publishedAt: new Date("2025-10-15T12:00:00"),
       },
     ],
   });
@@ -656,13 +693,17 @@ Welcome to FC BBFF! 💚
 
   console.log("✅ Seed completed successfully!");
   console.log("");
+  console.log("📋 Seeded Teams and Captains:");
+  seedPairs.forEach((item, index) => {
+    const pName = `${item.player.firstName}${item.player.lastName ? ` ${item.player.lastName}` : ""}`;
+    console.log(`  ${index + 1}. ${pName} -> ${item.team.name}`);
+  });
+  console.log("");
   console.log("📋 Development Credentials:");
   console.log("  Super Admin: superadmin@bbfffc.com / password123");
   console.log("  Admin:       admin@bbfffc.com / password123");
   console.log("  Editor:      editor@bbfffc.com / password123");
   console.log("  Viewer:      viewer@bbfffc.com / password123");
-  console.log("");
-  console.log("⚠️  These are DEVELOPMENT ONLY credentials. Change them in production!");
 }
 
 main()
