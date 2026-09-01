@@ -209,52 +209,80 @@ async function main() {
   // ============================================================================
   console.log("  Creating players...");
   const playersData = [
-    { firstName: "Rafiq", lastName: "Ahmed", jerseyNumber: 1, position: "GOALKEEPER" as PlayerPosition, currentCity: "Dhaka", bio: "Experienced goalkeeper with excellent reflexes and commanding presence in the box.", nationality: "Bangladeshi", height: "6'1\"", weight: "82kg", preferredFoot: "Right" },
-    { firstName: "Tanvir", lastName: "Hossain", jerseyNumber: 2, position: "DEFENDER" as PlayerPosition, secondaryPosition: "MIDFIELDER" as PlayerPosition, currentCity: "Chittagong", bio: "Solid right-back known for his defensive discipline and overlapping runs.", nationality: "Bangladeshi", height: "5'10\"", weight: "75kg", preferredFoot: "Right" },
-    { firstName: "Jubayer", lastName: "Rahman", jerseyNumber: 4, position: "DEFENDER" as PlayerPosition, currentCity: "Sylhet", bio: "Center-back with great aerial ability and leadership qualities.", nationality: "Bangladeshi", height: "6'0\"", weight: "80kg", preferredFoot: "Right" },
-    { firstName: "Saiful", lastName: "Islam", jerseyNumber: 5, position: "DEFENDER" as PlayerPosition, currentCity: "Dhaka", bio: "Reliable center-back who reads the game exceptionally well.", nationality: "Bangladeshi", height: "5'11\"", weight: "78kg", preferredFoot: "Left" },
-    { firstName: "Masud", lastName: "Rana", jerseyNumber: 3, position: "DEFENDER" as PlayerPosition, secondaryPosition: "MIDFIELDER" as PlayerPosition, currentCity: "Rajshahi", bio: "Attacking left-back with exceptional crossing ability.", nationality: "Bangladeshi", height: "5'9\"", weight: "72kg", preferredFoot: "Left" },
-    { firstName: "Ariful", lastName: "Haque", jerseyNumber: 6, position: "MIDFIELDER" as PlayerPosition, secondaryPosition: "DEFENDER" as PlayerPosition, currentCity: "Khulna", bio: "Box-to-box midfielder with tireless work rate and great passing range.", nationality: "Bangladeshi", height: "5'10\"", weight: "74kg", preferredFoot: "Right", isFeatured: true },
-    { firstName: "Nazmul", lastName: "Hasan", jerseyNumber: 8, position: "MIDFIELDER" as PlayerPosition, currentCity: "Dhaka", bio: "Creative playmaker with excellent vision and technical ability.", nationality: "Bangladeshi", height: "5'8\"", weight: "70kg", preferredFoot: "Left", isFeatured: true },
-    { firstName: "Imran", lastName: "Khan", jerseyNumber: 10, position: "MIDFIELDER" as PlayerPosition, secondaryPosition: "FORWARD" as PlayerPosition, currentCity: "Dhaka", bio: "Attacking midfielder who creates chances and scores spectacular goals.", nationality: "Bangladeshi", height: "5'9\"", weight: "71kg", preferredFoot: "Right", isFeatured: true },
-    { firstName: "Shakil", lastName: "Ahmed", jerseyNumber: 7, position: "FORWARD" as PlayerPosition, secondaryPosition: "MIDFIELDER" as PlayerPosition, currentCity: "Sylhet", bio: "Pacy winger with incredible dribbling skills and an eye for goal.", nationality: "Bangladeshi", height: "5'8\"", weight: "68kg", preferredFoot: "Right", isFeatured: true },
-    { firstName: "Fahim", lastName: "Chowdhury", jerseyNumber: 9, position: "FORWARD" as PlayerPosition, currentCity: "Dhaka", bio: "Clinical striker who is lethal inside the box. The club's top scorer.", nationality: "Bangladeshi", height: "5'11\"", weight: "76kg", preferredFoot: "Right", isFeatured: true },
-    { firstName: "Rezaul", lastName: "Karim", jerseyNumber: 11, position: "FORWARD" as PlayerPosition, secondaryPosition: "MIDFIELDER" as PlayerPosition, currentCity: "Chittagong", bio: "Versatile forward comfortable playing across the front line.", nationality: "Bangladeshi", height: "5'10\"", weight: "73kg", preferredFoot: "Left", isFeatured: true },
-    { firstName: "Kamrul", lastName: "Hasan", jerseyNumber: 12, position: "GOALKEEPER" as PlayerPosition, currentCity: "Barisal", bio: "Young talented backup goalkeeper with a bright future.", nationality: "Bangladeshi", height: "6'0\"", weight: "79kg", preferredFoot: "Right" },
-    { firstName: "Zahid", lastName: "Hossain", jerseyNumber: 14, position: "DEFENDER" as PlayerPosition, currentCity: "Dhaka", bio: "Versatile defender who can play across the back line.", nationality: "Bangladeshi", height: "5'11\"", weight: "77kg", preferredFoot: "Right" },
-    { firstName: "Biplab", lastName: "Roy", jerseyNumber: 16, position: "MIDFIELDER" as PlayerPosition, secondaryPosition: "DEFENDER" as PlayerPosition, currentCity: "Rangpur", bio: "Defensive midfielder with excellent tackling and interception ability.", nationality: "Bangladeshi", height: "5'10\"", weight: "76kg", preferredFoot: "Right" },
-    { firstName: "Sohan", lastName: "Ali", jerseyNumber: 18, position: "FORWARD" as PlayerPosition, currentCity: "Mymensingh", bio: "Young exciting forward with raw pace and finishing ability.", nationality: "Bangladeshi", height: "5'9\"", weight: "69kg", preferredFoot: "Right" },
+    { firstName: "Emran", lastName: "", jerseyNumber: 1, position: "GOALKEEPER" as PlayerPosition, currentCity: "Dhaka", bio: "Experienced goalkeeper with excellent reflexes and commanding presence.", nationality: "Bangladeshi", height: "6'1\"", weight: "82kg", preferredFoot: "Right" },
+    { firstName: "Rokibul", lastName: "", jerseyNumber: 2, position: "DEFENDER" as PlayerPosition, secondaryPosition: "MIDFIELDER" as PlayerPosition, currentCity: "Chittagong", bio: "Solid defender known for tactical discipline and overlapping runs.", nationality: "Bangladeshi", height: "5'10\"", weight: "75kg", preferredFoot: "Right" },
+    { firstName: "Shushmoy", lastName: "", jerseyNumber: 3, position: "DEFENDER" as PlayerPosition, currentCity: "Sylhet", bio: "Agile left-sided defender with reliable tackling and quick recovery.", nationality: "Bangladeshi", height: "5'9\"", weight: "72kg", preferredFoot: "Left" },
+    { firstName: "Tiash", lastName: "", jerseyNumber: 4, position: "DEFENDER" as PlayerPosition, secondaryPosition: "MIDFIELDER" as PlayerPosition, currentCity: "Dhaka", bio: "Composed center-back with great aerial ability and leadership qualities.", nationality: "Bangladeshi", height: "6'0\"", weight: "80kg", preferredFoot: "Right" },
+    { firstName: "Kaizen", lastName: "", jerseyNumber: 5, position: "DEFENDER" as PlayerPosition, currentCity: "Dhaka", bio: "Tenacious defender who reads opponent moves exceptionally well.", nationality: "Bangladeshi", height: "5'11\"", weight: "78kg", preferredFoot: "Right" },
+    { firstName: "Masud", lastName: "", jerseyNumber: 6, position: "MIDFIELDER" as PlayerPosition, secondaryPosition: "DEFENDER" as PlayerPosition, currentCity: "Rajshahi", bio: "Box-to-box midfielder with tireless work rate and physical presence.", nationality: "Bangladeshi", height: "5'10\"", weight: "74kg", preferredFoot: "Right", isFeatured: true },
+    { firstName: "Himel", lastName: "", jerseyNumber: 7, position: "FORWARD" as PlayerPosition, secondaryPosition: "MIDFIELDER" as PlayerPosition, currentCity: "Sylhet", bio: "Dynamic winger with lightning pace and clinical finishing.", nationality: "Bangladeshi", height: "5'8\"", weight: "68kg", preferredFoot: "Right", isFeatured: true },
+    { firstName: "Riyad", lastName: "", jerseyNumber: 8, position: "MIDFIELDER" as PlayerPosition, currentCity: "Dhaka", bio: "Creative central playmaker with visionary passing and flair.", nationality: "Bangladeshi", height: "5'8\"", weight: "70kg", preferredFoot: "Left", isFeatured: true },
+    { firstName: "Mahim", lastName: "", jerseyNumber: 9, position: "FORWARD" as PlayerPosition, currentCity: "Dhaka", bio: "Lethal goal scorer with sharp positioning inside the penalty box.", nationality: "Bangladeshi", height: "5'11\"", weight: "76kg", preferredFoot: "Right", isFeatured: true },
+    { firstName: "Nakib", lastName: "", jerseyNumber: 10, position: "MIDFIELDER" as PlayerPosition, secondaryPosition: "FORWARD" as PlayerPosition, currentCity: "Dhaka", bio: "Attacking talisman who creates game-winning chances and set pieces.", nationality: "Bangladeshi", height: "5'9\"", weight: "71kg", preferredFoot: "Right", isFeatured: true },
+    { firstName: "Shaishab", lastName: "", jerseyNumber: 11, position: "FORWARD" as PlayerPosition, secondaryPosition: "MIDFIELDER" as PlayerPosition, currentCity: "Chittagong", bio: "Skillful attacker capable of playing across the entire front line.", nationality: "Bangladeshi", height: "5'10\"", weight: "73kg", preferredFoot: "Left", isFeatured: true },
+    { firstName: "Sidni", lastName: "", jerseyNumber: 12, position: "GOALKEEPER" as PlayerPosition, currentCity: "Khulna", bio: "Agile shot-stopper with great penalty saving record.", nationality: "Bangladeshi", height: "6'0\"", weight: "79kg", preferredFoot: "Right" },
+    { firstName: "Arifin", lastName: "", jerseyNumber: 13, position: "DEFENDER" as PlayerPosition, currentCity: "Dhaka", bio: "Consistent and disciplined full-back providing defensive stability.", nationality: "Bangladeshi", height: "5'11\"", weight: "77kg", preferredFoot: "Right" },
+    { firstName: "Tanzil", lastName: "", jerseyNumber: 14, position: "DEFENDER" as PlayerPosition, secondaryPosition: "MIDFIELDER" as PlayerPosition, currentCity: "Chittagong", bio: "Versatile backline defender who excels in aerial duels.", nationality: "Bangladeshi", height: "6'0\"", weight: "78kg", preferredFoot: "Right" },
+    { firstName: "Tushar", lastName: "", jerseyNumber: 15, position: "DEFENDER" as PlayerPosition, currentCity: "Barisal", bio: "Hard-tackling defender with high work ethic and team spirit.", nationality: "Bangladeshi", height: "5'10\"", weight: "75kg", preferredFoot: "Left" },
+    { firstName: "Anash", lastName: "", jerseyNumber: 16, position: "MIDFIELDER" as PlayerPosition, secondaryPosition: "DEFENDER" as PlayerPosition, currentCity: "Dhaka", bio: "Hardworking midfield anchor who breaks up opposition play effectively.", nationality: "Bangladeshi", height: "5'10\"", weight: "76kg", preferredFoot: "Right" },
+    { firstName: "Sagor", lastName: "", jerseyNumber: 17, position: "MIDFIELDER" as PlayerPosition, secondaryPosition: "FORWARD" as PlayerPosition, currentCity: "Rangpur", bio: "Energetic midfielder with great long-range shooting ability.", nationality: "Bangladeshi", height: "5'9\"", weight: "71kg", preferredFoot: "Right" },
+    { firstName: "Nazim", lastName: "", jerseyNumber: 18, position: "FORWARD" as PlayerPosition, currentCity: "Dhaka", bio: "Pacy forward with sharp offensive instincts and direct running.", nationality: "Bangladeshi", height: "5'9\"", weight: "70kg", preferredFoot: "Right" },
+    { firstName: "Porag", lastName: "", jerseyNumber: 19, position: "FORWARD" as PlayerPosition, secondaryPosition: "MIDFIELDER" as PlayerPosition, currentCity: "Sylhet", bio: "Clever attacker who excels in tight spaces and rapid link-up play.", nationality: "Bangladeshi", height: "5'8\"", weight: "67kg", preferredFoot: "Left" },
+    { firstName: "Kawsar", lastName: "", jerseyNumber: 20, position: "MIDFIELDER" as PlayerPosition, currentCity: "Dhaka", bio: "Controlled midfielder with excellent passing accuracy and tempo control.", nationality: "Bangladeshi", height: "5'10\"", weight: "74kg", preferredFoot: "Right" },
+    { firstName: "Sayed", lastName: "", jerseyNumber: 21, position: "DEFENDER" as PlayerPosition, currentCity: "Comilla", bio: "Dependable center-back with strong physical presence.", nationality: "Bangladeshi", height: "6'1\"", weight: "81kg", preferredFoot: "Right" },
+    { firstName: "Utsho", lastName: "", jerseyNumber: 22, position: "GOALKEEPER" as PlayerPosition, currentCity: "Dhaka", bio: "Promising young goalkeeper with sharp reflexes and high agility.", nationality: "Bangladeshi", height: "6'0\"", weight: "78kg", preferredFoot: "Right" },
+    { firstName: "Fahimul", lastName: "", jerseyNumber: 23, position: "MIDFIELDER" as PlayerPosition, secondaryPosition: "FORWARD" as PlayerPosition, currentCity: "Mymensingh", bio: "Creative wide midfielder with dangerous crossing deliveries.", nationality: "Bangladeshi", height: "5'9\"", weight: "70kg", preferredFoot: "Right" },
+    { firstName: "Jahid H", lastName: "", jerseyNumber: 24, position: "DEFENDER" as PlayerPosition, currentCity: "Dhaka", bio: "Tough-tackling fullback with endurance and defensive grit.", nationality: "Bangladeshi", height: "5'11\"", weight: "76kg", preferredFoot: "Right" },
+    { firstName: "Imam", lastName: "", jerseyNumber: 25, position: "MIDFIELDER" as PlayerPosition, currentCity: "Rajshahi", bio: "Technical midfielder who distributes possession smoothly.", nationality: "Bangladeshi", height: "5'8\"", weight: "69kg", preferredFoot: "Left" },
+    { firstName: "Sohan", lastName: "", jerseyNumber: 26, position: "FORWARD" as PlayerPosition, currentCity: "Dhaka", bio: "Explosive attacker who creates scoring chances out of nowhere.", nationality: "Bangladeshi", height: "5'10\"", weight: "73kg", preferredFoot: "Right" },
+    { firstName: "Kawsar", lastName: "", jerseyNumber: 27, position: "DEFENDER" as PlayerPosition, secondaryPosition: "MIDFIELDER" as PlayerPosition, currentCity: "Khulna", bio: "Disciplined defender capable of shielding the backline.", nationality: "Bangladeshi", height: "5'10\"", weight: "75kg", preferredFoot: "Right" },
+    { firstName: "Antorr", lastName: "", jerseyNumber: 28, position: "MIDFIELDER" as PlayerPosition, currentCity: "Sylhet", bio: "Agile midfielder who keeps the midfield energetic and focused.", nationality: "Bangladeshi", height: "5'9\"", weight: "71kg", preferredFoot: "Right" },
+    { firstName: "Shishir", lastName: "", jerseyNumber: 29, position: "FORWARD" as PlayerPosition, currentCity: "Dhaka", bio: "Fast and opportunistic forward always on the hunt for rebounds.", nationality: "Bangladeshi", height: "5'8\"", weight: "68kg", preferredFoot: "Left" },
+    { firstName: "Sambil", lastName: "", jerseyNumber: 30, position: "DEFENDER" as PlayerPosition, currentCity: "Barisal", bio: "Sturdy defensive pillar with consistent performance.", nationality: "Bangladeshi", height: "5'11\"", weight: "77kg", preferredFoot: "Right" },
+    { firstName: "Hasib", lastName: "", jerseyNumber: 31, position: "GOALKEEPER" as PlayerPosition, currentCity: "Dhaka", bio: "Confident goalkeeper with great aerial reach and distribution.", nationality: "Bangladeshi", height: "6'2\"", weight: "83kg", preferredFoot: "Right" },
+    { firstName: "Youji", lastName: "", jerseyNumber: 32, position: "MIDFIELDER" as PlayerPosition, secondaryPosition: "FORWARD" as PlayerPosition, currentCity: "Chittagong", bio: "Quick-thinking playmaker who adds speed and rhythm to the attack.", nationality: "Bangladeshi", height: "5'8\"", weight: "69kg", preferredFoot: "Right" },
+    { firstName: "Sabbir", lastName: "", jerseyNumber: 33, position: "FORWARD" as PlayerPosition, currentCity: "Dhaka", bio: "Instinctive goalscorer with strong aerial threat.", nationality: "Bangladeshi", height: "5'11\"", weight: "75kg", preferredFoot: "Right" },
+    { firstName: "Niaz", lastName: "", jerseyNumber: 34, position: "DEFENDER" as PlayerPosition, currentCity: "Dhaka", bio: "Solid defender with exceptional work rate and tactical vision.", nationality: "Bangladeshi", height: "5'10\"", weight: "74kg", preferredFoot: "Right" },
   ];
 
   const players = [];
+  const usedSlugs = new Set<string>();
   for (const p of playersData) {
-    const slug = `${p.firstName}-${p.lastName}`.toLowerCase().replace(/\s+/g, "-");
+    const baseSlug = `${p.firstName}${p.lastName ? `-${p.lastName}` : ""}`.toLowerCase().replace(/\s+/g, "-");
+    let slug = baseSlug;
+    let counter = 1;
+    while (usedSlugs.has(slug)) {
+      counter++;
+      slug = `${baseSlug}-${counter}`;
+    }
+    usedSlugs.add(slug);
+
     const player = await prisma.player.create({
       data: {
         ...p,
         slug,
         status: "ACTIVE",
         isFeatured: (p as { isFeatured?: boolean }).isFeatured || false,
-        dateOfBirth: new Date(1995 + Math.floor(Math.random() * 8), Math.floor(Math.random() * 12), 1 + Math.floor(Math.random() * 28)),
+        dateOfBirth: new Date(1996 + Math.floor(Math.random() * 7), Math.floor(Math.random() * 12), 1 + Math.floor(Math.random() * 28)),
         dateJoined: new Date(2022 + Math.floor(Math.random() * 3), Math.floor(Math.random() * 12), 1),
       },
     });
     players.push(player);
   }
 
-  // Assign players to teams
-  for (let i = 0; i < 11; i++) {
+  // Assign players to teams (First XI & Squad)
+  for (let i = 0; i < 18; i++) {
     await prisma.teamPlayer.create({
       data: {
         teamId: teamA.id,
         playerId: players[i].id,
-        isCaptain: i === 7, // Imran Khan as captain
-        isViceCaptain: i === 5, // Ariful as vice captain
+        isCaptain: i === 9, // Nakib as captain (#10)
+        isViceCaptain: i === 5, // Masud as vice captain (#6)
       },
     });
   }
 
-  for (let i = 11; i < 15; i++) {
+  for (let i = 18; i < players.length; i++) {
     await prisma.teamPlayer.create({
       data: {
         teamId: teamB.id,
@@ -318,19 +346,19 @@ async function main() {
       isPublished: true,
       matchDay: 1,
       referee: "Referee Alam",
-      playerOfMatchId: players[9].id, // Fahim
-      matchReport: "A dominant display from FC BBFF First XI. Fahim Chowdhury scored a brace and Imran Khan added a stunning free kick.",
+      playerOfMatchId: players[8].id, // Mahim
+      matchReport: "A dominant display from FC BBFF First XI. Mahim scored a brace and Nakib added a stunning free kick.",
     },
   });
 
   // Match events for match 1
   await prisma.matchEvent.createMany({
     data: [
-      { matchId: match1.id, playerId: players[9].id, eventType: "GOAL", minute: 15, description: "Header from corner" },
-      { matchId: match1.id, playerId: players[7].id, eventType: "ASSIST", minute: 15, relatedPlayerId: players[9].id },
-      { matchId: match1.id, playerId: players[7].id, eventType: "GOAL", minute: 42, description: "Stunning free kick" },
-      { matchId: match1.id, playerId: players[9].id, eventType: "GOAL", minute: 67, description: "Clinical finish from close range" },
-      { matchId: match1.id, playerId: players[8].id, eventType: "ASSIST", minute: 67, relatedPlayerId: players[9].id },
+      { matchId: match1.id, playerId: players[8].id, eventType: "GOAL", minute: 15, description: "Header from corner" },
+      { matchId: match1.id, playerId: players[9].id, eventType: "ASSIST", minute: 15, relatedPlayerId: players[8].id },
+      { matchId: match1.id, playerId: players[9].id, eventType: "GOAL", minute: 42, description: "Stunning free kick" },
+      { matchId: match1.id, playerId: players[8].id, eventType: "GOAL", minute: 67, description: "Clinical finish from close range" },
+      { matchId: match1.id, playerId: players[6].id, eventType: "ASSIST", minute: 67, relatedPlayerId: players[8].id },
       { matchId: match1.id, playerId: players[3].id, eventType: "YELLOW_CARD", minute: 55 },
     ],
   });
@@ -349,15 +377,15 @@ async function main() {
       isPublished: true,
       matchDay: 2,
       referee: "Referee Bhuiyan",
-      playerOfMatchId: players[6].id, // Nazmul
+      playerOfMatchId: players[7].id, // Riyad
     },
   });
 
   await prisma.matchEvent.createMany({
     data: [
-      { matchId: match2.id, playerId: players[8].id, eventType: "GOAL", minute: 23, description: "Counter-attack goal" },
+      { matchId: match2.id, playerId: players[6].id, eventType: "GOAL", minute: 23, description: "Counter-attack goal" },
       { matchId: match2.id, playerId: players[10].id, eventType: "GOAL", minute: 78, description: "Tap-in from cross" },
-      { matchId: match2.id, playerId: players[6].id, eventType: "ASSIST", minute: 78, relatedPlayerId: players[10].id },
+      { matchId: match2.id, playerId: players[7].id, eventType: "ASSIST", minute: 78, relatedPlayerId: players[10].id },
     ],
   });
 
@@ -506,19 +534,19 @@ What a start to the season! FC BBFF First XI delivered a commanding performance 
 
 ## First Half
 
-The match started with high intensity from both sides, but it was BBFF who drew first blood in the 15th minute. **Fahim Chowdhury** rose highest to head in a pin-point corner delivery from **Imran Khan**.
+The match started with high intensity from both sides, but it was BBFF who drew first blood in the 15th minute. **Mahim** rose highest to head in a pin-point corner delivery from **Nakib**.
 
-The lead was doubled before half-time when **Imran Khan** himself stepped up to curl a magnificent free kick into the top corner from 25 yards, leaving the goalkeeper rooted to the spot.
+The lead was doubled before half-time when **Nakib** himself stepped up to curl a magnificent free kick into the top corner from 25 yards, leaving the goalkeeper rooted to the spot.
 
 ## Second Half
 
-The second half saw more of the same dominance. **Fahim Chowdhury** completed his brace in the 67th minute, finishing clinically from a delightful through ball by **Shakil Ahmed**.
+The second half saw more of the same dominance. **Mahim** completed his brace in the 67th minute, finishing clinically from a delightful through ball by **Himel**.
 
 Rival United pulled one back late on but it was nothing more than a consolation.
 
 ## Player of the Match
 
-**Fahim Chowdhury** - Two goals and a tireless performance made him the obvious choice.
+**Mahim** - Two goals and a tireless performance made him the obvious choice.
 
 A perfect start to the season. Up the BBFF! 🏆
         `.trim(),
