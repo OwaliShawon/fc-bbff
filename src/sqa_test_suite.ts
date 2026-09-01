@@ -93,7 +93,7 @@ async function main() {
   await runTest("PUBLIC_PAGES", "Club Leadership & Management Query (Owali Shawon 2014-2025)", async () => {
     const members = await getManagementMembers();
     if (members.length === 0) throw new Error("No management members found");
-    const owali = members.find((m) => m.name.toLowerCase().includes("owali"));
+    const owali = members.find((m) => m.name.toLowerCase().includes("owali") && m.role === "MANAGER");
     if (!owali) throw new Error("Owali Shawon record not found in management");
     if (owali.role !== "MANAGER") throw new Error(`Expected MANAGER role, got ${owali.role}`);
     if (!owali.tenure.includes("2014")) throw new Error(`Expected 2014 tenure, got ${owali.tenure}`);

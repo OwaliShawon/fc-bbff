@@ -1,7 +1,7 @@
 import "dotenv/config";
 import { neonConfig } from "@neondatabase/serverless";
 import { PrismaNeon } from "@prisma/adapter-neon";
-import { PrismaClient, PlayerPosition } from "@prisma/client";
+import { PrismaClient, PlayerPosition, ManagementRole } from "@prisma/client";
 import { hash } from "bcryptjs";
 import slugify from "slugify";
 import ws from "ws";
@@ -171,7 +171,7 @@ async function main() {
   // 4. Niloy - BBFF AL JULFIKAR
   // 5. Utsho - BBFF REVOLUTION
   // 6. Sujon - BBFF Calm Storm
-  // 7. Shawon - BBFF THUNDER
+  // 7. Owali Shawon - BBFF THUNDER
   // 8. Kabbo - BBFF Viperz
   // 9. Nakib - BBFF Brutal Bros
   // 10. Himel - BBFF Lone Wolves
@@ -250,7 +250,7 @@ async function main() {
         position: "DEFENDER" as PlayerPosition,
         secondaryPosition: "MIDFIELDER" as PlayerPosition,
         currentCity: "Dhaka",
-        bio: "Rock-solid center back with supreme aerial dominance and tackling precision.",
+        bio: "Rock-solid centre-back dominant in aerial duels and physical challenges.",
         nationality: "Bangladeshi",
         height: "6'0\"",
         weight: "78kg",
@@ -259,7 +259,7 @@ async function main() {
       },
       team: {
         name: "BBFF AL JULFIKAR",
-        description: "Steadfast defense coupled with decisive attacking strikes.",
+        description: "Impenetrable defense combined with swift counter-offense.",
         manager: "Coach Niloy",
       },
     },
@@ -267,20 +267,20 @@ async function main() {
       player: {
         firstName: "Utsho",
         lastName: "",
-        jerseyNumber: 22,
+        jerseyNumber: 8,
         position: "GOALKEEPER" as PlayerPosition,
         secondaryPosition: "DEFENDER" as PlayerPosition,
-        currentCity: "Dhaka",
-        bio: "Commanding goalkeeper with sharp distribution and fearless presence.",
+        currentCity: "Rajshahi",
+        bio: "Dynamic shot-stopper and defender who dictates team rhythm.",
         nationality: "Bangladeshi",
-        height: "6'0\"",
-        weight: "77kg",
+        height: "5'11\"",
+        weight: "76kg",
         preferredFoot: "Right",
         isFeatured: true,
       },
       team: {
         name: "BBFF REVOLUTION",
-        description: "Dynamic and innovative squad redefining football excellence.",
+        description: "Redefining modern club football with visionary passion.",
         manager: "Coach Utsho",
       },
     },
@@ -288,11 +288,11 @@ async function main() {
       player: {
         firstName: "Sujon",
         lastName: "",
-        jerseyNumber: 8,
+        jerseyNumber: 6,
         position: "MIDFIELDER" as PlayerPosition,
         secondaryPosition: "DEFENDER" as PlayerPosition,
-        currentCity: "Rajshahi",
-        bio: "Composed playmaker capable of orchestrating the game's rhythm.",
+        currentCity: "Khulna",
+        bio: "Calm and composed playmaker controlling the tempo from deep positions.",
         nationality: "Bangladeshi",
         height: "5'10\"",
         weight: "73kg",
@@ -307,8 +307,8 @@ async function main() {
     },
     {
       player: {
-        firstName: "Shawon",
-        lastName: "",
+        firstName: "Owali",
+        lastName: "Shawon",
         jerseyNumber: 7,
         position: "FORWARD" as PlayerPosition,
         secondaryPosition: "MIDFIELDER" as PlayerPosition,
@@ -323,7 +323,7 @@ async function main() {
       team: {
         name: "BBFF THUNDER",
         description: "Lightning-quick counter-attacks and electrifying performances.",
-        manager: "Coach Shawon",
+        manager: "Coach Owali Shawon",
       },
     },
     {
@@ -587,6 +587,82 @@ async function main() {
   });
 
   // ============================================================================
+  // MANAGEMENT & LEADERSHIP
+  // ============================================================================
+  console.log("  Creating club leadership and management members...");
+  const owaliPlayer = createdPlayers.find((p) => p.firstName === "Owali" || p.firstName === "Shawon");
+  const himelPlayer = createdPlayers.find((p) => p.firstName === "Himel");
+  const nakibPlayer = createdPlayers.find((p) => p.firstName === "Nakib");
+  const utshoPlayer = createdPlayers.find((p) => p.firstName === "Utsho");
+
+  const managementMembersData = [
+    // President
+    {
+      name: "Owali Shawon",
+      role: ManagementRole.PRESIDENT,
+      tenure: "2026 - Present",
+      isCurrent: true,
+      bio: "President of FC BBFF presiding over club governance, executive strategy, and sporting growth.",
+      playerId: owaliPlayer?.id ?? null,
+      sortOrder: 1,
+    },
+    // Manager
+    {
+      name: "Himel",
+      role: ManagementRole.MANAGER,
+      tenure: "2026 - Present",
+      isCurrent: true,
+      bio: "First Team Manager directing squad tactics, match strategy, and modern team performance.",
+      playerId: himelPlayer?.id ?? null,
+      sortOrder: 1,
+    },
+    {
+      name: "Owali Shawon",
+      role: ManagementRole.MANAGER,
+      tenure: "2014 - 2025",
+      isCurrent: false,
+      bio: "Foundational manager who led FC BBFF across a decorated decade of dominance and growth.",
+      playerId: owaliPlayer?.id ?? null,
+      sortOrder: 2,
+    },
+    // Captain
+    {
+      name: "Nakib",
+      role: ManagementRole.CAPTAIN,
+      tenure: "2026 - Present",
+      isCurrent: true,
+      bio: "Club Captain leading on the pitch with discipline, authority, and tactical composure.",
+      playerId: nakibPlayer?.id ?? null,
+      sortOrder: 1,
+    },
+    {
+      name: "Owali Shawon",
+      role: ManagementRole.CAPTAIN,
+      tenure: "2014 - 2025",
+      isCurrent: false,
+      bio: "Legendary captain who wore the armband with pride through the club's foundational era.",
+      playerId: owaliPlayer?.id ?? null,
+      sortOrder: 2,
+    },
+    // Vice Captain
+    {
+      name: "Utsho",
+      role: ManagementRole.VICE_CAPTAIN,
+      tenure: "2026 - Present",
+      isCurrent: true,
+      bio: "Vice-Captain providing vital on-pitch leadership, communication, and squad cohesion.",
+      playerId: utshoPlayer?.id ?? null,
+      sortOrder: 1,
+    },
+  ];
+
+  for (const member of managementMembersData) {
+    await prisma.managementMember.create({
+      data: member,
+    });
+  }
+
+  // ============================================================================
   // EVENTS
   // ============================================================================
   console.log("  Creating events...");
@@ -646,7 +722,7 @@ The stage is set for the most competitive season yet. Ten incredible teams led b
 4. **Niloy** - BBFF AL JULFIKAR
 5. **Utsho** - BBFF REVOLUTION
 6. **Sujon** - BBFF Calm Storm
-7. **Shawon** - BBFF THUNDER
+7. **Owali Shawon** - BBFF THUNDER
 8. **Kabbo** - BBFF Viperz
 9. **Nakib** - BBFF Brutal Bros
 10. **Himel** - BBFF Lone Wolves
@@ -697,6 +773,11 @@ Stay tuned for live scores, match reports, and fixture updates!
   seedPairs.forEach((item, index) => {
     const pName = `${item.player.firstName}${item.player.lastName ? ` ${item.player.lastName}` : ""}`;
     console.log(`  ${index + 1}. ${pName} -> ${item.team.name}`);
+  });
+  console.log("");
+  console.log("🏛️  Seeded Club Management & Leadership:");
+  managementMembersData.forEach((m) => {
+    console.log(`  • [${m.role}] ${m.name} (${m.tenure}) ${m.isCurrent ? "★ CURRENT" : ""}`);
   });
   console.log("");
   console.log("📋 Development Credentials:");
