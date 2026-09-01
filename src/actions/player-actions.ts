@@ -161,6 +161,115 @@ export async function getPlayerBySlug(slug: string) {
   });
 }
 
+// Helper: raw SQL fallback for player creation when Prisma DMMF is stale
+async function rawCreatePlayer(
+  playerFields: Record<string, unknown>,
+  slug: string,
+): Promise<Player> {
+  const id = crypto.randomUUID();
+  const now = new Date().toISOString();
+  const dob = playerFields.dateOfBirth ? new Date(playerFields.dateOfBirth as string).toISOString() : null;
+  const dj = playerFields.dateJoined ? new Date(playerFields.dateJoined as string).toISOString() : now;
+
+  const esc = (v: string | null | undefined) => v === null || v === undefined ? 'NULL' : `'${String(v).replace(/'/g, "''")}'`;
+  const secPos = playerFields.secondaryPosition
+    ? `'${String(playerFields.secondaryPosition).replace(/'/g, "''")}'` + '::"PlayerPosition"'
+    : 'NULL';
+
+  const sql = `
+    INSERT INTO players (
+      id, "firstName", "lastName", slug, "jerseyNumber", position, "secondaryPosition",
+      "currentCity", "dateOfBirth", nationality, height, weight, "preferredFoot",
+      "dateJoined", bio, "photoUrl", status, "isFeatured", "createdAt", "updatedAt"
+    ) VALUES (
+      '${id}',
+      ${esc(playerFields.firstName as string)},
+      ${esc(playerFields.lastName as string)},
+      ${esc(slug)},
+      ${playerFields.jerseyNumber != null ? Number(playerFields.jerseyNumber) : 'NULL'},
+      ${esc(playerFields.position as string || 'FORWARD')}::"PlayerPosition",
+      ${secPos},
+      ${esc(playerFields.currentCity as string | null)},
+      ${dob ? `'${dob}'::timestamp` : 'NULL'},
+      ${esc(playerFields.nationality as string | null)},
+      ${esc(playerFields.height as string | null)},
+      ${esc(playerFields.weight as string | null)},
+      ${esc(playerFields.preferredFoot as string | null)},
+      '${dj}'::timestamp,
+      ${esc(playerFields.bio as string | null)},
+      ${esc(playerFields.photoUrl as string | null)},
+      ${esc(playerFields.status as string || 'ACTIVE')}::"PlayerStatus",
+      ${playerFields.isFeatured ? 'true' : 'false'},
+      '${now}'::timestamp,
+      '${now}'::timestamp
+    )
+  `;
+
+  await db.$executeRawUnsafe(sql);
+
+  const rows: any[] = await db.$queryRaw`SELECT * FROM players WHERE id = ${id} LIMIT 1`;
+  return rows[0] as Player;
+}
+
+// Helper: raw SQL fallback for player update when Prisma DMMF is stale
+async function rawUpdatePlayer(
+  id: string,
+  updateData: Record<string, unknown>,
+): Promise<Player> {
+  // Build SET clauses dynamically for provided fields
+  const setClauses: string[] = [];
+  const values: unknown[] = [];
+
+  const fieldMap: Record<string, { col: string; cast?: string }> = {
+    firstName: { col: '"firstName"' },
+    lastName: { col: '"lastName"' },
+    slug: { col: 'slug' },
+    jerseyNumber: { col: '"jerseyNumber"' },
+    position: { col: 'position', cast: '::"PlayerPosition"' },
+    secondaryPosition: { col: '"secondaryPosition"', cast: '::"PlayerPosition"' },
+    currentCity: { col: '"currentCity"' },
+    dateOfBirth: { col: '"dateOfBirth"' },
+    nationality: { col: 'nationality' },
+    height: { col: 'height' },
+    weight: { col: 'weight' },
+    preferredFoot: { col: '"preferredFoot"' },
+    dateJoined: { col: '"dateJoined"' },
+    bio: { col: 'bio' },
+    photoUrl: { col: '"photoUrl"' },
+    status: { col: 'status', cast: '::"PlayerStatus"' },
+    isFeatured: { col: '"isFeatured"' },
+  };
+
+  for (const [key, val] of Object.entries(updateData)) {
+    const mapping = fieldMap[key];
+    if (!mapping) continue;
+
+    if (val === null || val === undefined) {
+      setClauses.push(`${mapping.col} = NULL`);
+    } else if (mapping.cast && typeof val === 'string') {
+      setClauses.push(`${mapping.col} = '${val.replace(/'/g, "''")}'${mapping.cast}`);
+    } else if (typeof val === 'boolean') {
+      setClauses.push(`${mapping.col} = ${val}`);
+    } else if (typeof val === 'number') {
+      setClauses.push(`${mapping.col} = ${val}`);
+    } else if (val instanceof Date) {
+      setClauses.push(`${mapping.col} = '${val.toISOString()}'::timestamp`);
+    } else {
+      setClauses.push(`${mapping.col} = '${String(val).replace(/'/g, "''")}'`);
+    }
+  }
+
+  setClauses.push(`"updatedAt" = NOW()`);
+
+  if (setClauses.length > 0) {
+    const setStr = setClauses.join(', ');
+    await db.$executeRawUnsafe(`UPDATE players SET ${setStr} WHERE id = '${id}'`);
+  }
+
+  const rows: any[] = await db.$queryRaw`SELECT * FROM players WHERE id = ${id} LIMIT 1`;
+  return rows[0] as Player;
+}
+
 export async function createPlayer(
   data: unknown
 ): Promise<ActionResponse<Player>> {
@@ -177,18 +286,28 @@ export async function createPlayer(
       counter++;
     }
 
-    const player = await db.player.create({
-      data: {
-        ...playerFields,
-        slug,
-        dateOfBirth: playerFields.dateOfBirth
-          ? new Date(playerFields.dateOfBirth)
-          : null,
-        dateJoined: playerFields.dateJoined
-          ? new Date(playerFields.dateJoined)
-          : new Date(),
-      },
-    });
+    let player: Player;
+    try {
+      player = await db.player.create({
+        data: {
+          ...playerFields,
+          slug,
+          dateOfBirth: playerFields.dateOfBirth
+            ? new Date(playerFields.dateOfBirth)
+            : null,
+          dateJoined: playerFields.dateJoined
+            ? new Date(playerFields.dateJoined)
+            : new Date(),
+        },
+      });
+    } catch (err: any) {
+      if (err.message && err.message.includes("Unknown argument")) {
+        // Stale Prisma client — use raw SQL fallback
+        player = await rawCreatePlayer(playerFields, slug);
+      } else {
+        throw err;
+      }
+    }
 
     if (teamId) {
       const teamOps: any[] = [];
@@ -294,65 +413,67 @@ export async function updatePlayer(
       }
     }
 
-    const txOps: any[] = [
-      db.player.update({
-        where: { id },
-        data: updateData,
-      }),
-    ];
+    let player: Player;
+    try {
+      // Try Prisma-native update first
+      const txOps: any[] = [
+        db.player.update({
+          where: { id },
+          data: updateData,
+        }),
+      ];
 
-    if (teamId !== undefined) {
-      if (!teamId) {
-        // Remove from all teams
-        txOps.push(
-          db.teamPlayer.deleteMany({
-            where: { playerId: id },
-          })
-        );
+      if (teamId !== undefined) {
+        if (!teamId) {
+          txOps.push(db.teamPlayer.deleteMany({ where: { playerId: id } }));
+        } else {
+          txOps.push(db.teamPlayer.deleteMany({ where: { playerId: id, NOT: { teamId } } }));
+          if (isCaptain) {
+            txOps.push(db.teamPlayer.updateMany({ where: { teamId, isCaptain: true, NOT: { playerId: id } }, data: { isCaptain: false } }));
+          }
+          if (isViceCaptain) {
+            txOps.push(db.teamPlayer.updateMany({ where: { teamId, isViceCaptain: true, NOT: { playerId: id } }, data: { isViceCaptain: false } }));
+          }
+          txOps.push(
+            db.teamPlayer.upsert({
+              where: { teamId_playerId: { teamId, playerId: id } },
+              create: { teamId, playerId: id, isCaptain: isCaptain || false, isViceCaptain: isViceCaptain || false },
+              update: { isCaptain: isCaptain !== undefined ? isCaptain : false, isViceCaptain: isViceCaptain !== undefined ? isViceCaptain : false },
+            })
+          );
+        }
+      }
+
+      const [updated] = await db.$transaction(txOps);
+      player = updated;
+    } catch (err: any) {
+      if (err.message && err.message.includes("Unknown argument")) {
+        // Stale Prisma client — use raw SQL fallback for the player update
+        player = await rawUpdatePlayer(id, updateData);
+
+        // Handle team operations separately (these use models that haven't changed)
+        if (teamId !== undefined) {
+          if (!teamId) {
+            await db.teamPlayer.deleteMany({ where: { playerId: id } });
+          } else {
+            await db.teamPlayer.deleteMany({ where: { playerId: id, NOT: { teamId } } });
+            if (isCaptain) {
+              await db.teamPlayer.updateMany({ where: { teamId, isCaptain: true, NOT: { playerId: id } }, data: { isCaptain: false } });
+            }
+            if (isViceCaptain) {
+              await db.teamPlayer.updateMany({ where: { teamId, isViceCaptain: true, NOT: { playerId: id } }, data: { isViceCaptain: false } });
+            }
+            await db.teamPlayer.upsert({
+              where: { teamId_playerId: { teamId, playerId: id } },
+              create: { teamId, playerId: id, isCaptain: isCaptain || false, isViceCaptain: isViceCaptain || false },
+              update: { isCaptain: isCaptain !== undefined ? isCaptain : false, isViceCaptain: isViceCaptain !== undefined ? isViceCaptain : false },
+            });
+          }
+        }
       } else {
-        // Remove from other teams
-        txOps.push(
-          db.teamPlayer.deleteMany({
-            where: { playerId: id, NOT: { teamId } },
-          })
-        );
-
-        if (isCaptain) {
-          txOps.push(
-            db.teamPlayer.updateMany({
-              where: { teamId, isCaptain: true, NOT: { playerId: id } },
-              data: { isCaptain: false },
-            })
-          );
-        }
-        if (isViceCaptain) {
-          txOps.push(
-            db.teamPlayer.updateMany({
-              where: { teamId, isViceCaptain: true, NOT: { playerId: id } },
-              data: { isViceCaptain: false },
-            })
-          );
-        }
-
-        txOps.push(
-          db.teamPlayer.upsert({
-            where: { teamId_playerId: { teamId, playerId: id } },
-            create: {
-              teamId,
-              playerId: id,
-              isCaptain: isCaptain || false,
-              isViceCaptain: isViceCaptain || false,
-            },
-            update: {
-              isCaptain: isCaptain !== undefined ? isCaptain : false,
-              isViceCaptain: isViceCaptain !== undefined ? isViceCaptain : false,
-            },
-          })
-        );
+        throw err;
       }
     }
-
-    const [player] = await db.$transaction(txOps);
 
     createAuditLog({
       userId: session.user.id,
