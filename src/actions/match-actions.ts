@@ -11,6 +11,7 @@ import {
   matchEventSchema,
 } from "@/lib/validations";
 import { createAuditLog } from "@/services/audit-log";
+import { slugify } from "@/lib/utils";
 import type { ActionResponse, PaginatedResponse, Match } from "@/types";
 
 async function requirePermission(permission: string) {
@@ -148,6 +149,110 @@ export async function createMatch(data: unknown): Promise<ActionResponse<Match>>
     return {
       success: false,
       error: error instanceof Error ? error.message : "Failed to create match",
+    };
+  }
+}
+
+export async function createMatchWithOutsider(data: {
+  fcBbffTeamId: string;
+  outsiderTeamName: string;
+  isFcBbffHome?: boolean;
+  matchDate: string;
+  venue?: string | null;
+  competitionId?: string | null;
+  seasonId?: string | null;
+  matchDay?: number | null;
+  referee?: string | null;
+  notes?: string | null;
+  status?: "SCHEDULED" | "LIVE" | "COMPLETED" | "POSTPONED" | "CANCELLED";
+  selectedPlayerIds?: string[];
+}): Promise<ActionResponse<Match>> {
+  try {
+    await requirePermission(PERMISSIONS.MATCHES_CREATE);
+
+    const trimmedName = data.outsiderTeamName.trim();
+    if (!trimmedName) {
+      return { success: false, error: "Outsider team name is required" };
+    }
+
+    // Find or create outsider team
+    let outsiderTeam = await db.team.findFirst({
+      where: {
+        name: { equals: trimmedName, mode: "insensitive" },
+        deletedAt: null,
+      },
+    });
+
+    if (!outsiderTeam) {
+      const baseSlug = slugify(trimmedName);
+      let slug = baseSlug;
+      let counter = 1;
+      while (await db.team.findUnique({ where: { slug } })) {
+        slug = `${baseSlug}-${counter}`;
+        counter++;
+      }
+      outsiderTeam = await db.team.create({
+        data: {
+          name: trimmedName,
+          slug,
+          status: "ACTIVE",
+        },
+      });
+    }
+
+    const isHome = data.isFcBbffHome !== false;
+    const homeTeamId = isHome ? data.fcBbffTeamId : outsiderTeam.id;
+    const awayTeamId = isHome ? outsiderTeam.id : data.fcBbffTeamId;
+
+    if (homeTeamId === awayTeamId) {
+      return { success: false, error: "FC BBFF and Outsider team must be different" };
+    }
+
+    const match = await db.match.create({
+      data: {
+        homeTeamId,
+        awayTeamId,
+        matchDate: new Date(data.matchDate),
+        venue: data.venue || null,
+        competitionId: data.competitionId || null,
+        seasonId: data.seasonId || null,
+        matchDay: data.matchDay || null,
+        referee: data.referee || null,
+        notes: data.notes || null,
+        status: data.status || "SCHEDULED",
+      },
+    });
+
+    // If FC BBFF player IDs were selected for this match, create match lineups
+    if (data.selectedPlayerIds && data.selectedPlayerIds.length > 0) {
+      await db.matchLineup.createMany({
+        data: data.selectedPlayerIds.map((playerId) => ({
+          matchId: match.id,
+          playerId,
+          teamId: data.fcBbffTeamId,
+          type: "STARTING",
+        })),
+        skipDuplicates: true,
+      });
+    }
+
+    await createAuditLog({
+      action: "CREATE",
+      module: "matches",
+      recordId: match.id,
+      description: `Created match vs outsider team: ${trimmedName}`,
+      newValue: { ...data, matchId: match.id },
+    });
+
+    revalidatePath("/admin/matches");
+    revalidatePath("/matches");
+    revalidatePath("/h2h");
+    revalidatePath("/teams");
+    return { success: true, data: match };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to create match vs outsider team",
     };
   }
 }

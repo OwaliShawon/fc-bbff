@@ -4,7 +4,7 @@ import { useState, useTransition, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
-  createMatch, updateMatch, deleteMatch, updateMatchResult,
+  createMatch, createMatchWithOutsider, updateMatch, deleteMatch, updateMatchResult,
   addMatchEvent, removeMatchEvent, getMatchById,
 } from "@/actions/match-actions";
 import { Button } from "@/components/ui/button";
@@ -27,10 +27,10 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import {
-  Plus, Search, Edit, Trash2, ChevronLeft, ChevronRight, Loader2, Swords, Trophy, X,
+  Plus, Search, Edit, Trash2, ChevronLeft, ChevronRight, Loader2, Swords, Trophy, X, Globe, Users,
 } from "lucide-react";
 import { formatDateTime, getMatchStatusColor } from "@/lib/utils";
-import type { PaginatedResponse, Match, Season } from "@/types";
+import type { PaginatedResponse, Match, Season, Player } from "@/types";
 import type { Team, Competition } from "@prisma/client";
 
 const EVENT_LABELS: Record<string, { label: string; icon: string; color: string }> = {
@@ -49,6 +49,7 @@ interface MatchesClientProps {
   teams: Team[];
   seasons: Season[];
   competitions?: Competition[];
+  allPlayers?: Player[];
   currentPage: number;
   currentStatus: string;
   currentSearch: string;
@@ -60,6 +61,7 @@ export function MatchesClient({
   teams,
   seasons,
   competitions = [],
+  allPlayers = [],
   currentPage,
   currentStatus,
   currentSearch,
@@ -78,6 +80,21 @@ export function MatchesClient({
   const [searchInput, setSearchInput] = useState(currentSearch);
   const [isLoadingMatch, setIsLoadingMatch] = useState(false);
 
+  const fcBbffTeam = teams.find((t) => t.name.toUpperCase().includes("BBFF")) || teams[0];
+
+  const [matchTypeMode, setMatchTypeMode] = useState<"outsider" | "internal">("outsider");
+  const [outsiderData, setOutsiderData] = useState<{
+    fcBbffTeamId: string;
+    outsiderTeamName: string;
+    isFcBbffHome: boolean;
+    selectedPlayerIds: string[];
+  }>({
+    fcBbffTeamId: fcBbffTeam?.id || "",
+    outsiderTeamName: "",
+    isFcBbffHome: true,
+    selectedPlayerIds: [],
+  });
+
   const [formData, setFormData] = useState({
     homeTeamId: "", awayTeamId: "", matchDate: "", venue: "", seasonId: "",
     competitionId: "", matchDay: "", referee: "", status: "SCHEDULED", notes: "",
@@ -93,15 +110,31 @@ export function MatchesClient({
 
   function openCreate() {
     setEditingMatch(null);
+    setMatchTypeMode("outsider");
+    setOutsiderData({
+      fcBbffTeamId: fcBbffTeam?.id || teams[0]?.id || "",
+      outsiderTeamName: "",
+      isFcBbffHome: true,
+      selectedPlayerIds: allPlayers.map((p) => p.id), // Pre-select all registered players by default
+    });
     setFormData({
-      homeTeamId: "", awayTeamId: "", matchDate: "", venue: "", seasonId: "",
-      competitionId: "", matchDay: "", referee: "", status: "SCHEDULED", notes: "",
+      homeTeamId: fcBbffTeam?.id || teams[0]?.id || "",
+      awayTeamId: "",
+      matchDate: new Date().toISOString().slice(0, 16),
+      venue: "",
+      seasonId: "",
+      competitionId: "",
+      matchDay: "",
+      referee: "",
+      status: "SCHEDULED",
+      notes: "",
     });
     setShowDialog(true);
   }
 
   function openEdit(match: any) {
     setEditingMatch(match);
+    setMatchTypeMode("internal");
     setFormData({
       homeTeamId: match.homeTeamId, awayTeamId: match.awayTeamId,
       matchDate: new Date(match.matchDate).toISOString().slice(0, 16),
@@ -129,17 +162,32 @@ export function MatchesClient({
       setSelectedMatch(fullMatch);
 
       // Collect all players from both teams
-      const homePlayers = (fullMatch.homeTeam?.teamPlayers || []).map((tp: any) => ({
+      let homePlayers = (fullMatch.homeTeam?.teamPlayers || []).map((tp: any) => ({
         ...tp.player,
         teamName: fullMatch.homeTeam?.name,
         teamSide: "home",
       }));
-      const awayPlayers = (fullMatch.awayTeam?.teamPlayers || []).map((tp: any) => ({
+      let awayPlayers = (fullMatch.awayTeam?.teamPlayers || []).map((tp: any) => ({
         ...tp.player,
         teamName: fullMatch.awayTeam?.name,
         teamSide: "away",
       }));
-      setMatchPlayers([...homePlayers, ...awayPlayers]);
+
+      // Collect lineups if explicitly created
+      const lineupPlayers = (fullMatch.lineups || []).map((l: any) => ({
+        ...l.player,
+        teamName: "FC BBFF",
+        teamSide: fullMatch.homeTeamId === l.teamId ? "home" : "away",
+      }));
+
+      // Always include ALL club players for FC BBFF in match roster so any player can score goals/assists/cards
+      const clubPlayers = allPlayers.map((p: any) => ({
+        ...p,
+        teamName: "FC BBFF",
+        teamSide: fullMatch.homeTeam?.name?.toUpperCase().includes("BBFF") ? "home" : "away",
+      }));
+
+      setMatchPlayers([...lineupPlayers, ...clubPlayers, ...homePlayers, ...awayPlayers]);
 
       // Load existing events
       setMatchEvents(fullMatch.matchEvents || []);
@@ -163,17 +211,40 @@ export function MatchesClient({
 
   async function handleSubmit() {
     startTransition(async () => {
-      const data = {
-        ...formData,
-        matchDay: formData.matchDay ? parseInt(formData.matchDay) : null,
-        competitionId: formData.competitionId || null,
-        seasonId: formData.seasonId || null,
-      };
-      const result = editingMatch
-        ? await updateMatch(editingMatch.id, data)
-        : await createMatch(data);
+      let result;
+      if (!editingMatch && matchTypeMode === "outsider") {
+        if (!outsiderData.outsiderTeamName.trim()) {
+          toast.error("Please enter the Outsider / External Team name");
+          return;
+        }
+        result = await createMatchWithOutsider({
+          fcBbffTeamId: outsiderData.fcBbffTeamId || fcBbffTeam?.id || "",
+          outsiderTeamName: outsiderData.outsiderTeamName,
+          isFcBbffHome: outsiderData.isFcBbffHome,
+          selectedPlayerIds: outsiderData.selectedPlayerIds,
+          matchDate: formData.matchDate,
+          venue: formData.venue,
+          competitionId: formData.competitionId || null,
+          seasonId: formData.seasonId || null,
+          matchDay: formData.matchDay ? parseInt(formData.matchDay) : null,
+          referee: formData.referee,
+          notes: formData.notes,
+          status: formData.status as any,
+        });
+      } else {
+        const data = {
+          ...formData,
+          matchDay: formData.matchDay ? parseInt(formData.matchDay) : null,
+          competitionId: formData.competitionId || null,
+          seasonId: formData.seasonId || null,
+        };
+        result = editingMatch
+          ? await updateMatch(editingMatch.id, data)
+          : await createMatch(data);
+      }
+
       if (result.success) {
-        toast.success(editingMatch ? "Match updated" : "Match created");
+        toast.success(editingMatch ? "Match updated" : "Match created!");
         setShowDialog(false);
         router.refresh();
       } else {
@@ -421,45 +492,204 @@ export function MatchesClient({
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
         <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
           <DialogHeader><DialogTitle>{editingMatch ? "Edit Match" : "Create Match"}</DialogTitle></DialogHeader>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            {/* Match Type / Competition Selector */}
-            <div className="col-span-full space-y-2 rounded-xl border border-white/10 bg-white/[0.03] p-3">
-              <Label className="font-bold text-white flex items-center gap-2">
-                <Trophy className="h-4 w-4 text-emerald-400" /> Match Type / Competition
-              </Label>
-              <Select
-                value={formData.competitionId || "none"}
-                onValueChange={(v) => setFormData({ ...formData, competitionId: v === "none" ? "" : v })}
+          
+          {/* Mode Switcher Tabs for Creating New Match */}
+          {!editingMatch && (
+            <div className="flex items-center gap-2 p-1 bg-white/[0.04] rounded-xl border border-white/10 my-2">
+              <button
+                type="button"
+                onClick={() => setMatchTypeMode("outsider")}
+                className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 ${
+                  matchTypeMode === "outsider"
+                    ? "bg-emerald-600 text-white shadow-lg shadow-emerald-950"
+                    : "text-neutral-400 hover:text-white"
+                }`}
               >
-                <SelectTrigger className="w-full bg-neutral-900 border-white/10">
-                  <SelectValue placeholder="Select Competition or Independent Match" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">🤝 Independent / Friendly Match (No Competition)</SelectItem>
-                  {competitions.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>🏆 {c.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="text-[11px] text-neutral-400">
-                Create match independently (e.g. friendly/exhibition match) or link to an official competition.
-              </p>
+                <Globe className="h-4 w-4" /> Match vs Outsider Team
+              </button>
+              <button
+                type="button"
+                onClick={() => setMatchTypeMode("internal")}
+                className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 ${
+                  matchTypeMode === "internal"
+                    ? "bg-emerald-600 text-white shadow-lg shadow-emerald-950"
+                    : "text-neutral-400 hover:text-white"
+                }`}
+              >
+                <Swords className="h-4 w-4" /> Existing / Internal Teams
+              </button>
             </div>
+          )}
 
-            <div className="space-y-2">
-              <Label>Home Team *</Label>
-              <Select value={formData.homeTeamId} onValueChange={(v) => setFormData({ ...formData, homeTeamId: v })}>
-                <SelectTrigger><SelectValue placeholder="Select team" /></SelectTrigger>
-                <SelectContent>{teams.map((t) => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}</SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Away Team *</Label>
-              <Select value={formData.awayTeamId} onValueChange={(v) => setFormData({ ...formData, awayTeamId: v })}>
-                <SelectTrigger><SelectValue placeholder="Select team" /></SelectTrigger>
-                <SelectContent>{teams.map((t) => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}</SelectContent>
-              </Select>
-            </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            {/* Competition Selector (Only for Internal/Competition matches) */}
+            {(matchTypeMode === "internal" || editingMatch) && (
+              <div className="col-span-full space-y-2 rounded-xl border border-white/10 bg-white/[0.03] p-3">
+                <Label className="font-bold text-white flex items-center gap-2">
+                  <Trophy className="h-4 w-4 text-emerald-400" /> Competition Selection
+                </Label>
+                <Select
+                  value={formData.competitionId || "none"}
+                  onValueChange={(v) => setFormData({ ...formData, competitionId: v === "none" ? "" : v })}
+                >
+                  <SelectTrigger className="w-full bg-neutral-900 border-neutral-700 text-white">
+                    <SelectValue placeholder="Select Competition or Independent Match" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-neutral-900 border-neutral-700 text-white">
+                    <SelectItem value="none">🤝 Independent / Friendly Match (No Competition)</SelectItem>
+                    {competitions.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>🏆 {c.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {/* Outsider Team Form Fields */}
+            {matchTypeMode === "outsider" && !editingMatch ? (
+              <div className="col-span-full space-y-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 p-4">
+                <div className="flex items-center justify-between bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3">
+                  <div>
+                    <p className="text-xs font-bold text-emerald-400">⚽ Club Team: FC BBFF</p>
+                    <p className="text-[11px] text-neutral-400">Default FC BBFF team is selected automatically for outsider matches.</p>
+                  </div>
+                  <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/40 text-[10px]">
+                    FC BBFF Default
+                  </Badge>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="font-bold text-white">Outsider / External Team Name *</Label>
+                  <Input
+                    placeholder="e.g. Abahani Academy, Mohammedan SC, Dhaka Stars FC..."
+                    value={outsiderData.outsiderTeamName}
+                    onChange={(e) => setOutsiderData({ ...outsiderData, outsiderTeamName: e.target.value })}
+                    className="bg-neutral-900 border-neutral-700 text-white placeholder:text-neutral-500"
+                  />
+                  <p className="text-[11px] text-neutral-400">
+                    Type the opponent club name. If this team does not exist yet, it will be automatically registered!
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="font-bold text-white">Match Designation</Label>
+                  <div className="flex items-center gap-6 pt-1">
+                    <label className="flex items-center gap-2 text-xs font-semibold text-white cursor-pointer">
+                      <input
+                        type="radio"
+                        name="homeAway"
+                        checked={outsiderData.isFcBbffHome}
+                        onChange={() => setOutsiderData({ ...outsiderData, isFcBbffHome: true })}
+                        className="accent-emerald-500 h-4 w-4"
+                      />
+                      FC BBFF is Home Team
+                    </label>
+                    <label className="flex items-center gap-2 text-xs font-semibold text-white cursor-pointer">
+                      <input
+                        type="radio"
+                        name="homeAway"
+                        checked={!outsiderData.isFcBbffHome}
+                        onChange={() => setOutsiderData({ ...outsiderData, isFcBbffHome: false })}
+                        className="accent-emerald-500 h-4 w-4"
+                      />
+                      FC BBFF is Away Team
+                    </label>
+                  </div>
+                </div>
+
+                {/* FC BBFF Squad Roster Selection from All Registered Club Players */}
+                <div className="space-y-2 border-t border-white/10 pt-3">
+                  <div className="flex items-center justify-between">
+                    <Label className="font-bold text-white flex items-center gap-1.5">
+                      <Users className="h-4 w-4 text-emerald-400" /> Select Match Roster from All Club Players ({outsiderData.selectedPlayerIds.length} / {allPlayers.length})
+                    </Label>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setOutsiderData({ ...outsiderData, selectedPlayerIds: allPlayers.map((p) => p.id) })}
+                        className="text-[11px] text-emerald-400 hover:underline font-bold"
+                      >
+                        Select All
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setOutsiderData({ ...outsiderData, selectedPlayerIds: [] })}
+                        className="text-[11px] text-neutral-400 hover:underline"
+                      >
+                        Deselect All
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="max-h-48 overflow-y-auto space-y-1.5 rounded-xl border border-white/10 bg-neutral-950 p-2">
+                    {allPlayers.length === 0 ? (
+                      <p className="text-center text-xs text-neutral-500 py-3">No registered players found in club database.</p>
+                    ) : (
+                      allPlayers.map((player) => {
+                        const isChecked = outsiderData.selectedPlayerIds.includes(player.id);
+                        return (
+                          <label
+                            key={player.id}
+                            className={`flex items-center justify-between p-2 rounded-lg text-xs cursor-pointer transition-colors ${
+                              isChecked
+                                ? "bg-emerald-500/20 border border-emerald-500/40 text-white font-semibold"
+                                : "bg-neutral-900 border border-neutral-800 text-neutral-400 hover:bg-neutral-800"
+                            }`}
+                          >
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="checkbox"
+                                checked={isChecked}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setOutsiderData({
+                                      ...outsiderData,
+                                      selectedPlayerIds: [...outsiderData.selectedPlayerIds, player.id],
+                                    });
+                                  } else {
+                                    setOutsiderData({
+                                      ...outsiderData,
+                                      selectedPlayerIds: outsiderData.selectedPlayerIds.filter((id) => id !== player.id),
+                                    });
+                                  }
+                                }}
+                                className="accent-emerald-500 h-4 w-4 rounded"
+                              />
+                              <span>
+                                {player.firstName} {player.lastName}
+                              </span>
+                            </div>
+                            <span className="text-[10px] text-neutral-400 font-mono">
+                              {player.jerseyNumber ? `#${player.jerseyNumber}` : ""} {player.position}
+                            </span>
+                          </label>
+                        );
+                      })
+                    )}
+                  </div>
+                  <p className="text-[10px] text-neutral-400">
+                    Checked players will be registered as the match lineup for FC BBFF.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="space-y-2">
+                  <Label>Home Team *</Label>
+                  <Select value={formData.homeTeamId} onValueChange={(v) => setFormData({ ...formData, homeTeamId: v })}>
+                    <SelectTrigger className="w-full bg-neutral-900 border-neutral-700 text-white"><SelectValue placeholder="Select home team" /></SelectTrigger>
+                    <SelectContent className="bg-neutral-900 border-neutral-700 text-white">{teams.map((t) => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Away Team *</Label>
+                  <Select value={formData.awayTeamId} onValueChange={(v) => setFormData({ ...formData, awayTeamId: v })}>
+                    <SelectTrigger className="w-full bg-neutral-900 border-neutral-700 text-white"><SelectValue placeholder="Select away team" /></SelectTrigger>
+                    <SelectContent className="bg-neutral-900 border-neutral-700 text-white">{teams.map((t) => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+              </>
+            )}
             <div className="space-y-2">
               <Label>Date & Time *</Label>
               <Input type="datetime-local" value={formData.matchDate} onChange={(e) => setFormData({ ...formData, matchDate: e.target.value })} />

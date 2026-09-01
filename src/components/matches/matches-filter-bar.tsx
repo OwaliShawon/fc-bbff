@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Trophy, Swords, Sparkles } from "lucide-react";
+import { Trophy, Swords, Sparkles, Globe, Home } from "lucide-react";
 
 interface MatchesFilterBarProps {
   competitions: any[];
@@ -48,6 +48,32 @@ export function MatchesFilterBar({ competitions, currentFilter }: MatchesFilterB
         </Button>
 
         <Button
+          variant={currentFilter === "outsider" ? "default" : "ghost"}
+          size="sm"
+          onClick={() => handleFilterChange("outsider")}
+          className={
+            currentFilter === "outsider"
+              ? "bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs"
+              : "text-neutral-400 hover:text-white text-xs"
+          }
+        >
+          <Globe className="h-3.5 w-3.5 mr-1 text-blue-400" /> vs Outside Teams
+        </Button>
+
+        <Button
+          variant={currentFilter === "internal" ? "default" : "ghost"}
+          size="sm"
+          onClick={() => handleFilterChange("internal")}
+          className={
+            currentFilter === "internal"
+              ? "bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs"
+              : "text-neutral-400 hover:text-white text-xs"
+          }
+        >
+          <Home className="h-3.5 w-3.5 mr-1 text-purple-400" /> Internal Squad
+        </Button>
+
+        <Button
           variant={currentFilter === "competition" ? "default" : "ghost"}
           size="sm"
           onClick={() => handleFilterChange("competition")}
@@ -57,20 +83,7 @@ export function MatchesFilterBar({ competitions, currentFilter }: MatchesFilterB
               : "text-neutral-400 hover:text-white text-xs"
           }
         >
-          <Trophy className="h-3.5 w-3.5 mr-1 text-amber-400" /> Competition Matches
-        </Button>
-
-        <Button
-          variant={currentFilter === "independent" ? "default" : "ghost"}
-          size="sm"
-          onClick={() => handleFilterChange("independent")}
-          className={
-            currentFilter === "independent"
-              ? "bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs"
-              : "text-neutral-400 hover:text-white text-xs"
-          }
-        >
-          <Swords className="h-3.5 w-3.5 mr-1 text-cyan-400" /> Independent / Friendly
+          <Trophy className="h-3.5 w-3.5 mr-1 text-amber-400" /> Competitions
         </Button>
       </div>
 
@@ -83,10 +96,10 @@ export function MatchesFilterBar({ competitions, currentFilter }: MatchesFilterB
             else handleFilterChange(`comp_${val}`);
           }}
         >
-          <SelectTrigger className="w-full bg-neutral-900 border-white/10 text-xs text-white">
+          <SelectTrigger className="w-full bg-neutral-900 border-neutral-700 text-xs text-white">
             <SelectValue placeholder="Filter by Competition..." />
           </SelectTrigger>
-          <SelectContent className="bg-neutral-900 border-white/10 text-white">
+          <SelectContent className="bg-neutral-900 border-neutral-700 text-white">
             <SelectItem value="all">🏆 Select Specific Competition...</SelectItem>
             {competitions.map((comp) => (
               <SelectItem key={comp.id} value={comp.id}>
