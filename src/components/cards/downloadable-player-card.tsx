@@ -47,7 +47,7 @@ export function DownloadablePlayerCard({ player, team }: { player: any; team?: a
         >
           {isExporting ? (
             <>
-              <Loader2 className="h-3.5 w-3.5 animate-spin" /> Generating JPG...
+              <span className="inline-block animate-spin text-sm leading-none">⚽</span> Generating JPG...
             </>
           ) : (
             <>
