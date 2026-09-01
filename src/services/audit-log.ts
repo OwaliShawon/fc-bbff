@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { auth } from "@/lib/auth";
 
 type AuditLogInput = {
+  userId?: string;
   action: string;
   module: string;
   recordId?: string;
@@ -17,12 +18,16 @@ type AuditLogInput = {
  */
 export async function createAuditLog(input: AuditLogInput) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) return;
+    let userId = input.userId;
+    if (!userId) {
+      const session = await auth();
+      userId = session?.user?.id;
+    }
+    if (!userId) return;
 
     await db.auditLog.create({
       data: {
-        userId: session.user.id,
+        userId,
         action: input.action,
         module: input.module,
         recordId: input.recordId,

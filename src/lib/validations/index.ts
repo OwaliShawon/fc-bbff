@@ -65,6 +65,9 @@ export const createPlayerSchema = z.object({
     .enum(["ACTIVE", "INJURED", "SUSPENDED", "INACTIVE", "TRANSFERRED"])
     .default("ACTIVE"),
   isFeatured: z.boolean().default(false),
+  teamId: z.string().optional().nullable().or(z.literal("").transform(() => null)),
+  isCaptain: z.boolean().default(false),
+  isViceCaptain: z.boolean().default(false),
 });
 
 export const updatePlayerSchema = createPlayerSchema.partial();

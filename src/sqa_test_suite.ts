@@ -1,7 +1,7 @@
 import "dotenv/config";
 import { db } from "./lib/db";
-import { getPlayers, getPlayerBySlug } from "./actions/player-actions";
-import { getTeams } from "./actions/team-actions";
+import { getPlayers, getPlayerBySlug, getAllActivePlayers } from "./actions/player-actions";
+import { getTeams, getAllActiveTeams, getTeamSquad } from "./actions/team-actions";
 import { getMatches } from "./actions/match-actions";
 import { getCompetitions, getSeasons, getLeagueTable } from "./actions/competition-actions";
 import { getEvents } from "./actions/event-actions";
@@ -144,6 +144,38 @@ async function main() {
   await runTest("ADMIN_PAGES", "Admin Teams Management Query", async () => {
     const teams = await getTeams({ pageSize: 20 });
     if (!teams.data) throw new Error("Teams query failed");
+  });
+
+  await runTest("ADMIN_PAGES", "Admin Teams & Squad Roster Query (getTeamSquad)", async () => {
+    const teams = await getTeams({ pageSize: 5 });
+    if (!teams.data || teams.data.length === 0) throw new Error("No teams found");
+    const squad = await getTeamSquad(teams.data[0].id);
+    if (!Array.isArray(squad)) throw new Error("Squad did not return an array");
+    if (squad.length === 0) throw new Error("Expected squad members in team");
+    if (!squad[0].player) throw new Error("Squad member missing player details");
+  });
+
+  await runTest("ADMIN_PAGES", "Admin Active Players & Teams for Squad Assignment", async () => {
+    const [allPlayers, allTeams] = await Promise.all([
+      getAllActivePlayers(),
+      getAllActiveTeams(),
+    ]);
+    if (!Array.isArray(allPlayers) || allPlayers.length === 0) {
+      throw new Error("Active players list is empty");
+    }
+    if (!Array.isArray(allTeams) || allTeams.length === 0) {
+      throw new Error("Active teams list is empty");
+    }
+  });
+
+  await runTest("ADMIN_PAGES", "Player Squad Membership & Captaincy Resolution", async () => {
+    const player = await db.player.findFirst({
+      where: { teamPlayers: { some: { isCaptain: true } } },
+      include: { teamPlayers: { include: { team: true } } },
+    });
+    if (!player) throw new Error("No captain player found");
+    const captainTeam = player.teamPlayers.find((tp) => tp.isCaptain);
+    if (!captainTeam || !captainTeam.team) throw new Error("Failed to resolve captain team");
   });
 
   await runTest("ADMIN_PAGES", "Admin Seasons Management Query", async () => {

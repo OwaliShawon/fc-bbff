@@ -1,4 +1,5 @@
 import { getTeams } from "@/actions/team-actions";
+import { getAllActivePlayers } from "@/actions/player-actions";
 import { TeamsClient } from "./teams-client";
 
 export default async function TeamsPage({
@@ -11,7 +12,18 @@ export default async function TeamsPage({
   const search = (params.search as string) || "";
   const status = (params.status as string) || "";
 
-  const teamsData = await getTeams({ page, pageSize: 10, search, status });
+  const [teamsData, allPlayers] = await Promise.all([
+    getTeams({ page, pageSize: 10, search, status }),
+    getAllActivePlayers(),
+  ]);
 
-  return <TeamsClient initialData={teamsData} currentPage={page} currentSearch={search} currentStatus={status} />;
+  return (
+    <TeamsClient
+      initialData={teamsData}
+      allPlayers={allPlayers}
+      currentPage={page}
+      currentSearch={search}
+      currentStatus={status}
+    />
+  );
 }

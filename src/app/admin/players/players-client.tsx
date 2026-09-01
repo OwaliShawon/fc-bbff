@@ -76,6 +76,9 @@ type PlayerFormData = {
   photoUrl: string;
   status: string;
   isFeatured: boolean;
+  teamId: string;
+  isCaptain: boolean;
+  isViceCaptain: boolean;
 };
 
 const defaultFormData: PlayerFormData = {
@@ -95,6 +98,9 @@ const defaultFormData: PlayerFormData = {
   photoUrl: "",
   status: "ACTIVE",
   isFeatured: false,
+  teamId: "NONE",
+  isCaptain: false,
+  isViceCaptain: false,
 };
 
 export function PlayersClient({
@@ -129,6 +135,7 @@ export function PlayersClient({
 
   function openEdit(player: Player) {
     setEditingPlayer(player);
+    const currentTeam = (player as any).teamPlayers?.[0];
     setFormData({
       firstName: player.firstName,
       lastName: player.lastName,
@@ -150,6 +157,9 @@ export function PlayersClient({
       photoUrl: player.photoUrl || "",
       status: player.status,
       isFeatured: player.isFeatured,
+      teamId: currentTeam?.teamId || "NONE",
+      isCaptain: currentTeam?.isCaptain || false,
+      isViceCaptain: currentTeam?.isViceCaptain || false,
     });
     setShowDialog(true);
   }
@@ -163,6 +173,9 @@ export function PlayersClient({
     startTransition(async () => {
       const payload = {
         ...formData,
+        teamId: formData.teamId === "NONE" ? null : formData.teamId,
+        isCaptain: formData.teamId === "NONE" ? false : formData.isCaptain,
+        isViceCaptain: formData.teamId === "NONE" ? false : formData.isViceCaptain,
         secondaryPosition:
           formData.secondaryPosition === "NONE" || !formData.secondaryPosition
             ? null
@@ -388,8 +401,30 @@ export function PlayersClient({
                         {player.status}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-sm text-neutral-500">
-                      {(player as any).teamPlayers?.[0]?.team?.name || "—"}
+                    <TableCell className="text-sm">
+                      {(() => {
+                        const tp = (player as any).teamPlayers?.[0];
+                        if (!tp?.team) {
+                          return <span className="text-xs text-neutral-400">Free Agent</span>;
+                        }
+                        return (
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            <Badge variant="outline" className="font-medium bg-neutral-50 dark:bg-neutral-900 border-neutral-300 dark:border-neutral-700">
+                              {tp.team.name}
+                            </Badge>
+                            {tp.isCaptain && (
+                              <Badge className="bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 text-[10px] px-1.5 py-0 border border-amber-300 dark:border-amber-700">
+                                👑 Captain
+                              </Badge>
+                            )}
+                            {tp.isViceCaptain && (
+                              <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300 text-[10px] px-1.5 py-0 border border-blue-300 dark:border-blue-700">
+                                🛡️ Vice-Captain
+                              </Badge>
+                            )}
+                          </div>
+                        );
+                      })()}
                     </TableCell>
                     <TableCell className="text-center">
                       {player.isFeatured ? "⭐" : "—"}
@@ -648,6 +683,79 @@ export function PlayersClient({
                 }
                 placeholder="https://..."
               />
+            </div>
+
+            {/* Team & Role Assignment */}
+            <div className="col-span-full rounded-xl border border-neutral-200 bg-neutral-50/50 p-4 dark:border-neutral-800 dark:bg-neutral-900/50 space-y-3">
+              <div>
+                <h4 className="text-sm font-semibold text-neutral-900 dark:text-white">Team Assignment</h4>
+                <p className="text-xs text-neutral-500">Assign player to a squad and configure leadership status</p>
+              </div>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 items-center">
+                <div className="space-y-1.5">
+                  <Label>Club Team</Label>
+                  <Select
+                    value={formData.teamId}
+                    onValueChange={(v) =>
+                      setFormData({
+                        ...formData,
+                        teamId: v,
+                        isCaptain: v === "NONE" ? false : formData.isCaptain,
+                        isViceCaptain: v === "NONE" ? false : formData.isViceCaptain,
+                      })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Team" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="NONE">No Team (Free Agent)</SelectItem>
+                      {teams.map((t) => (
+                        <SelectItem key={t.id} value={t.id}>
+                          {t.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {formData.teamId !== "NONE" && (
+                  <div className="flex flex-wrap items-center gap-4 pt-4 sm:pt-5">
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        id="isCaptain"
+                        checked={formData.isCaptain}
+                        onCheckedChange={(checked) =>
+                          setFormData({
+                            ...formData,
+                            isCaptain: checked === true,
+                            isViceCaptain: checked === true ? false : formData.isViceCaptain,
+                          })
+                        }
+                      />
+                      <Label htmlFor="isCaptain" className="cursor-pointer text-xs font-semibold text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                        👑 Team Captain
+                      </Label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        id="isViceCaptain"
+                        checked={formData.isViceCaptain}
+                        onCheckedChange={(checked) =>
+                          setFormData({
+                            ...formData,
+                            isViceCaptain: checked === true,
+                            isCaptain: checked === true ? false : formData.isCaptain,
+                          })
+                        }
+                      />
+                      <Label htmlFor="isViceCaptain" className="cursor-pointer text-xs font-semibold text-blue-600 dark:text-blue-400 flex items-center gap-1">
+                        🛡️ Vice Captain
+                      </Label>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="col-span-full space-y-2">

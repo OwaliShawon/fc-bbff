@@ -183,52 +183,140 @@ export async function deleteTeam(id: string): Promise<ActionResponse> {
 export async function addPlayerToTeam(
   teamId: string,
   playerId: string,
-  options?: { isCaptain?: boolean; isViceCaptain?: boolean }
+  options?: { isCaptain?: boolean; isViceCaptain?: boolean; transfer?: boolean }
 ): Promise<ActionResponse> {
   try {
     await requirePermission(PERMISSIONS.TEAMS_UPDATE);
 
-    const existing = await db.teamPlayer.findUnique({
-      where: { teamId_playerId: { teamId, playerId } },
+    // Remove from any other teams to ensure clean transfer
+    await db.teamPlayer.deleteMany({
+      where: {
+        playerId,
+        NOT: { teamId },
+      },
     });
-    if (existing) return { success: false, error: "Player already in team" };
 
-    // If setting as captain, unset existing captain
+    // If setting as captain, unset existing captain for this team
     if (options?.isCaptain) {
+      await db.teamPlayer.updateMany({
+        where: { teamId, isCaptain: true, NOT: { playerId } },
+        data: { isCaptain: false },
+      });
+    }
+    // If setting as vice captain, unset existing vice captain for this team
+    if (options?.isViceCaptain) {
+      await db.teamPlayer.updateMany({
+        where: { teamId, isViceCaptain: true, NOT: { playerId } },
+        data: { isViceCaptain: false },
+      });
+    }
+
+    await db.teamPlayer.upsert({
+      where: { teamId_playerId: { teamId, playerId } },
+      create: {
+        teamId,
+        playerId,
+        isCaptain: options?.isCaptain || false,
+        isViceCaptain: options?.isViceCaptain || false,
+      },
+      update: {
+        isCaptain: options?.isCaptain !== undefined ? options.isCaptain : undefined,
+        isViceCaptain: options?.isViceCaptain !== undefined ? options.isViceCaptain : undefined,
+      },
+    });
+
+    const player = await db.player.findUnique({ where: { id: playerId } });
+    const team = await db.team.findUnique({ where: { id: teamId } });
+
+    await createAuditLog({
+      action: "UPDATE",
+      module: "teams",
+      recordId: teamId,
+      description: `Assigned player ${player ? `${player.firstName} ${player.lastName}` : playerId} to team ${team?.name || teamId}`,
+    });
+
+    revalidatePath("/admin/teams");
+    revalidatePath("/admin/players");
+    revalidatePath("/teams");
+    revalidatePath("/players");
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error.message : "Failed to add player" };
+  }
+}
+
+export async function togglePlayerCaptain(
+  teamId: string,
+  playerId: string,
+  isCaptain: boolean
+): Promise<ActionResponse> {
+  try {
+    await requirePermission(PERMISSIONS.TEAMS_UPDATE);
+
+    if (isCaptain) {
       await db.teamPlayer.updateMany({
         where: { teamId, isCaptain: true },
         data: { isCaptain: false },
       });
     }
-    if (options?.isViceCaptain) {
+
+    await db.teamPlayer.update({
+      where: { teamId_playerId: { teamId, playerId } },
+      data: { isCaptain },
+    });
+
+    revalidatePath("/admin/teams");
+    revalidatePath("/admin/players");
+    revalidatePath("/teams");
+    revalidatePath("/players");
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error.message : "Failed to update captain status" };
+  }
+}
+
+export async function togglePlayerViceCaptain(
+  teamId: string,
+  playerId: string,
+  isViceCaptain: boolean
+): Promise<ActionResponse> {
+  try {
+    await requirePermission(PERMISSIONS.TEAMS_UPDATE);
+
+    if (isViceCaptain) {
       await db.teamPlayer.updateMany({
         where: { teamId, isViceCaptain: true },
         data: { isViceCaptain: false },
       });
     }
 
-    await db.teamPlayer.create({
-      data: {
-        teamId,
-        playerId,
-        isCaptain: options?.isCaptain || false,
-        isViceCaptain: options?.isViceCaptain || false,
-      },
-    });
-
-    await createAuditLog({
-      action: "UPDATE",
-      module: "teams",
-      recordId: teamId,
-      description: `Added player to team`,
+    await db.teamPlayer.update({
+      where: { teamId_playerId: { teamId, playerId } },
+      data: { isViceCaptain },
     });
 
     revalidatePath("/admin/teams");
+    revalidatePath("/admin/players");
     revalidatePath("/teams");
+    revalidatePath("/players");
     return { success: true };
   } catch (error) {
-    return { success: false, error: error instanceof Error ? error.message : "Failed to add player" };
+    return { success: false, error: error instanceof Error ? error.message : "Failed to update vice captain status" };
   }
+}
+
+export async function getTeamSquad(teamId: string) {
+  return db.teamPlayer.findMany({
+    where: { teamId },
+    include: {
+      player: true,
+    },
+    orderBy: [
+      { isCaptain: "desc" },
+      { isViceCaptain: "desc" },
+      { player: { jerseyNumber: "asc" } },
+    ],
+  });
 }
 
 export async function removePlayerFromTeam(
@@ -250,7 +338,9 @@ export async function removePlayerFromTeam(
     });
 
     revalidatePath("/admin/teams");
+    revalidatePath("/admin/players");
     revalidatePath("/teams");
+    revalidatePath("/players");
     return { success: true };
   } catch (error) {
     return { success: false, error: error instanceof Error ? error.message : "Failed to remove player" };

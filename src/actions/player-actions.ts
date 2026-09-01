@@ -167,8 +167,9 @@ export async function createPlayer(
   try {
     const session = await requirePermission(PERMISSIONS.PLAYERS_CREATE);
     const validated = createPlayerSchema.parse(data);
+    const { teamId, isCaptain, isViceCaptain, ...playerFields } = validated;
 
-    const baseSlug = slugify(`${validated.firstName}-${validated.lastName}`);
+    const baseSlug = slugify(`${playerFields.firstName}-${playerFields.lastName}`);
     let slug = baseSlug;
     let counter = 1;
     while (await db.player.findUnique({ where: { slug } })) {
@@ -178,27 +179,63 @@ export async function createPlayer(
 
     const player = await db.player.create({
       data: {
-        ...validated,
+        ...playerFields,
         slug,
-        dateOfBirth: validated.dateOfBirth
-          ? new Date(validated.dateOfBirth)
+        dateOfBirth: playerFields.dateOfBirth
+          ? new Date(playerFields.dateOfBirth)
           : null,
-        dateJoined: validated.dateJoined
-          ? new Date(validated.dateJoined)
+        dateJoined: playerFields.dateJoined
+          ? new Date(playerFields.dateJoined)
           : new Date(),
       },
     });
 
-    await createAuditLog({
+    if (teamId) {
+      const teamOps: any[] = [];
+      if (isCaptain) {
+        teamOps.push(
+          db.teamPlayer.updateMany({
+            where: { teamId, isCaptain: true },
+            data: { isCaptain: false },
+          })
+        );
+      }
+      if (isViceCaptain) {
+        teamOps.push(
+          db.teamPlayer.updateMany({
+            where: { teamId, isViceCaptain: true },
+            data: { isViceCaptain: false },
+          })
+        );
+      }
+
+      teamOps.push(
+        db.teamPlayer.create({
+          data: {
+            teamId,
+            playerId: player.id,
+            isCaptain: isCaptain || false,
+            isViceCaptain: isViceCaptain || false,
+          },
+        })
+      );
+
+      await db.$transaction(teamOps);
+    }
+
+    createAuditLog({
+      userId: session.user.id,
       action: "CREATE",
       module: "players",
       recordId: player.id,
-      description: `Created player: ${validated.firstName} ${validated.lastName}`,
+      description: `Created player: ${playerFields.firstName} ${playerFields.lastName}${teamId ? " and assigned to team" : ""}`,
       newValue: validated,
-    });
+    }).catch((err) => console.error("Audit log error:", err));
 
     revalidatePath("/admin/players");
+    revalidatePath("/admin/teams");
     revalidatePath("/players");
+    revalidatePath("/teams");
 
     return { success: true, data: player };
   } catch (error) {
@@ -214,30 +251,35 @@ export async function updatePlayer(
   data: unknown
 ): Promise<ActionResponse<Player>> {
   try {
-    await requirePermission(PERMISSIONS.PLAYERS_UPDATE);
+    const session = await requirePermission(PERMISSIONS.PLAYERS_UPDATE);
     const validated = updatePlayerSchema.parse(data);
+    const { teamId, isCaptain, isViceCaptain, ...playerFields } = validated;
 
     const existing = await db.player.findUnique({ where: { id } });
     if (!existing) {
       return { success: false, error: "Player not found" };
     }
 
-    const updateData: Record<string, unknown> = { ...validated };
-    if (validated.dateOfBirth !== undefined) {
-      updateData.dateOfBirth = validated.dateOfBirth
-        ? new Date(validated.dateOfBirth)
+    const updateData: Record<string, unknown> = { ...playerFields };
+    if (playerFields.dateOfBirth !== undefined) {
+      updateData.dateOfBirth = playerFields.dateOfBirth
+        ? new Date(playerFields.dateOfBirth)
         : null;
     }
-    if (validated.dateJoined !== undefined) {
-      updateData.dateJoined = validated.dateJoined
-        ? new Date(validated.dateJoined)
+    if (playerFields.dateJoined !== undefined) {
+      updateData.dateJoined = playerFields.dateJoined
+        ? new Date(playerFields.dateJoined)
         : existing.dateJoined;
     }
 
-    // Update slug if name changed
-    if (validated.firstName || validated.lastName) {
-      const firstName = validated.firstName || existing.firstName;
-      const lastName = validated.lastName || existing.lastName;
+    // Only recalculate slug if name actually changed
+    const nameChanged =
+      (playerFields.firstName !== undefined && playerFields.firstName !== existing.firstName) ||
+      (playerFields.lastName !== undefined && playerFields.lastName !== existing.lastName);
+
+    if (nameChanged) {
+      const firstName = playerFields.firstName ?? existing.firstName;
+      const lastName = playerFields.lastName ?? existing.lastName;
       const newSlug = slugify(`${firstName}-${lastName}`);
       if (newSlug !== existing.slug) {
         let slug = newSlug;
@@ -252,23 +294,83 @@ export async function updatePlayer(
       }
     }
 
-    const player = await db.player.update({
-      where: { id },
-      data: updateData,
-    });
+    const txOps: any[] = [
+      db.player.update({
+        where: { id },
+        data: updateData,
+      }),
+    ];
 
-    await createAuditLog({
+    if (teamId !== undefined) {
+      if (!teamId) {
+        // Remove from all teams
+        txOps.push(
+          db.teamPlayer.deleteMany({
+            where: { playerId: id },
+          })
+        );
+      } else {
+        // Remove from other teams
+        txOps.push(
+          db.teamPlayer.deleteMany({
+            where: { playerId: id, NOT: { teamId } },
+          })
+        );
+
+        if (isCaptain) {
+          txOps.push(
+            db.teamPlayer.updateMany({
+              where: { teamId, isCaptain: true, NOT: { playerId: id } },
+              data: { isCaptain: false },
+            })
+          );
+        }
+        if (isViceCaptain) {
+          txOps.push(
+            db.teamPlayer.updateMany({
+              where: { teamId, isViceCaptain: true, NOT: { playerId: id } },
+              data: { isViceCaptain: false },
+            })
+          );
+        }
+
+        txOps.push(
+          db.teamPlayer.upsert({
+            where: { teamId_playerId: { teamId, playerId: id } },
+            create: {
+              teamId,
+              playerId: id,
+              isCaptain: isCaptain || false,
+              isViceCaptain: isViceCaptain || false,
+            },
+            update: {
+              isCaptain: isCaptain !== undefined ? isCaptain : false,
+              isViceCaptain: isViceCaptain !== undefined ? isViceCaptain : false,
+            },
+          })
+        );
+      }
+    }
+
+    const [player] = await db.$transaction(txOps);
+
+    createAuditLog({
+      userId: session.user.id,
       action: "UPDATE",
       module: "players",
       recordId: id,
       description: `Updated player: ${player.firstName} ${player.lastName}`,
       previousValue: existing,
       newValue: validated,
-    });
+    }).catch((err) => console.error("Audit log error:", err));
 
     revalidatePath("/admin/players");
+    revalidatePath("/admin/teams");
     revalidatePath("/players");
-    revalidatePath(`/players/${player.slug}`);
+    revalidatePath("/teams");
+    if (player.slug) {
+      revalidatePath(`/players/${player.slug}`);
+    }
 
     return { success: true, data: player };
   } catch (error) {
