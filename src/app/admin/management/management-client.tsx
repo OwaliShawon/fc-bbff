@@ -54,7 +54,7 @@ import type { Player } from "@/types";
 type Member = {
   id: string;
   name: string;
-  role: "MANAGER" | "CAPTAIN" | "VICE_CAPTAIN";
+  role: "PRESIDENT" | "MANAGER" | "CAPTAIN" | "VICE_CAPTAIN";
   tenure: string;
   isCurrent: boolean;
   bio?: string | null;
@@ -88,7 +88,7 @@ export function ManagementClient({
 
   const [formData, setFormData] = useState({
     name: "",
-    role: "MANAGER" as "MANAGER" | "CAPTAIN" | "VICE_CAPTAIN",
+    role: "PRESIDENT" as "PRESIDENT" | "MANAGER" | "CAPTAIN" | "VICE_CAPTAIN",
     tenure: "",
     isCurrent: false,
     bio: "",
@@ -169,6 +169,8 @@ export function ManagementClient({
 
   const getRoleBadge = (role: string) => {
     switch (role) {
+      case "PRESIDENT":
+        return <Badge className="bg-purple-500/20 text-purple-300">President</Badge>;
       case "MANAGER":
         return <Badge className="bg-emerald-500/20 text-emerald-300">Manager</Badge>;
       case "CAPTAIN":
@@ -310,7 +312,7 @@ export function ManagementClient({
                   <Label htmlFor="role">Role *</Label>
                   <Select
                     value={formData.role}
-                    onValueChange={(v: "MANAGER" | "CAPTAIN" | "VICE_CAPTAIN") =>
+                    onValueChange={(v: "PRESIDENT" | "MANAGER" | "CAPTAIN" | "VICE_CAPTAIN") =>
                       setFormData({ ...formData, role: v })
                     }
                   >
@@ -318,6 +320,7 @@ export function ManagementClient({
                       <SelectValue placeholder="Select role" />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="PRESIDENT">President</SelectItem>
                       <SelectItem value="MANAGER">Manager</SelectItem>
                       <SelectItem value="CAPTAIN">Captain</SelectItem>
                       <SelectItem value="VICE_CAPTAIN">Vice-Captain</SelectItem>

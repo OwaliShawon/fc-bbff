@@ -11,7 +11,7 @@ import type { ManagementRole } from "@prisma/client";
 
 const managementSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
-  role: z.enum(["MANAGER", "CAPTAIN", "VICE_CAPTAIN"]),
+  role: z.enum(["PRESIDENT", "MANAGER", "CAPTAIN", "VICE_CAPTAIN"]),
   tenure: z.string().min(2, "Tenure is required (e.g., 2014 - 2025)"),
   isCurrent: z.boolean().default(false),
   bio: z.string().optional(),
