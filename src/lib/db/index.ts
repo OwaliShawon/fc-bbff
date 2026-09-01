@@ -19,7 +19,8 @@ function createClient(): PrismaClient {
 }
 
 function getClient(): PrismaClient {
-  if (!globalThis.__prismaInstance || !(globalThis.__prismaInstance as unknown as { managementMember?: unknown }).managementMember) {
+  // In development, ensure we have the latest client with all fields
+  if (!globalThis.__prismaInstance || process.env.NODE_ENV === "development") {
     globalThis.__prismaInstance = createClient();
   }
   return globalThis.__prismaInstance;

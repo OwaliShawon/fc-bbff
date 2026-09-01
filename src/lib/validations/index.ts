@@ -128,8 +128,20 @@ export const updateCompetitionSchema = createCompetitionSchema.partial();
 // ============================================================================
 
 export const createMatchSchema = z.object({
-  competitionId: z.string().uuid().optional().nullable(),
-  seasonId: z.string().uuid().optional().nullable(),
+  competitionId: z
+    .string()
+    .uuid()
+    .optional()
+    .nullable()
+    .or(z.literal("").transform(() => null))
+    .or(z.literal("NONE").transform(() => null)),
+  seasonId: z
+    .string()
+    .uuid()
+    .optional()
+    .nullable()
+    .or(z.literal("").transform(() => null))
+    .or(z.literal("NONE").transform(() => null)),
   homeTeamId: z.string().uuid("Home team is required"),
   awayTeamId: z.string().uuid("Away team is required"),
   matchDate: z.string().min(1, "Match date is required"),
@@ -150,14 +162,26 @@ export const updateMatchSchema = createMatchSchema.partial();
 export const matchResultSchema = z.object({
   homeScore: z.coerce.number().int().min(0, "Score cannot be negative"),
   awayScore: z.coerce.number().int().min(0, "Score cannot be negative"),
-  playerOfMatchId: z.string().uuid().optional().nullable(),
+  playerOfMatchId: z
+    .string()
+    .uuid()
+    .optional()
+    .nullable()
+    .or(z.literal("").transform(() => null))
+    .or(z.literal("NONE").transform(() => null)),
   matchReport: z.string().optional().nullable(),
   status: z.enum(["COMPLETED", "LIVE"]).default("COMPLETED"),
 });
 
 export const matchEventSchema = z.object({
   playerId: z.string().uuid("Player is required"),
-  relatedPlayerId: z.string().uuid().optional().nullable(),
+  relatedPlayerId: z
+    .string()
+    .uuid()
+    .optional()
+    .nullable()
+    .or(z.literal("").transform(() => null))
+    .or(z.literal("NONE").transform(() => null)),
   eventType: z.enum([
     "GOAL",
     "ASSIST",
@@ -217,7 +241,13 @@ export const createNewsSchema = z.object({
   excerpt: z.string().optional().nullable(),
   content: z.string().min(1, "Content is required"),
   featuredImageUrl: z.string().optional().nullable(),
-  categoryId: z.string().uuid().optional().nullable(),
+  categoryId: z
+    .string()
+    .uuid()
+    .optional()
+    .nullable()
+    .or(z.literal("").transform(() => null))
+    .or(z.literal("NONE").transform(() => null)),
   tags: z.array(z.string()).default([]),
   status: z.enum(["DRAFT", "PUBLISHED", "SCHEDULED", "ARCHIVED"]).default("DRAFT"),
   isFeatured: z.boolean().default(false),

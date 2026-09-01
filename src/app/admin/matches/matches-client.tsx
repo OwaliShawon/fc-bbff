@@ -113,7 +113,15 @@ export function MatchesClient({
   async function handleResult() {
     if (!selectedMatch) return;
     startTransition(async () => {
-      const result = await updateMatchResult(selectedMatch.id, resultData);
+      const payload = {
+        ...resultData,
+        playerOfMatchId:
+          resultData.playerOfMatchId && resultData.playerOfMatchId !== "NONE"
+            ? resultData.playerOfMatchId
+            : null,
+        matchReport: resultData.matchReport || null,
+      };
+      const result = await updateMatchResult(selectedMatch.id, payload);
       if (result.success) {
         toast.success("Result published successfully!");
         setShowResultDialog(false);

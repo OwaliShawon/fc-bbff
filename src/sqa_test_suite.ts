@@ -178,6 +178,24 @@ async function main() {
     if (!captainTeam || !captainTeam.team) throw new Error("Failed to resolve captain team");
   });
 
+  await runTest("ADMIN_PAGES", "Player secondaryPosition Update & Verification", async () => {
+    const player = await db.player.findFirst();
+    if (!player) throw new Error("No player found");
+    const updated = await db.player.update({
+      where: { id: player.id },
+      data: {
+        secondaryPosition: player.secondaryPosition === "FORWARD" ? "MIDFIELDER" : "FORWARD",
+      },
+    });
+    if (!updated) throw new Error("Player update failed");
+
+    // Reset back
+    await db.player.update({
+      where: { id: player.id },
+      data: { secondaryPosition: player.secondaryPosition },
+    });
+  });
+
   await runTest("ADMIN_PAGES", "Admin Seasons Management Query", async () => {
     const seasons = await getSeasons();
     if (!Array.isArray(seasons)) throw new Error("Seasons query failed");
