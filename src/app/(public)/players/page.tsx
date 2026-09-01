@@ -70,13 +70,20 @@ export default async function PlayersPage() {
                           <h3 className="font-bold text-white group-hover:text-emerald-400 transition-colors">
                             {player.firstName} {player.lastName}
                           </h3>
-                          <Badge variant="secondary" className={`mt-1.5 text-xs ${getPlayerPositionColor(player.position)}`}>
-                            {player.position}
-                          </Badge>
+                          <div className="flex flex-wrap items-center justify-center gap-1 mt-1.5">
+                            <Badge variant="secondary" className={`text-xs ${getPlayerPositionColor(player.position)}`}>
+                              {player.position}
+                            </Badge>
+                            {player.secondaryPosition && (
+                              <Badge variant="outline" className="border-white/10 text-[10px] text-neutral-400">
+                                Sec: {player.secondaryPosition}
+                              </Badge>
+                            )}
+                          </div>
                         </div>
-                        {player.nationality && (
-                          <p className="mt-2 text-xs text-neutral-500">{player.nationality}</p>
-                        )}
+                        <p className="mt-2 text-xs text-neutral-500">
+                          {[player.nationality, player.currentCity].filter(Boolean).join(" • ")}
+                        </p>
                       </div>
                     </Link>
                   ))}

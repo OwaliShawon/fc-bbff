@@ -47,6 +47,12 @@ export const createPlayerSchema = z.object({
   lastName: z.string().min(1, "Last name is required"),
   jerseyNumber: z.coerce.number().int().min(1).max(99).optional().nullable(),
   position: z.enum(["GOALKEEPER", "DEFENDER", "MIDFIELDER", "FORWARD"]),
+  secondaryPosition: z
+    .enum(["GOALKEEPER", "DEFENDER", "MIDFIELDER", "FORWARD"])
+    .optional()
+    .nullable()
+    .or(z.literal("").transform(() => null)),
+  currentCity: z.string().optional().nullable(),
   dateOfBirth: z.string().optional().nullable(),
   nationality: z.string().optional().nullable(),
   height: z.string().optional().nullable(),

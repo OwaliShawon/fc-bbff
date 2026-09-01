@@ -4,7 +4,7 @@ import Link from "next/link";
 import { getPlayerBySlug } from "@/actions/player-actions";
 import { Badge } from "@/components/ui/badge";
 import { getPlayerPositionColor, formatDate } from "@/lib/utils";
-import { Calendar, MapPin, Ruler, Weight, Footprints, Star, ArrowLeft } from "lucide-react";
+import { Calendar, MapPin, Ruler, Weight, Footprints, Star, ArrowLeft, Building2, Shield } from "lucide-react";
 
 export default async function PlayerPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -14,6 +14,8 @@ export default async function PlayerPage({ params }: { params: Promise<{ slug: s
   const details = [
     { icon: Calendar, label: "Date of Birth", value: player.dateOfBirth ? formatDate(player.dateOfBirth) : null },
     { icon: MapPin, label: "Nationality", value: player.nationality },
+    { icon: Building2, label: "Current City", value: player.currentCity },
+    { icon: Shield, label: "Secondary Position", value: player.secondaryPosition },
     { icon: Ruler, label: "Height", value: player.height },
     { icon: Weight, label: "Weight", value: player.weight },
     { icon: Footprints, label: "Preferred Foot", value: player.preferredFoot },
@@ -61,6 +63,11 @@ export default async function PlayerPage({ params }: { params: Promise<{ slug: s
                 <Badge className={`${getPlayerPositionColor(player.position)} text-sm`}>
                   {player.position}
                 </Badge>
+                {player.secondaryPosition && (
+                  <Badge variant="outline" className="border-emerald-500/30 text-emerald-300 text-sm">
+                    Sec: {player.secondaryPosition}
+                  </Badge>
+                )}
                 <Badge className={player.status === "ACTIVE" ? "bg-emerald-500/10 text-emerald-400" : "bg-red-500/10 text-red-400"}>
                   {player.status}
                 </Badge>

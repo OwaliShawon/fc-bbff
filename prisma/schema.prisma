@@ -174,12 +174,14 @@ model Player {
   lastName        String
   slug            String         @unique
   jerseyNumber    Int?
-  position        PlayerPosition
-  dateOfBirth     DateTime?
-  nationality     String?
-  height          String?
-  weight          String?
-  preferredFoot   String?
+  position          PlayerPosition
+  secondaryPosition PlayerPosition?
+  currentCity       String?
+  dateOfBirth       DateTime?
+  nationality       String?
+  height            String?
+  weight            String?
+  preferredFoot     String?
   dateJoined      DateTime       @default(now())
   bio             String?        @db.Text
   photoUrl        String?

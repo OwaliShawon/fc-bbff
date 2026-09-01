@@ -64,6 +64,8 @@ type PlayerFormData = {
   lastName: string;
   jerseyNumber: number | null;
   position: string;
+  secondaryPosition: string;
+  currentCity: string;
   dateOfBirth: string;
   nationality: string;
   height: string;
@@ -81,6 +83,8 @@ const defaultFormData: PlayerFormData = {
   lastName: "",
   jerseyNumber: null,
   position: "MIDFIELDER",
+  secondaryPosition: "NONE",
+  currentCity: "",
   dateOfBirth: "",
   nationality: "",
   height: "",
@@ -130,6 +134,8 @@ export function PlayersClient({
       lastName: player.lastName,
       jerseyNumber: player.jerseyNumber,
       position: player.position,
+      secondaryPosition: player.secondaryPosition || "NONE",
+      currentCity: player.currentCity || "",
       dateOfBirth: player.dateOfBirth
         ? new Date(player.dateOfBirth).toISOString().split("T")[0]
         : "",
@@ -155,9 +161,18 @@ export function PlayersClient({
 
   async function handleSubmit() {
     startTransition(async () => {
+      const payload = {
+        ...formData,
+        secondaryPosition:
+          formData.secondaryPosition === "NONE" || !formData.secondaryPosition
+            ? null
+            : formData.secondaryPosition,
+        currentCity: formData.currentCity ? formData.currentCity.trim() : null,
+      };
+
       const result = editingPlayer
-        ? await updatePlayer(editingPlayer.id, formData)
-        : await createPlayer(formData);
+        ? await updatePlayer(editingPlayer.id, payload)
+        : await createPlayer(payload);
 
       if (result.success) {
         toast.success(
@@ -337,18 +352,25 @@ export function PlayersClient({
                             {player.firstName} {player.lastName}
                           </p>
                           <p className="text-xs text-neutral-500">
-                            {player.nationality || "—"}
+                            {[player.nationality, player.currentCity].filter(Boolean).join(" • ") || "—"}
                           </p>
                         </div>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge
-                        variant="secondary"
-                        className={getPlayerPositionColor(player.position)}
-                      >
-                        {player.position}
-                      </Badge>
+                      <div className="flex flex-col gap-1 items-start">
+                        <Badge
+                          variant="secondary"
+                          className={getPlayerPositionColor(player.position)}
+                        >
+                          {player.position}
+                        </Badge>
+                        {player.secondaryPosition && (
+                          <span className="text-[10px] text-neutral-500">
+                            Sec: {player.secondaryPosition}
+                          </span>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell>
                       <Badge
@@ -482,7 +504,7 @@ export function PlayersClient({
               />
             </div>
             <div className="space-y-2">
-              <Label>Position *</Label>
+              <Label>Primary Position *</Label>
               <Select
                 value={formData.position}
                 onValueChange={(v) =>
@@ -499,6 +521,36 @@ export function PlayersClient({
                   <SelectItem value="FORWARD">Forward</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Secondary Position</Label>
+              <Select
+                value={formData.secondaryPosition}
+                onValueChange={(v) =>
+                  setFormData({ ...formData, secondaryPosition: v })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="None" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="NONE">None</SelectItem>
+                  <SelectItem value="GOALKEEPER">Goalkeeper</SelectItem>
+                  <SelectItem value="DEFENDER">Defender</SelectItem>
+                  <SelectItem value="MIDFIELDER">Midfielder</SelectItem>
+                  <SelectItem value="FORWARD">Forward</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Current City</Label>
+              <Input
+                placeholder="e.g., Dhaka, London"
+                value={formData.currentCity}
+                onChange={(e) =>
+                  setFormData({ ...formData, currentCity: e.target.value })
+                }
+              />
             </div>
             <div className="space-y-2">
               <Label>Date of Birth</Label>
