@@ -90,6 +90,10 @@ export const createTeamSchema = z.object({
   description: z.string().optional().nullable(),
   logoUrl: z.string().optional().nullable(),
   manager: z.string().optional().nullable(),
+  contactPersonName: z.string().optional().nullable(),
+  contactNumber: z.string().optional().nullable(),
+  facebookUrl: z.string().optional().nullable(),
+  isExternal: z.boolean().default(false),
   status: z.enum(["ACTIVE", "INACTIVE"]).default("ACTIVE"),
 });
 

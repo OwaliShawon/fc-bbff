@@ -96,6 +96,10 @@ export function TeamsClient({
     description: "",
     logoUrl: "",
     manager: "",
+    contactPersonName: "",
+    contactNumber: "",
+    facebookUrl: "",
+    isExternal: false,
     status: "ACTIVE",
   });
 
@@ -115,6 +119,10 @@ export function TeamsClient({
       description: "",
       logoUrl: "",
       manager: "",
+      contactPersonName: "",
+      contactNumber: "",
+      facebookUrl: "",
+      isExternal: false,
       status: "ACTIVE",
     });
     setShowDialog(true);
@@ -127,6 +135,10 @@ export function TeamsClient({
       description: team.description || "",
       logoUrl: team.logoUrl || "",
       manager: team.manager || "",
+      contactPersonName: (team as any).contactPersonName || "",
+      contactNumber: (team as any).contactNumber || "",
+      facebookUrl: (team as any).facebookUrl || "",
+      isExternal: (team as any).isExternal || false,
       status: team.status,
     });
     setShowDialog(true);
@@ -322,16 +334,45 @@ export function TeamsClient({
                   <TableRow key={team.id}>
                     <TableCell>
                       <div className="flex items-center gap-3">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-100 text-sm font-bold text-emerald-700 dark:bg-emerald-900/30">
-                          {team.name.charAt(0)}
-                        </div>
+                        {team.logoUrl ? (
+                          <img
+                            src={team.logoUrl}
+                            alt={team.name}
+                            className="h-9 w-9 rounded-lg object-cover border border-neutral-200 dark:border-neutral-800"
+                          />
+                        ) : (
+                          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-100 text-sm font-bold text-emerald-700 dark:bg-emerald-900/30">
+                            {team.name.charAt(0)}
+                          </div>
+                        )}
                         <div>
-                          <p className="font-medium">{team.name}</p>
+                          <div className="flex items-center gap-2">
+                            <p className="font-medium">{team.name}</p>
+                            {team.isExternal ? (
+                              <Badge variant="outline" className="text-[10px] border-amber-500/40 text-amber-500 bg-amber-500/10 font-bold">
+                                Outsider Team
+                              </Badge>
+                            ) : (
+                              <Badge variant="outline" className="text-[10px] border-emerald-500/40 text-emerald-500 bg-emerald-500/10 font-bold">
+                                FC BBFF Squad
+                              </Badge>
+                            )}
+                          </div>
                           <p className="max-w-[300px] truncate text-xs text-neutral-500">{team.description || "—"}</p>
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell className="text-sm">{team.manager || "—"}</TableCell>
+                    <TableCell className="text-sm">
+                      <div>
+                        <p className="font-medium text-neutral-900 dark:text-neutral-200">{team.manager || "—"}</p>
+                        {team.contactPersonName && (
+                          <p className="text-xs text-neutral-500">
+                            Contact: <span className="text-emerald-400 font-semibold">{team.contactPersonName}</span>
+                            {team.contactNumber ? ` (${team.contactNumber})` : ""}
+                          </p>
+                        )}
+                      </div>
+                    </TableCell>
                     <TableCell>
                       <Badge variant="secondary" className="gap-1 font-medium">
                         <UsersRound className="h-3 w-3 text-emerald-600" />
@@ -681,6 +722,19 @@ export function TeamsClient({
             <DialogTitle>{editingTeam ? "Edit Team" : "Add Team"}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
+            <div className="flex items-center gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3">
+              <Checkbox
+                id="isExternalTeam"
+                checked={formData.isExternal}
+                onCheckedChange={(checked) =>
+                  setFormData({ ...formData, isExternal: checked === true })
+                }
+              />
+              <Label htmlFor="isExternalTeam" className="cursor-pointer text-xs font-bold text-amber-300">
+                This is an External / Outsider Opponent Team
+              </Label>
+            </div>
+
             <div className="space-y-2">
               <Label>Team Name *</Label>
               <Input
@@ -690,24 +744,70 @@ export function TeamsClient({
                 }
               />
             </div>
-            <div className="space-y-2">
-              <Label>Manager</Label>
-              <Input
-                value={formData.manager}
-                onChange={(e) =>
-                  setFormData({ ...formData, manager: e.target.value })
-                }
-              />
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label>Manager / Coach</Label>
+                <Input
+                  value={formData.manager}
+                  onChange={(e) =>
+                    setFormData({ ...formData, manager: e.target.value })
+                  }
+                  placeholder="e.g. John Doe"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Logo URL</Label>
+                <Input
+                  value={formData.logoUrl}
+                  onChange={(e) =>
+                    setFormData({ ...formData, logoUrl: e.target.value })
+                  }
+                  placeholder="https://..."
+                />
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label>Logo URL</Label>
-              <Input
-                value={formData.logoUrl}
-                onChange={(e) =>
-                  setFormData({ ...formData, logoUrl: e.target.value })
-                }
-              />
+
+            {/* Outsider / Contact Person Details */}
+            <div className="rounded-xl border border-white/10 bg-white/[0.02] p-3 space-y-3">
+              <p className="text-xs font-bold text-emerald-400 uppercase tracking-wider">
+                Contact Person Details
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Contact Person Name</Label>
+                  <Input
+                    value={formData.contactPersonName}
+                    onChange={(e) =>
+                      setFormData({ ...formData, contactPersonName: e.target.value })
+                    }
+                    placeholder="e.g. Rahat Ahmed"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Contact Phone Number</Label>
+                  <Input
+                    value={formData.contactNumber}
+                    onChange={(e) =>
+                      setFormData({ ...formData, contactNumber: e.target.value })
+                    }
+                    placeholder="e.g. +8801700000000"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label className="text-xs">Facebook Profile / Page URL (Optional)</Label>
+                <Input
+                  value={formData.facebookUrl}
+                  onChange={(e) =>
+                    setFormData({ ...formData, facebookUrl: e.target.value })
+                  }
+                  placeholder="https://facebook.com/..."
+                />
+              </div>
             </div>
+
             <div className="space-y-2">
               <Label>Description</Label>
               <Textarea
@@ -715,7 +815,7 @@ export function TeamsClient({
                 onChange={(e) =>
                   setFormData({ ...formData, description: e.target.value })
                 }
-                rows={3}
+                rows={2}
               />
             </div>
             <div className="space-y-2">

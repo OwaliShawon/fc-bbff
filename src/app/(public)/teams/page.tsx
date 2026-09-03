@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { UsersRound, User, ArrowRight, Shield } from "lucide-react";
 
 export default async function TeamsPage() {
-  const { data: teams } = await getTeams({ pageSize: 50, status: "ACTIVE" });
+  const { data: teams } = await getTeams({ pageSize: 50, status: "ACTIVE", isExternal: false });
 
   return (
     <div className="min-h-screen">

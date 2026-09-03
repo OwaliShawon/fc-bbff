@@ -22,6 +22,7 @@ export async function getTeams(params?: {
   pageSize?: number;
   search?: string;
   status?: string;
+  isExternal?: boolean;
 }): Promise<PaginatedResponse<Team>> {
   const page = params?.page || 1;
   const pageSize = params?.pageSize || 10;
@@ -29,6 +30,9 @@ export async function getTeams(params?: {
 
   const where: Record<string, unknown> = { deletedAt: null };
 
+  if (params?.isExternal !== undefined) {
+    where.isExternal = params.isExternal;
+  }
   if (params?.search) {
     where.name = { contains: params.search, mode: "insensitive" };
   }
@@ -198,13 +202,7 @@ export async function addPlayerToTeam(
   try {
     await requirePermission(PERMISSIONS.TEAMS_UPDATE);
 
-    // Remove from any other teams to ensure clean transfer
-    await db.teamPlayer.deleteMany({
-      where: {
-        playerId,
-        NOT: { teamId },
-      },
-    });
+    // Allow players to belong to multiple internal teams (e.g. FC BBFF default umbrella + sub-teams)
 
     // If setting as captain, unset existing captain for this team
     if (options?.isCaptain) {

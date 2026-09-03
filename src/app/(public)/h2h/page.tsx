@@ -1,11 +1,14 @@
-import { getAllOpponentRecords } from "@/actions/h2h-actions";
+import { getAllOpponentRecords, getH2HTeamOptions } from "@/actions/h2h-actions";
 import { H2HComparisonClient } from "@/components/h2h/h2h-comparison-client";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Swords, Trophy, Shield, Flame } from "lucide-react";
 import Link from "next/link";
 
 export default async function H2HPage() {
-  const allSummaries = await getAllOpponentRecords();
+  const [allSummaries, teamOptions] = await Promise.all([
+    getAllOpponentRecords(),
+    getH2HTeamOptions(),
+  ]);
 
   return (
     <div className="min-h-screen bg-neutral-950 text-white">
@@ -20,7 +23,7 @@ export default async function H2HPage() {
             FC BBFF vs Opponents
           </h1>
           <p className="mt-4 text-neutral-400 max-w-2xl mx-auto text-sm sm:text-base">
-            Complete historical track record, head-to-head statistics, win rates, and match logs against all outsider teams.
+            Complete historical track record, head-to-head statistics, win rates, and match logs across internal FC BBFF teams and external outsider opponents.
           </p>
         </div>
       </section>
@@ -29,7 +32,12 @@ export default async function H2HPage() {
       <section className="py-12 bg-neutral-950">
         <div className="mx-auto max-w-7xl px-4 lg:px-8 space-y-16">
           {/* Interactive H2H Card & Match Log */}
-          <H2HComparisonClient allSummaries={allSummaries} initialSummary={allSummaries[0] || null} />
+          <H2HComparisonClient
+            allSummaries={allSummaries}
+            initialSummary={allSummaries[0] || null}
+            internalTeams={teamOptions.internalTeams}
+            outsiderTeams={teamOptions.outsiderTeams}
+          />
 
           {/* Overall Opponents Head-to-Head Table */}
           <div className="rounded-2xl border border-white/10 bg-white/5 p-6 lg:p-8">

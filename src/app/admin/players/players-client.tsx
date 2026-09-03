@@ -405,25 +405,22 @@ export function PlayersClient({
                     </TableCell>
                     <TableCell className="text-sm">
                       {(() => {
-                        const tp = (player as any).teamPlayers?.[0];
-                        if (!tp?.team) {
+                        const teamPlayers = (player as any).teamPlayers || [];
+                        if (teamPlayers.length === 0) {
                           return <span className="text-xs text-neutral-400">Free Agent</span>;
                         }
                         return (
-                          <div className="flex flex-wrap items-center gap-1.5">
-                            <Badge variant="outline" className="font-medium bg-neutral-50 dark:bg-neutral-900 border-neutral-300 dark:border-neutral-700">
-                              {tp.team.name}
-                            </Badge>
-                            {tp.isCaptain && (
-                              <Badge className="bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 text-[10px] px-1.5 py-0 border border-amber-300 dark:border-amber-700">
-                                👑 Captain
+                          <div className="flex flex-wrap items-center gap-1.5 max-w-[200px]">
+                            {teamPlayers.map((tp: any) => (
+                              <Badge
+                                key={tp.id || tp.teamId}
+                                variant="outline"
+                                className="font-medium bg-neutral-50 dark:bg-neutral-900 border-neutral-300 dark:border-neutral-700 text-xs"
+                              >
+                                {tp.team?.name || "Team"}
+                                {tp.isCaptain ? " 👑" : tp.isViceCaptain ? " 🛡️" : ""}
                               </Badge>
-                            )}
-                            {tp.isViceCaptain && (
-                              <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300 text-[10px] px-1.5 py-0 border border-blue-300 dark:border-blue-700">
-                                🛡️ Vice-Captain
-                              </Badge>
-                            )}
+                            ))}
                           </div>
                         );
                       })()}
