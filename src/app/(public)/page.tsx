@@ -219,6 +219,12 @@ export default async function HomePage() {
                   <Badge variant="secondary" className={`mt-1 text-[10px] ${getPlayerPositionColor(player.position)}`}>
                     {player.position}
                   </Badge>
+                  {player.currentCity && (
+                    <p className="text-[10px] text-amber-300 font-semibold mt-1 flex items-center justify-center gap-0.5 truncate max-w-full">
+                      <MapPin className="h-2.5 w-2.5 text-amber-400 shrink-0" />
+                      <span className="truncate">{player.currentCity}</span>
+                    </p>
+                  )}
                 </Link>
               ))}
             </div>

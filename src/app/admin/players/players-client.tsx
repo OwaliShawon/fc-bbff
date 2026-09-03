@@ -54,6 +54,7 @@ import {
   Loader2,
   UserCircle,
   Filter,
+  MapPin,
 } from "lucide-react";
 import { getPlayerPositionColor } from "@/lib/utils";
 import type { PaginatedResponse, Player } from "@/types";
@@ -364,8 +365,9 @@ export function PlayersClient({
                           <p className="font-medium">
                             {player.firstName} {player.lastName}
                           </p>
-                          <p className="text-xs text-neutral-500">
-                            {[player.nationality, player.currentCity].filter(Boolean).join(" • ") || "—"}
+                          <p className="text-xs text-neutral-400 flex items-center gap-1 font-medium">
+                            {player.currentCity && <MapPin className="h-3 w-3 text-amber-400 shrink-0" />}
+                            <span>{[player.currentCity, player.nationality].filter(Boolean).join(" • ") || "—"}</span>
                           </p>
                         </div>
                       </div>

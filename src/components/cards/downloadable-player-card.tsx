@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Download, Loader2, Sparkles, Shield, Crown, Trophy, Activity } from "lucide-react";
+import { Download, Sparkles, Shield, Crown, MapPin } from "lucide-react";
 import { exportElementAsJpeg } from "@/lib/export-image";
 import { getPlayerPositionColor } from "@/lib/utils";
 
@@ -129,11 +129,6 @@ export function DownloadablePlayerCard({ player, team }: { player: any; team?: a
             <Badge className={`${getPlayerPositionColor(player.position)} text-[10px] px-2 py-0.5 shadow-lg font-bold`}>
               {player.position}
             </Badge>
-            {player.secondaryPosition && (
-              <Badge variant="outline" className="border-white/30 bg-neutral-950/80 text-[10px] px-2 py-0.5 text-neutral-200 font-medium">
-                {player.secondaryPosition}
-              </Badge>
-            )}
           </div>
           {team?.isCaptain && (
             <div className="absolute top-2.5 right-2.5 bg-amber-400 text-neutral-950 font-black text-[10px] px-2.5 py-0.5 rounded-full shadow-lg flex items-center gap-1 border border-amber-300 z-20">
@@ -142,14 +137,23 @@ export function DownloadablePlayerCard({ player, team }: { player: any; team?: a
           )}
         </div>
 
-        {/* Player Name & Team Info */}
+        {/* Player Name, City & Team Info */}
         <div className="relative z-10 text-center mb-3">
           <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
             {player.firstName} {player.lastName}
           </h2>
-          <p className="text-xs text-emerald-400 font-semibold mt-0.5 flex items-center justify-center gap-1">
-            <Shield className="h-3 w-3 text-emerald-400 shrink-0" />
-            <span className="truncate">{team?.team?.name || "FC BBFF Squad"}</span>
+          <p className="text-xs font-semibold mt-1 flex items-center justify-center gap-1.5 flex-wrap">
+            {player.currentCity && (
+              <span className="text-amber-300 flex items-center gap-0.5">
+                <MapPin className="h-3 w-3 text-amber-400 shrink-0" />
+                {player.currentCity}
+              </span>
+            )}
+            {player.currentCity && <span className="text-neutral-500">•</span>}
+            <span className="text-emerald-400 flex items-center gap-1 truncate max-w-[180px]">
+              <Shield className="h-3 w-3 text-emerald-400 shrink-0" />
+              {team?.team?.name || "FC BBFF Squad"}
+            </span>
           </p>
         </div>
 
@@ -173,18 +177,22 @@ export function DownloadablePlayerCard({ player, team }: { player: any; team?: a
           </div>
         </div>
 
-        {/* Player Stats Grid */}
-        <div className="relative z-10 grid grid-cols-3 gap-1.5 sm:gap-2 rounded-xl bg-white/[0.04] p-2.5 sm:p-3 border border-white/10 text-center text-xs mb-3">
+        {/* Player Stats Grid with City */}
+        <div className="relative z-10 grid grid-cols-4 gap-1 sm:gap-1.5 rounded-xl bg-white/[0.04] p-2.5 sm:p-3 border border-white/10 text-center text-xs mb-3">
           <div>
-            <p className="text-[9px] sm:text-[10px] text-neutral-400 uppercase font-semibold">Nationality</p>
+            <p className="text-[8px] sm:text-[9px] text-neutral-400 uppercase font-semibold">City</p>
+            <p className="font-bold text-amber-300 truncate mt-0.5">{player.currentCity || "—"}</p>
+          </div>
+          <div className="border-l border-white/10">
+            <p className="text-[8px] sm:text-[9px] text-neutral-400 uppercase font-semibold">Nation</p>
             <p className="font-bold text-white truncate mt-0.5">{player.nationality || "—"}</p>
           </div>
-          <div className="border-x border-white/10">
-            <p className="text-[9px] sm:text-[10px] text-neutral-400 uppercase font-semibold">Foot</p>
+          <div className="border-l border-white/10">
+            <p className="text-[8px] sm:text-[9px] text-neutral-400 uppercase font-semibold">Foot</p>
             <p className="font-bold text-emerald-400 mt-0.5 uppercase">{player.preferredFoot || "—"}</p>
           </div>
-          <div>
-            <p className="text-[9px] sm:text-[10px] text-neutral-400 uppercase font-semibold">Height</p>
+          <div className="border-l border-white/10">
+            <p className="text-[8px] sm:text-[9px] text-neutral-400 uppercase font-semibold">Height</p>
             <p className="font-bold text-white mt-0.5">{player.height || "—"}</p>
           </div>
         </div>

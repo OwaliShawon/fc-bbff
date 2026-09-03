@@ -4,7 +4,7 @@ import { getTeamBySlug } from "@/actions/team-actions";
 import { getHeadToHeadStats } from "@/actions/h2h-actions";
 import { DownloadableH2HCard } from "@/components/cards/downloadable-h2h-card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, UsersRound, Swords } from "lucide-react";
+import { ArrowLeft, UsersRound, Swords, MapPin } from "lucide-react";
 
 export default async function TeamDetailPage({
   params,
@@ -109,6 +109,12 @@ export default async function TeamDetailPage({
                       {player.firstName} {player.lastName}
                     </p>
                     <p className="text-xs text-neutral-400 font-medium mt-1">{player.position}</p>
+                    {player.currentCity && (
+                      <p className="text-[11px] text-amber-300 font-semibold mt-1 flex items-center justify-center gap-0.5">
+                        <MapPin className="h-3 w-3 text-amber-400 shrink-0" />
+                        <span className="truncate">{player.currentCity}</span>
+                      </p>
+                    )}
                     {(isCaptain || isViceCaptain) && (
                       <Badge className="mt-2 text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/30">
                         {isCaptain ? "C" : "VC"}

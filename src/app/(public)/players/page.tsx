@@ -2,7 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { getPlayers } from "@/actions/player-actions";
 import { Badge } from "@/components/ui/badge";
-import { UserCircle } from "lucide-react";
+import { UserCircle, MapPin } from "lucide-react";
 import { getPlayerPositionColor } from "@/lib/utils";
 
 export default async function PlayersPage() {
@@ -74,15 +74,11 @@ export default async function PlayersPage() {
                             <Badge variant="secondary" className={`text-xs ${getPlayerPositionColor(player.position)}`}>
                               {player.position}
                             </Badge>
-                            {player.secondaryPosition && (
-                              <Badge variant="outline" className="border-white/10 text-[10px] text-neutral-400">
-                                Sec: {player.secondaryPosition}
-                              </Badge>
-                            )}
                           </div>
                         </div>
-                        <p className="mt-2 text-xs text-neutral-500">
-                          {[player.nationality, player.currentCity].filter(Boolean).join(" • ")}
+                        <p className="mt-2.5 text-xs text-neutral-400 flex items-center justify-center gap-1 font-medium">
+                          <MapPin className="h-3 w-3 text-emerald-400 shrink-0" />
+                          <span className="truncate">{player.currentCity || player.nationality || "FC BBFF"}</span>
                         </p>
                       </div>
                     </Link>
