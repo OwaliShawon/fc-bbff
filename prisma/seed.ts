@@ -1,16 +1,26 @@
 import "dotenv/config";
-import { neonConfig } from "@neondatabase/serverless";
+import { Pool as PgPool } from "pg";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { Pool as NeonPool, neonConfig } from "@neondatabase/serverless";
 import { PrismaNeon } from "@prisma/adapter-neon";
 import { PrismaClient, PlayerPosition, ManagementRole } from "@prisma/client";
 import { hash } from "bcryptjs";
 import slugify from "slugify";
 import ws from "ws";
 
-neonConfig.webSocketConstructor = ws;
+const connectionString = process.env.DATABASE_URL || "";
+let prisma: PrismaClient;
 
-const connectionString = process.env.DATABASE_URL!;
-const adapter = new PrismaNeon({ connectionString });
-const prisma = new PrismaClient({ adapter });
+if (connectionString.includes("neon.tech") || connectionString.includes("neondb")) {
+  neonConfig.webSocketConstructor = ws;
+  const pool = new NeonPool({ connectionString });
+  const adapter = new PrismaNeon(pool as any);
+  prisma = new PrismaClient({ adapter });
+} else {
+  const pool = new PgPool({ connectionString });
+  const adapter = new PrismaPg(pool as any);
+  prisma = new PrismaClient({ adapter });
+}
 
 async function main() {
   console.log("🌱 Starting seed with specific teams and players...");

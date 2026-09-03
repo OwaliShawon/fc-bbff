@@ -25,6 +25,12 @@ export async function createAuditLog(input: AuditLogInput) {
     }
     if (!userId) return;
 
+    const userExists = await db.user.findUnique({
+      where: { id: userId },
+      select: { id: true },
+    });
+    if (!userExists) return;
+
     await db.auditLog.create({
       data: {
         userId,

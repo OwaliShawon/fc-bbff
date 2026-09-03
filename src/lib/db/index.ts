@@ -1,11 +1,9 @@
-import { neonConfig } from "@neondatabase/serverless";
+import { Pool as PgPool } from "pg";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { Pool as NeonPool, neonConfig } from "@neondatabase/serverless";
 import { PrismaNeon } from "@prisma/adapter-neon";
 import { PrismaClient } from "@prisma/client";
 import ws from "ws";
-
-if (typeof globalThis.WebSocket === "undefined") {
-  neonConfig.webSocketConstructor = ws;
-}
 
 declare global {
   // eslint-disable-next-line no-var
@@ -13,16 +11,23 @@ declare global {
 }
 
 function createClient(): PrismaClient {
-  const connectionString = process.env.DATABASE_URL!;
-  const adapter = new PrismaNeon({ connectionString });
-  return new PrismaClient({ adapter });
+  const connectionString = process.env.DATABASE_URL || "";
+  if (connectionString.includes("neon.tech") || connectionString.includes("neondb")) {
+    if (typeof globalThis.WebSocket === "undefined") {
+      neonConfig.webSocketConstructor = ws;
+    }
+    const pool = new NeonPool({ connectionString });
+    const adapter = new PrismaNeon(pool as any);
+    return new PrismaClient({ adapter });
+  } else {
+    const pool = new PgPool({ connectionString });
+    const adapter = new PrismaPg(pool as any);
+    return new PrismaClient({ adapter });
+  }
 }
 
 function getClient(): PrismaClient {
-  if (
-    !globalThis.__prismaInstance ||
-    !(globalThis.__prismaInstance as unknown as { managementMember?: unknown }).managementMember
-  ) {
+  if (!globalThis.__prismaInstance) {
     globalThis.__prismaInstance = createClient();
   }
   return globalThis.__prismaInstance;
