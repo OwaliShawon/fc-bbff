@@ -10,7 +10,9 @@
     "postinstall": "prisma generate",
     "db:seed": "npx tsx prisma/seed.ts",
     "db:push": "npx prisma db push",
-    "db:generate": "npx prisma generate"
+    "db:generate": "npx prisma generate",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui"
   },
   "prisma": {
     "seed": "npx tsx prisma/seed.ts"
@@ -65,6 +67,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "@tailwindcss/postcss": "^4",
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20",
