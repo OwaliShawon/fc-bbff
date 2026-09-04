@@ -46,17 +46,47 @@ export default async function TeamDetailPage({
               </div>
             )}
             <div>
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3">
                 <h1 className="text-3xl font-black text-white md:text-5xl">{team.name}</h1>
-                <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-400">
-                  {team.status}
-                </Badge>
+                {team.isExternal ? (
+                  <Badge variant="outline" className="border-amber-500/40 text-amber-400 bg-amber-500/10 font-bold">
+                    Outsider Opponent Team
+                  </Badge>
+                ) : (
+                  <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-400 font-bold">
+                    {team.status}
+                  </Badge>
+                )}
               </div>
               {team.description && <p className="mt-2 text-neutral-400">{team.description}</p>}
               {team.manager && (
                 <p className="mt-2 text-sm text-emerald-400">
                   Manager: <strong className="text-white">{team.manager}</strong>
                 </p>
+              )}
+              {team.contactPersonName && (
+                <div className="mt-3 flex flex-wrap items-center gap-4 text-xs text-neutral-300 bg-white/5 border border-white/10 rounded-xl p-3 max-w-md">
+                  <div>
+                    <span className="text-neutral-400">Contact Person:</span>{" "}
+                    <strong className="text-emerald-400">{team.contactPersonName}</strong>
+                  </div>
+                  {team.contactNumber && (
+                    <div>
+                      <span className="text-neutral-400">Phone:</span>{" "}
+                      <strong className="text-white">{team.contactNumber}</strong>
+                    </div>
+                  )}
+                  {team.facebookUrl && (
+                    <a
+                      href={team.facebookUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-400 hover:underline font-semibold"
+                    >
+                      Facebook Profile →
+                    </a>
+                  )}
+                </div>
               )}
             </div>
           </div>
@@ -76,55 +106,57 @@ export default async function TeamDetailPage({
             </div>
           )}
 
-          {/* Squad List */}
-          <div>
-            <h2 className="mb-8 text-2xl font-bold text-white flex items-center gap-2">
-              <UsersRound className="h-6 w-6 text-emerald-400" /> Squad Roster ({team.teamPlayers?.length || 0})
-            </h2>
+          {/* Squad List (Internal Squads Only) */}
+          {!team.isExternal && (
+            <div>
+              <h2 className="mb-8 text-2xl font-bold text-white flex items-center gap-2">
+                <UsersRound className="h-6 w-6 text-emerald-400" /> Squad Roster ({team.teamPlayers?.length || 0})
+              </h2>
 
-            {!team.teamPlayers || team.teamPlayers.length === 0 ? (
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-12 text-center text-neutral-400">
-                <p className="text-base text-neutral-400">No players currently assigned to this squad.</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-                {team.teamPlayers.map(({ player, isCaptain, isViceCaptain }: any) => (
-                  <Link
-                    key={player.id}
-                    href={`/players/${player.slug}`}
-                    className="group overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-4 text-center transition-all hover:border-emerald-500/30 hover:bg-emerald-500/5"
-                  >
-                    <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-xl bg-white/10 text-xl font-bold text-white group-hover:bg-emerald-500/20 group-hover:text-emerald-400 transition-all">
-                      {player.photoUrl ? (
-                        <img
-                          src={player.photoUrl}
-                          alt={`${player.firstName} ${player.lastName}`}
-                          className="h-full w-full rounded-xl object-cover"
-                        />
-                      ) : (
-                        player.jerseyNumber ? `#${player.jerseyNumber}` : player.firstName.charAt(0)
-                      )}
-                    </div>
-                    <p className="font-bold text-white group-hover:text-emerald-400 transition-colors text-sm">
-                      {player.firstName} {player.lastName}
-                    </p>
-                    <p className="text-xs text-neutral-400 font-medium mt-1">{player.position}</p>
-                    {player.currentCity && (
-                      <p className="text-[11px] text-amber-300 font-semibold mt-1 flex items-center justify-center gap-0.5">
-                        <MapPin className="h-3 w-3 text-amber-400 shrink-0" />
-                        <span className="truncate">{player.currentCity}</span>
+              {!team.teamPlayers || team.teamPlayers.length === 0 ? (
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-12 text-center text-neutral-400">
+                  <p className="text-base text-neutral-400">No players currently assigned to this squad.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+                  {team.teamPlayers.map(({ player, isCaptain, isViceCaptain }: any) => (
+                    <Link
+                      key={player.id}
+                      href={`/players/${player.slug}`}
+                      className="group overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-4 text-center transition-all hover:border-emerald-500/30 hover:bg-emerald-500/5"
+                    >
+                      <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-xl bg-white/10 text-xl font-bold text-white group-hover:bg-emerald-500/20 group-hover:text-emerald-400 transition-all">
+                        {player.photoUrl ? (
+                          <img
+                            src={player.photoUrl}
+                            alt={`${player.firstName} ${player.lastName}`}
+                            className="h-full w-full rounded-xl object-cover"
+                          />
+                        ) : (
+                          player.jerseyNumber ? `#${player.jerseyNumber}` : player.firstName.charAt(0)
+                        )}
+                      </div>
+                      <p className="font-bold text-white group-hover:text-emerald-400 transition-colors text-sm">
+                        {player.firstName} {player.lastName}
                       </p>
-                    )}
-                    {(isCaptain || isViceCaptain) && (
-                      <Badge className="mt-2 text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                        {isCaptain ? "C" : "VC"}
-                      </Badge>
-                    )}
-                  </Link>
-                ))}
-              </div>
-            )}
-          </div>
+                      <p className="text-xs text-neutral-400 font-medium mt-1">{player.position}</p>
+                      {player.currentCity && (
+                        <p className="text-[11px] text-amber-300 font-semibold mt-1 flex items-center justify-center gap-0.5">
+                          <MapPin className="h-3 w-3 text-amber-400 shrink-0" />
+                          <span className="truncate">{player.currentCity}</span>
+                        </p>
+                      )}
+                      {(isCaptain || isViceCaptain) && (
+                        <Badge className="mt-2 text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                          {isCaptain ? "C" : "VC"}
+                        </Badge>
+                      )}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </section>
     </div>

@@ -321,6 +321,15 @@ export async function addTeamToCompetition(
   try {
     await requirePermission(PERMISSIONS.COMPETITIONS_UPDATE);
 
+    const team = await db.team.findUnique({ where: { id: teamId } });
+    if (!team) return { success: false, error: "Team not found" };
+    if (team.isExternal) {
+      return {
+        success: false,
+        error: "External teams cannot join competitions. Competitions are strictly for internal FC BBFF teams.",
+      };
+    }
+
     await db.competitionTeam.create({
       data: { competitionId, teamId },
     });

@@ -833,14 +833,18 @@ export function MatchesClient({
                   <Label>Home Team *</Label>
                   <Select value={formData.homeTeamId} onValueChange={(v) => setFormData({ ...formData, homeTeamId: v })}>
                     <SelectTrigger className="w-full bg-neutral-900 border-neutral-700 text-white"><SelectValue placeholder="Select home team" /></SelectTrigger>
-                    <SelectContent className="bg-neutral-900 border-neutral-700 text-white">{teams.map((t) => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}</SelectContent>
+                    <SelectContent className="bg-neutral-900 border-neutral-700 text-white">
+                      {teams.filter((t: any) => !t.isExternal).map((t) => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
+                    </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
                   <Label>Away Team *</Label>
                   <Select value={formData.awayTeamId} onValueChange={(v) => setFormData({ ...formData, awayTeamId: v })}>
                     <SelectTrigger className="w-full bg-neutral-900 border-neutral-700 text-white"><SelectValue placeholder="Select away team" /></SelectTrigger>
-                    <SelectContent className="bg-neutral-900 border-neutral-700 text-white">{teams.map((t) => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}</SelectContent>
+                    <SelectContent className="bg-neutral-900 border-neutral-700 text-white">
+                      {teams.filter((t: any) => !t.isExternal).map((t) => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
+                    </SelectContent>
                   </Select>
                 </div>
               </>

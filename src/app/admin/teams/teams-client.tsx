@@ -374,10 +374,16 @@ export function TeamsClient({
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="secondary" className="gap-1 font-medium">
-                        <UsersRound className="h-3 w-3 text-emerald-600" />
-                        {team._count?.teamPlayers || 0} players
-                      </Badge>
+                      {team.isExternal ? (
+                        <Badge variant="outline" className="border-amber-500/30 text-amber-400 bg-amber-500/10 text-xs">
+                          Outsider Club
+                        </Badge>
+                      ) : (
+                        <Badge variant="secondary" className="gap-1 font-medium">
+                          <UsersRound className="h-3 w-3 text-emerald-600" />
+                          {team._count?.teamPlayers || 0} players
+                        </Badge>
+                      )}
                     </TableCell>
                     <TableCell>
                       <Badge className={team.status === "ACTIVE" ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" : ""}>
@@ -386,15 +392,17 @@ export function TeamsClient({
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1.5">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => openSquad(team)}
-                          className="h-8 gap-1.5 border-emerald-500/30 bg-emerald-50/50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950/30 dark:text-emerald-300 dark:hover:bg-emerald-900/50 text-xs font-semibold"
-                        >
-                          <UsersRound className="h-3.5 w-3.5" />
-                          Manage Squad
-                        </Button>
+                        {!team.isExternal && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => openSquad(team)}
+                            className="h-8 gap-1.5 border-emerald-500/30 bg-emerald-50/50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950/30 dark:text-emerald-300 dark:hover:bg-emerald-900/50 text-xs font-semibold"
+                          >
+                            <UsersRound className="h-3.5 w-3.5" />
+                            Manage Squad
+                          </Button>
+                        )}
                         <Button
                           variant="ghost"
                           size="icon"

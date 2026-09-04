@@ -709,7 +709,7 @@ export function PlayersClient({
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="NONE">No Team (Free Agent)</SelectItem>
-                      {teams.map((t) => (
+                      {teams.filter((t: any) => !t.isExternal).map((t) => (
                         <SelectItem key={t.id} value={t.id}>
                           {t.name}
                         </SelectItem>

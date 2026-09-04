@@ -127,6 +127,19 @@ export async function createMatch(data: unknown): Promise<ActionResponse<Match>>
       return { success: false, error: "Home and away teams must be different" };
     }
 
+    if (validated.competitionId) {
+      const [homeTeam, awayTeam] = await Promise.all([
+        db.team.findUnique({ where: { id: validated.homeTeamId } }),
+        db.team.findUnique({ where: { id: validated.awayTeamId } }),
+      ]);
+      if (homeTeam?.isExternal || awayTeam?.isExternal) {
+        return {
+          success: false,
+          error: "Competitions are strictly for internal FC BBFF teams. External teams cannot participate in competition matches.",
+        };
+      }
+    }
+
     const match = await db.match.create({
       data: {
         ...validated,
