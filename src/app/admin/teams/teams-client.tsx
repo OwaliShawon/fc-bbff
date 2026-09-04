@@ -354,7 +354,7 @@ export function TeamsClient({
                               </Badge>
                             ) : (
                               <Badge variant="outline" className="text-[10px] border-emerald-500/40 text-emerald-500 bg-emerald-500/10 font-bold">
-                                FC BBFF Squad
+                                BBFF Squad
                               </Badge>
                             )}
                           </div>

@@ -95,7 +95,7 @@ export function H2HComparisonClient({
               <SelectContent className="bg-neutral-900 border-neutral-700 text-white">
                 {internalTeams.length > 0 && (
                   <div className="px-2 py-1 text-[10px] font-bold text-emerald-400 uppercase">
-                    — Internal FC BBFF Squads —
+                    — Internal BBFF Squads —
                   </div>
                 )}
                 {internalTeams.filter((t) => t.id !== team1Id).map((t) => (
