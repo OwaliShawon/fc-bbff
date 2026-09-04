@@ -96,8 +96,8 @@ export async function getTeamBySlug(slug: string) {
 
   if (!team) return null;
 
-  // If this is the main core FC BBFF team, ensure all active club players are present in its squad
-  const isMainFcBbff = !team.isExternal && team.name.toUpperCase().includes("BBFF");
+  // If this is the single main team "FC BBFF", ensure all active club players are present in its squad
+  const isMainFcBbff = !team.isExternal && team.name.trim().toUpperCase() === "FC BBFF";
 
   if (isMainFcBbff) {
     const allPlayers = await db.player.findMany({
@@ -365,8 +365,8 @@ export async function togglePlayerViceCaptain(
 export async function getTeamSquad(teamId: string) {
   const team = await db.team.findUnique({ where: { id: teamId } });
 
-  // If this is the main core FC BBFF team, ensure Manager, Captain, Vice-Captain, and squad sync with current leadership
-  const isMainFcBbff = team && !team.isExternal && team.name.toUpperCase().includes("BBFF");
+  // If this is the single main team "FC BBFF", ensure Manager, Captain, Vice-Captain, and squad sync with current leadership
+  const isMainFcBbff = team && !team.isExternal && team.name.trim().toUpperCase() === "FC BBFF";
 
   if (isMainFcBbff) {
     // 1. Sync Manager name from active leadership

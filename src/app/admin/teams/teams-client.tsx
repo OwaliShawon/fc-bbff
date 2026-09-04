@@ -470,8 +470,17 @@ export function TeamsClient({
                 {activeSquadTeam?.name?.charAt(0)}
               </div>
               <div>
-                <DialogTitle className="text-xl font-bold">
+                <DialogTitle className="text-xl font-bold flex items-center gap-2">
                   {activeSquadTeam?.name} — Squad Roster
+                  {activeSquadTeam && !activeSquadTeam.isExternal && activeSquadTeam.name.trim().toUpperCase() === "FC BBFF" ? (
+                    <Badge variant="outline" className="border-emerald-500/40 text-emerald-400 bg-emerald-500/10 text-xs">
+                      Main Club Squad (All Players Auto-Included)
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className="border-amber-500/40 text-amber-400 bg-amber-500/10 text-xs">
+                      Custom Sub-Team Squad (Select Players)
+                    </Badge>
+                  )}
                 </DialogTitle>
                 <p className="text-xs text-neutral-500 mt-0.5">
                   Assign players to this team, appoint captains, or transfer squad members
@@ -481,6 +490,17 @@ export function TeamsClient({
           </DialogHeader>
 
           <div className="space-y-6 pt-2">
+            {/* Banner explaining automatic vs manual squad selection */}
+            {activeSquadTeam && !activeSquadTeam.isExternal && activeSquadTeam.name.trim().toUpperCase() === "FC BBFF" ? (
+              <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs text-emerald-300">
+                <strong>⚽ Main FC BBFF Team:</strong> All registered players in the club are automatically included in the main FC BBFF squad. To create smaller squads or sub-teams, create a sub-team and select specific players for it.
+              </div>
+            ) : (
+              <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-300">
+                <strong>⚡ Custom Squad Selection:</strong> Players must be explicitly selected and assigned to belong to this squad.
+              </div>
+            )}
+
             {/* Quick Add Player Section */}
             <div className="rounded-xl border border-neutral-200 bg-neutral-50/80 p-4 dark:border-neutral-800 dark:bg-neutral-900/50">
               <div className="mb-3">
