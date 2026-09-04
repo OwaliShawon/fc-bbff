@@ -682,17 +682,71 @@ export function MatchesClient({
                   </p>
                 </div>
 
-                <div className="space-y-2">
-                  <Label className="font-bold text-white">Outsider / External Team Name *</Label>
-                  <Input
-                    placeholder="e.g. Abahani Academy, Mohammedan SC, Dhaka Stars FC..."
-                    value={outsiderData.outsiderTeamName}
-                    onChange={(e) => setOutsiderData({ ...outsiderData, outsiderTeamName: e.target.value })}
-                    className="bg-neutral-900 border-neutral-700 text-white placeholder:text-neutral-500"
-                  />
-                  <p className="text-[11px] text-neutral-400">
-                    Type the opponent club name. If this team does not exist yet, it will be automatically registered!
-                  </p>
+                {/* Outsider Team Selector Dropdown & Name */}
+                <div className="space-y-3 rounded-xl bg-amber-500/10 border border-amber-500/20 p-3">
+                  <div className="space-y-1">
+                    <Label className="font-bold text-amber-400 text-xs uppercase tracking-wider">
+                      Select Outsider / External Opponent Team *
+                    </Label>
+                    <Select
+                      onValueChange={(teamId) => {
+                        if (teamId === "NEW") {
+                          setOutsiderData({
+                            ...outsiderData,
+                            outsiderTeamName: "",
+                            outsiderContactPersonName: "",
+                            outsiderContactNumber: "",
+                            outsiderFacebookUrl: "",
+                            outsiderLogoUrl: "",
+                          });
+                        } else {
+                          const found = teams.filter((t: any) => t.isExternal).find((t: any) => t.id === teamId);
+                          if (found) {
+                            setOutsiderData({
+                              ...outsiderData,
+                              outsiderTeamName: found.name,
+                              outsiderContactPersonName: (found as any).contactPersonName || "",
+                              outsiderContactNumber: (found as any).contactNumber || "",
+                              outsiderFacebookUrl: (found as any).facebookUrl || "",
+                              outsiderLogoUrl: found.logoUrl || "",
+                            });
+                          }
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="w-full bg-neutral-900 border-neutral-700 text-white font-semibold text-xs">
+                        <SelectValue placeholder="Choose an existing outsider team or enter new..." />
+                      </SelectTrigger>
+                      <SelectContent className="bg-neutral-900 border-neutral-700 text-white">
+                        <SelectItem value="NEW" className="font-bold text-emerald-400">
+                          ➕ Register / Enter New Outsider Team
+                        </SelectItem>
+                        {teams.filter((t: any) => t.isExternal).length > 0 && (
+                          <div className="px-2 py-1 text-[10px] font-bold text-amber-400 uppercase border-t border-neutral-800 my-1">
+                            — Existing Outsider Opponent Teams —
+                          </div>
+                        )}
+                        {teams.filter((t: any) => t.isExternal).map((t: any) => (
+                          <SelectItem key={t.id} value={t.id}>
+                            ⚽ {t.name} {(t as any).contactPersonName ? `(Contact: ${(t as any).contactPersonName})` : ""}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-1 pt-1">
+                    <Label className="text-xs font-bold text-white">Outsider / External Team Name *</Label>
+                    <Input
+                      placeholder="e.g. Abahani Academy, Mohammedan SC, Dhaka Stars FC..."
+                      value={outsiderData.outsiderTeamName}
+                      onChange={(e) => setOutsiderData({ ...outsiderData, outsiderTeamName: e.target.value })}
+                      className="bg-neutral-900 border-neutral-700 text-white placeholder:text-neutral-500 text-xs"
+                    />
+                    <p className="text-[11px] text-neutral-400">
+                      Selecting an existing team above will automatically fill in its name, contact person, phone number, and logo.
+                    </p>
+                  </div>
                 </div>
 
                 {/* Contact Person & Logo Fields for Outsider Team */}
