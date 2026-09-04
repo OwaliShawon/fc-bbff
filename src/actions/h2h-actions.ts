@@ -142,6 +142,7 @@ export async function getAllOpponentRecords(): Promise<H2HSummary[]> {
   const opponentTeams = await db.team.findMany({
     where: {
       id: { not: fcBbffTeam.id },
+      isExternal: false,
       status: "ACTIVE",
     },
     orderBy: { name: "asc" },
