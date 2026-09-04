@@ -30,7 +30,7 @@ import {
   Plus, Search, Edit, Trash2, ChevronLeft, ChevronRight, Loader2, Swords, Trophy, X, Globe, Users,
 } from "lucide-react";
 import { formatDateTime, getMatchStatusColor } from "@/lib/utils";
-import type { PaginatedResponse, Match, Season, Player } from "@/types";
+import type { PaginatedResponse, Match, Season, Player, Venue } from "@/types";
 import type { Team, Competition } from "@prisma/client";
 
 const EVENT_LABELS: Record<string, { label: string; icon: string; color: string }> = {
@@ -50,6 +50,7 @@ interface MatchesClientProps {
   seasons: Season[];
   competitions?: Competition[];
   allPlayers?: Player[];
+  venues?: Venue[];
   currentPage: number;
   currentStatus: string;
   currentSearch: string;
@@ -62,6 +63,7 @@ export function MatchesClient({
   seasons,
   competitions = [],
   allPlayers = [],
+  venues = [],
   currentPage,
   currentStatus,
   currentSearch,
@@ -926,7 +928,47 @@ export function MatchesClient({
             </div>
             <div className="space-y-2">
               <Label>Venue</Label>
-              <Input value={formData.venue} onChange={(e) => setFormData({ ...formData, venue: e.target.value })} />
+              {venues && venues.length > 0 ? (
+                <Select
+                  value={
+                    venues.some((v) => v.name === formData.venue)
+                      ? formData.venue
+                      : formData.venue
+                      ? "custom"
+                      : "none"
+                  }
+                  onValueChange={(val) => {
+                    if (val === "none") {
+                      setFormData({ ...formData, venue: "" });
+                    } else if (val !== "custom") {
+                      setFormData({ ...formData, venue: val });
+                    }
+                  }}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select venue..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">No venue selected</SelectItem>
+                    {venues.map((v) => (
+                      <SelectItem key={v.id} value={v.name}>
+                        {v.name} {v.city ? `(${v.city})` : ""} {v.isHomeVenue ? "🏠 [Home Ground]" : ""}
+                      </SelectItem>
+                    ))}
+                    <SelectItem value="custom">Custom / Other Venue...</SelectItem>
+                  </SelectContent>
+                </Select>
+              ) : null}
+              {(!venues ||
+                venues.length === 0 ||
+                !venues.some((v) => v.name === formData.venue)) && (
+                <Input
+                  placeholder="Type custom venue name..."
+                  value={formData.venue}
+                  onChange={(e) => setFormData({ ...formData, venue: e.target.value })}
+                  className={venues && venues.length > 0 ? "mt-2" : ""}
+                />
+              )}
             </div>
             <div className="space-y-2">
               <Label>Season</Label>

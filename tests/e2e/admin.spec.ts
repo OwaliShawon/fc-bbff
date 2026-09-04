@@ -27,4 +27,9 @@ test.describe("Admin Console & Squad Roster E2E Tests", () => {
       }
     }
   });
+
+  test("should redirect unauthenticated users from /admin/venues to /login", async ({ page }) => {
+    await page.goto("/admin/venues");
+    await expect(page).toHaveURL(/\/login/);
+  });
 });

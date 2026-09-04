@@ -2,6 +2,7 @@ import { getMatches } from "@/actions/match-actions";
 import { getAllActiveTeams } from "@/actions/team-actions";
 import { getSeasons, getCompetitions } from "@/actions/competition-actions";
 import { getPlayers } from "@/actions/player-actions";
+import { getAllVenues } from "@/actions/venue-actions";
 import { MatchesClient } from "./matches-client";
 
 export default async function MatchesPage({
@@ -15,12 +16,13 @@ export default async function MatchesPage({
   const search = (params.search as string) || "";
   const competitionId = (params.competitionId as string) || "";
 
-  const [matchesData, teams, seasons, competitionsData, playersData] = await Promise.all([
+  const [matchesData, teams, seasons, competitionsData, playersData, venues] = await Promise.all([
     getMatches({ page, pageSize: 10, status, search, competitionId }),
     getAllActiveTeams(),
     getSeasons(),
     getCompetitions({ pageSize: 100 }),
     getPlayers({ pageSize: 300 }),
+    getAllVenues(),
   ]);
 
   return (
@@ -30,6 +32,7 @@ export default async function MatchesPage({
       seasons={seasons}
       competitions={competitionsData.data || []}
       allPlayers={playersData.data || []}
+      venues={venues}
       currentPage={page}
       currentStatus={status}
       currentSearch={search}

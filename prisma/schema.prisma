@@ -328,6 +328,8 @@ model Match {
   awayTeamId        String
   matchDate         DateTime
   venue             String?
+  venueId           String?
+  venueRef          Venue?       @relation(fields: [venueId], references: [id], onDelete: SetNull)
   homeScore         Int?
   awayScore         Int?
   status            MatchStatus  @default(SCHEDULED)
@@ -357,6 +359,7 @@ model Match {
   @@index([seasonId])
   @@index([homeTeamId])
   @@index([awayTeamId])
+  @@index([venueId])
   @@index([matchDate])
   @@index([status])
   @@map("matches")
@@ -431,6 +434,8 @@ model Event {
   startTime       String?
   endTime         String?
   venue           String?
+  venueId         String?
+  venueRef        Venue?      @relation(fields: [venueId], references: [id], onDelete: SetNull)
   coverImageUrl   String?
   registrationUrl String?
   organizer       String?
@@ -444,8 +449,34 @@ model Event {
 
   @@index([eventDate])
   @@index([status])
+  @@index([venueId])
   @@index([slug])
   @@map("events")
+}
+
+// ============================================================================
+// VENUES
+// ============================================================================
+
+model Venue {
+  id          String    @id @default(uuid())
+  name        String
+  city        String?
+  address     String?
+  turfType    String?
+  capacity    Int?
+  photoUrl    String?
+  notes       String?   @db.Text
+  isHomeVenue Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  matches     Match[]
+  events      Event[]
+
+  @@index([name])
+  @@map("venues")
 }
 
 model EventGallery {

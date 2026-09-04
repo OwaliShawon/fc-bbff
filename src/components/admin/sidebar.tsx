@@ -27,6 +27,7 @@ import {
   CalendarDays,
   TableProperties,
   Star,
+  MapPin,
   type LucideIcon,
 } from "lucide-react";
 import { useState } from "react";
@@ -78,13 +79,19 @@ const navGroups: { label: string; items: NavItem[] }[] = [
     ],
   },
   {
-    label: "Matches",
+    label: "Matches & Venues",
     items: [
       {
         title: "Fixtures & Results",
         href: "/admin/matches",
         icon: Swords,
         permission: PERMISSIONS.MATCHES_VIEW,
+      },
+      {
+        title: "Venues",
+        href: "/admin/venues",
+        icon: MapPin,
+        permission: PERMISSIONS.VENUES_VIEW,
       },
       {
         title: "Statistics",

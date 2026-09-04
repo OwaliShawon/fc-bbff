@@ -297,6 +297,26 @@ export const siteSettingsSchema = z.object({
 });
 
 // ============================================================================
+// VENUES
+// ============================================================================
+
+export const createVenueSchema = z.object({
+  name: z.string().min(1, "Venue name is required"),
+  city: z.string().optional().nullable().or(z.literal("").transform(() => null)),
+  address: z.string().optional().nullable().or(z.literal("").transform(() => null)),
+  turfType: z.string().optional().nullable().or(z.literal("").transform(() => null)),
+  capacity: z.preprocess(
+    (val) => (val === "" || val === null || val === undefined || Number.isNaN(Number(val)) ? null : Number(val)),
+    z.number().int().min(0, "Capacity must be positive").nullable().optional()
+  ),
+  photoUrl: z.string().optional().nullable().or(z.literal("").transform(() => null)),
+  notes: z.string().optional().nullable().or(z.literal("").transform(() => null)),
+  isHomeVenue: z.boolean().default(false),
+});
+
+export const updateVenueSchema = createVenueSchema.partial();
+
+// ============================================================================
 // SEARCH & PAGINATION
 // ============================================================================
 
