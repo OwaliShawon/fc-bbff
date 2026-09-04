@@ -81,7 +81,7 @@ export function DownloadableStatisticsCard({ stats }: { stats: any[] }) {
               />
             </div>
             <div>
-              <p className="text-xs sm:text-sm font-black tracking-widest bg-gradient-to-r from-emerald-300 via-amber-200 to-emerald-400 bg-clip-text text-transparent uppercase drop-shadow">
+              <p className="text-xs sm:text-sm font-black tracking-widest text-white uppercase drop-shadow">
                 FC BBFF
               </p>
               <h2 className="text-sm sm:text-base font-black text-white tracking-tight leading-tight">

@@ -17,7 +17,6 @@ export default async function PlayerPage({ params }: { params: Promise<{ slug: s
   const details = [
     { icon: Shield, label: "Current Team", value: currentTeam?.team?.name },
     { icon: Calendar, label: "Date of Birth", value: player.dateOfBirth ? formatDate(player.dateOfBirth) : null },
-    { icon: MapPin, label: "Nationality", value: player.nationality },
     { icon: Building2, label: "Current City", value: player.currentCity },
     { icon: Ruler, label: "Height", value: player.height },
     { icon: Weight, label: "Weight", value: player.weight },

@@ -629,7 +629,7 @@ export function TeamsClient({
                                   <p className="text-sm font-semibold text-neutral-900 dark:text-white flex items-center gap-1.5">
                                     #{p.jerseyNumber ?? "—"} {p.firstName} {p.lastName}
                                   </p>
-                                  <p className="text-xs text-neutral-400">{p.nationality || "Club Player"}</p>
+                                  <p className="text-xs text-neutral-400">{p.currentCity || "Club Player"}</p>
                                 </div>
                               </div>
                             </TableCell>

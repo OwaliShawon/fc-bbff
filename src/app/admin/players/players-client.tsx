@@ -367,7 +367,7 @@ export function PlayersClient({
                           </p>
                           <p className="text-xs text-neutral-400 flex items-center gap-1 font-medium">
                             {player.currentCity && <MapPin className="h-3 w-3 text-amber-400 shrink-0" />}
-                            <span>{[player.currentCity, player.nationality].filter(Boolean).join(" • ") || "—"}</span>
+                            <span>{player.currentCity || "—"}</span>
                           </p>
                         </div>
                       </div>

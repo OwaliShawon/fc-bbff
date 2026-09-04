@@ -78,7 +78,7 @@ export default async function PlayersPage() {
                         </div>
                         <p className="mt-2.5 text-xs text-neutral-400 flex items-center justify-center gap-1 font-medium">
                           <MapPin className="h-3 w-3 text-emerald-400 shrink-0" />
-                          <span className="truncate">{player.currentCity || player.nationality || "FC BBFF"}</span>
+                          <span className="truncate">{player.currentCity || "FC BBFF"}</span>
                         </p>
                       </div>
                     </Link>

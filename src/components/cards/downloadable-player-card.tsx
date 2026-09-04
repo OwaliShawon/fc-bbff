@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Download, Sparkles, Shield, Crown, MapPin } from "lucide-react";
+import { Download, Sparkles, Crown, MapPin } from "lucide-react";
 import { exportElementAsJpeg } from "@/lib/export-image";
 import { getPlayerPositionColor } from "@/lib/utils";
 
@@ -89,7 +89,7 @@ export function DownloadablePlayerCard({ player, team }: { player: any; team?: a
               />
             </div>
             <div>
-              <p className="text-xs sm:text-sm font-black tracking-widest bg-gradient-to-r from-emerald-300 via-amber-200 to-emerald-400 bg-clip-text text-transparent uppercase drop-shadow">
+              <p className="text-xs sm:text-sm font-black tracking-widest text-white uppercase drop-shadow">
                 FC BBFF
               </p>
               <p className="text-[9px] sm:text-[10px] font-bold text-neutral-300 tracking-wide">
@@ -137,24 +137,17 @@ export function DownloadablePlayerCard({ player, team }: { player: any; team?: a
           )}
         </div>
 
-        {/* Player Name, City & Team Info */}
+        {/* Player Name & City */}
         <div className="relative z-10 text-center mb-3">
           <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
             {player.firstName} {player.lastName}
           </h2>
-          <p className="text-xs font-semibold mt-1 flex items-center justify-center gap-1.5 flex-wrap">
-            {player.currentCity && (
-              <span className="text-amber-300 flex items-center gap-0.5">
-                <MapPin className="h-3 w-3 text-amber-400 shrink-0" />
-                {player.currentCity}
-              </span>
-            )}
-            {player.currentCity && <span className="text-neutral-500">•</span>}
-            <span className="text-emerald-400 flex items-center gap-1 truncate max-w-[180px]">
-              <Shield className="h-3 w-3 text-emerald-400 shrink-0" />
-              {team?.team?.name || "FC BBFF Squad"}
-            </span>
-          </p>
+          {player.currentCity && (
+            <p className="text-xs font-semibold mt-1 flex items-center justify-center gap-1 text-amber-300">
+              <MapPin className="h-3 w-3 text-amber-400 shrink-0" />
+              {player.currentCity}
+            </p>
+          )}
         </div>
 
         {/* Seasonal Performance Bar */}
@@ -178,14 +171,10 @@ export function DownloadablePlayerCard({ player, team }: { player: any; team?: a
         </div>
 
         {/* Player Stats Grid with City */}
-        <div className="relative z-10 grid grid-cols-4 gap-1 sm:gap-1.5 rounded-xl bg-white/[0.04] p-2.5 sm:p-3 border border-white/10 text-center text-xs mb-3">
+        <div className="relative z-10 grid grid-cols-3 gap-1 sm:gap-1.5 rounded-xl bg-white/[0.04] p-2.5 sm:p-3 border border-white/10 text-center text-xs mb-3">
           <div>
             <p className="text-[8px] sm:text-[9px] text-neutral-400 uppercase font-semibold">City</p>
             <p className="font-bold text-amber-300 truncate mt-0.5">{player.currentCity || "—"}</p>
-          </div>
-          <div className="border-l border-white/10">
-            <p className="text-[8px] sm:text-[9px] text-neutral-400 uppercase font-semibold">Nation</p>
-            <p className="font-bold text-white truncate mt-0.5">{player.nationality || "—"}</p>
           </div>
           <div className="border-l border-white/10">
             <p className="text-[8px] sm:text-[9px] text-neutral-400 uppercase font-semibold">Foot</p>

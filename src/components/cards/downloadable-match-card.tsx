@@ -83,7 +83,7 @@ export function DownloadableMatchCard({ match }: { match: any }) {
               />
             </div>
             <div className="min-w-0">
-              <p className="text-xs sm:text-sm font-black tracking-widest bg-gradient-to-r from-emerald-300 via-amber-200 to-emerald-400 bg-clip-text text-transparent uppercase drop-shadow truncate">
+              <p className="text-xs sm:text-sm font-black tracking-widest text-white uppercase drop-shadow truncate">
                 FC BBFF
               </p>
               <p className="text-[9px] sm:text-[10px] font-bold text-neutral-300 tracking-wide truncate">
