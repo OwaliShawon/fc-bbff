@@ -46,7 +46,7 @@ export function PublicFooter({ settings }: { settings: SiteSettingsMap }) {
           {/* Brand */}
           <div className="space-y-4">
             <div className="flex items-center gap-3">
-              <div className="relative h-10 w-10 overflow-hidden rounded-xl bg-neutral-900 border border-white/10 shadow-lg shadow-emerald-500/10">
+              <div className="relative h-10 w-10 overflow-hidden rounded-full bg-neutral-900 border border-white/10 shadow-lg shadow-emerald-500/10">
                 <Image
                   src="/logo.png"
                   alt="FC BBFF Logo"

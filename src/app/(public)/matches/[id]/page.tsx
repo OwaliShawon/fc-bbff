@@ -5,6 +5,8 @@ import { formatDateTime, getMatchStatusColor } from "@/lib/utils";
 import { ArrowLeft, MapPin, User, Clock } from "lucide-react";
 import Link from "next/link";
 import { DownloadableMatchCard } from "@/components/cards/downloadable-match-card";
+import { DownloadableMatchdayCard } from "@/components/cards/downloadable-matchday-card";
+import { DownloadableMotmCard } from "@/components/cards/downloadable-motm-card";
 
 export default async function MatchDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -197,26 +199,22 @@ export default async function MatchDetailPage({ params }: { params: Promise<{ id
               )}
             </div>
 
-            {/* Right Column — Official Match Card, POTM + Stats (5 cols) */}
+            {/* Right Column — Official Match Card, Matchday Graphic, POTM + Stats (5 cols) */}
             <div className="space-y-6 lg:col-span-5">
               {/* Official Downloadable Match Card */}
               <div className="rounded-3xl border border-white/10 bg-white/[0.02] p-2 sm:p-4">
                 <DownloadableMatchCard match={match} />
               </div>
 
-              {/* Player of the Match */}
+              {/* Matchday Graphic Poster Exporter */}
+              <div className="rounded-3xl border border-white/10 bg-white/[0.02] p-2 sm:p-4">
+                <DownloadableMatchdayCard match={match} />
+              </div>
+
+              {/* Player of the Match MOTM Award Graphic Exporter */}
               {match.playerOfMatch && (
-                <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-amber-900/20 to-amber-800/10 p-6">
-                  <h3 className="mb-4 text-lg font-bold text-amber-400">⭐ Player of the Match</h3>
-                  <div className="text-center">
-                    <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-amber-500/20 text-2xl font-bold text-amber-400">
-                      {match.playerOfMatch.jerseyNumber || "?"}
-                    </div>
-                    <Link href={`/players/${match.playerOfMatch.slug}`} className="text-lg font-bold text-white hover:text-amber-400 transition-colors">
-                      {match.playerOfMatch.firstName} {match.playerOfMatch.lastName}
-                    </Link>
-                    <p className="text-sm text-neutral-400">{match.playerOfMatch.position}</p>
-                  </div>
+                <div className="rounded-3xl border border-amber-400/20 bg-amber-950/10 p-2 sm:p-4">
+                  <DownloadableMotmCard match={match} />
                 </div>
               )}
 

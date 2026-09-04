@@ -72,10 +72,10 @@ export default async function H2HPage() {
                               <img
                                 src={s.opponentTeam.logoUrl}
                                 alt={s.opponentTeam.name}
-                                className="h-7 w-7 rounded-lg object-cover border border-white/10"
+                                className="h-7 w-7 rounded-full object-cover border border-white/10"
                               />
                             ) : (
-                              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-500/20 text-xs font-bold text-emerald-400 border border-emerald-500/30">
+                              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500/20 text-xs font-bold text-emerald-400 border border-emerald-500/30">
                                 {s.opponentTeam.name.charAt(0)}
                               </div>
                             )}

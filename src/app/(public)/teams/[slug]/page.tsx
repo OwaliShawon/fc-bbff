@@ -38,10 +38,10 @@ export default async function TeamDetailPage({
               <img
                 src={team.logoUrl}
                 alt={team.name}
-                className="h-24 w-24 rounded-2xl object-cover border-2 border-emerald-500/30"
+                className="h-24 w-24 rounded-full object-cover border-2 border-emerald-500/30"
               />
             ) : (
-              <div className="flex h-24 w-24 items-center justify-center rounded-2xl bg-emerald-600/20 text-4xl font-black text-emerald-400 border border-emerald-500/30">
+              <div className="flex h-24 w-24 items-center justify-center rounded-full bg-emerald-600/20 text-4xl font-black text-emerald-400 border border-emerald-500/30">
                 {team.name.charAt(0)}
               </div>
             )}

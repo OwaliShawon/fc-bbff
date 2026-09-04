@@ -27,7 +27,7 @@ export function DownloadableStatisticsCard({ stats }: { stats: any[] }) {
   return (
     <div className="space-y-4 w-full flex flex-col items-center justify-center">
       {/* Action Header */}
-      <div className="flex items-center justify-between gap-2 flex-wrap w-full max-w-[540px]">
+      <div className="flex items-center justify-between gap-2 flex-wrap w-full max-w-[480px]">
         <h3 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
           <Flame className="h-4 sm:h-5 w-4 sm:w-5 text-amber-400 shrink-0" /> Squad Leaderboard Card
         </h3>
@@ -52,14 +52,14 @@ export function DownloadableStatisticsCard({ stats }: { stats: any[] }) {
       {/* Responsive Printable / Exportable Leaderboard Card */}
       <div
         id={cardId}
-        className="relative overflow-hidden rounded-3xl border-2 border-emerald-500/40 bg-gradient-to-b from-neutral-900 via-neutral-950 to-emerald-950/50 p-4 sm:p-6 shadow-2xl text-white w-full max-w-[540px] mx-auto min-h-[480px]"
+        className="relative overflow-hidden rounded-3xl border-2 border-emerald-500/40 bg-gradient-to-b from-neutral-900 via-neutral-950 to-emerald-950/60 p-5 sm:p-6 shadow-2xl text-white w-full max-w-[480px] mx-auto min-h-[480px] flex flex-col justify-between"
       >
         {/* Glow Accents */}
-        <div className="absolute -right-24 -top-24 h-64 w-64 rounded-full bg-emerald-500/20 blur-3xl pointer-events-none" />
-        <div className="absolute -left-24 -bottom-24 h-64 w-64 rounded-full bg-amber-500/15 blur-3xl pointer-events-none" />
+        <div className="absolute -right-20 -top-20 h-56 w-56 rounded-full bg-emerald-500/20 blur-3xl pointer-events-none" />
+        <div className="absolute -left-20 -bottom-20 h-56 w-56 rounded-full bg-amber-500/15 blur-3xl pointer-events-none" />
 
         {/* Large Watermark Logo in Background */}
-        <div className="absolute -right-10 -bottom-6 h-80 w-80 opacity-[0.07] pointer-events-none select-none">
+        <div className="absolute -right-8 -bottom-6 h-72 w-72 opacity-[0.06] pointer-events-none select-none">
           <img
             src="/logo.png"
             alt="BBFF Watermark"
@@ -72,11 +72,11 @@ export function DownloadableStatisticsCard({ stats }: { stats: any[] }) {
         <div className="relative z-10 flex items-center justify-between border-b border-white/10 pb-3 sm:pb-4 mb-4">
           <div className="flex items-center gap-2.5 sm:gap-3.5">
             {/* Highlighted BBFF Official Logo */}
-            <div className="relative h-12 w-12 sm:h-14 sm:w-14 shrink-0 overflow-hidden rounded-2xl bg-neutral-900/90 p-1.5 border-2 border-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.5)] ring-2 ring-emerald-500/20">
+            <div className="relative h-12 w-12 sm:h-14 sm:w-14 shrink-0 overflow-hidden rounded-full bg-neutral-900 border-2 border-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.5)] ring-2 ring-emerald-500/20">
               <img
                 src="/logo.png"
                 alt="FC BBFF Logo"
-                className="h-full w-full object-contain drop-shadow-[0_2px_8px_rgba(16,185,129,0.6)]"
+                className="h-full w-full object-cover"
                 crossOrigin="anonymous"
               />
             </div>
@@ -175,7 +175,7 @@ export function DownloadableStatisticsCard({ stats }: { stats: any[] }) {
         </div>
 
         {/* Card Footer with Miniature Crest */}
-        <div className="relative z-10 flex items-center justify-between border-t border-white/10 pt-2.5 sm:pt-3 text-[10px] text-neutral-400">
+        <div className="relative z-10 flex items-center justify-between border-t border-white/10 pt-2.5 sm:pt-3 text-[10px] text-neutral-400 mt-auto">
           <div className="flex items-center gap-1.5">
             <img src="/logo.png" alt="logo" className="h-3.5 w-3.5 object-contain opacity-80" crossOrigin="anonymous" />
             <span>Official Bhai Brother Football Federation Squad Statistics</span>

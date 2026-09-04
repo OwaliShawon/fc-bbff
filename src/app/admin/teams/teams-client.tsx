@@ -338,10 +338,10 @@ export function TeamsClient({
                           <img
                             src={team.logoUrl}
                             alt={team.name}
-                            className="h-9 w-9 rounded-lg object-cover border border-neutral-200 dark:border-neutral-800"
+                            className="h-9 w-9 rounded-full object-cover border border-neutral-200 dark:border-neutral-800"
                           />
                         ) : (
-                          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-100 text-sm font-bold text-emerald-700 dark:bg-emerald-900/30">
+                          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-100 text-sm font-bold text-emerald-700 dark:bg-emerald-900/30">
                             {team.name.charAt(0)}
                           </div>
                         )}
