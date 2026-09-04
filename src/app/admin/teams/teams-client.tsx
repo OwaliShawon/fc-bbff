@@ -730,112 +730,141 @@ export function TeamsClient({
             <DialogTitle>{editingTeam ? "Edit Team" : "Add Team"}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="flex items-center gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3">
-              <Checkbox
-                id="isExternalTeam"
-                checked={formData.isExternal}
-                onCheckedChange={(checked) =>
-                  setFormData({ ...formData, isExternal: checked === true })
+            {/* Team Type Switcher / Indicator */}
+            <div className="flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.03] p-3">
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="isExternalTeam"
+                  checked={formData.isExternal}
+                  onCheckedChange={(checked) =>
+                    setFormData({ ...formData, isExternal: checked === true })
+                  }
+                />
+                <Label htmlFor="isExternalTeam" className="cursor-pointer text-xs font-bold text-white">
+                  Is External / Outsider Opponent Club?
+                </Label>
+              </div>
+              <Badge
+                variant="secondary"
+                className={
+                  formData.isExternal
+                    ? "bg-amber-500/20 text-amber-300 border-amber-500/40 text-[10px]"
+                    : "bg-emerald-500/20 text-emerald-300 border-emerald-500/40 text-[10px]"
                 }
-              />
-              <Label htmlFor="isExternalTeam" className="cursor-pointer text-xs font-bold text-amber-300">
-                This is an External / Outsider Opponent Team
-              </Label>
+              >
+                {formData.isExternal ? "⚽ External Opponent" : "🟢 Internal Squad"}
+              </Badge>
             </div>
 
             <div className="space-y-2">
               <Label>Team Name *</Label>
               <Input
                 value={formData.name}
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                placeholder={formData.isExternal ? "e.g. Abahani Academy, Mohammedan SC..." : "e.g. FC BBFF Red, FC BBFF Alpha..."}
               />
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <Label>Manager / Coach</Label>
-                <Input
-                  value={formData.manager}
-                  onChange={(e) =>
-                    setFormData({ ...formData, manager: e.target.value })
-                  }
-                  placeholder="e.g. John Doe"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Logo URL</Label>
-                <Input
-                  value={formData.logoUrl}
-                  onChange={(e) =>
-                    setFormData({ ...formData, logoUrl: e.target.value })
-                  }
-                  placeholder="https://..."
-                />
-              </div>
-            </div>
+            {/* Fields Specific to External vs Internal Teams */}
+            {formData.isExternal ? (
+              /* External / Outsider Opponent Fields */
+              <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 space-y-4">
+                <p className="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                  📞 Contact Person & Outsider Details
+                </p>
 
-            {/* Outsider / Contact Person Details */}
-            <div className="rounded-xl border border-white/10 bg-white/[0.02] p-3 space-y-3">
-              <p className="text-xs font-bold text-emerald-400 uppercase tracking-wider">
-                Contact Person Details
-              </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <Label className="text-xs">Contact Person Name</Label>
-                  <Input
-                    value={formData.contactPersonName}
-                    onChange={(e) =>
-                      setFormData({ ...formData, contactPersonName: e.target.value })
-                    }
-                    placeholder="e.g. Rahat Ahmed"
-                  />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-neutral-300">Contact Person Name</Label>
+                    <Input
+                      value={formData.contactPersonName}
+                      onChange={(e) => setFormData({ ...formData, contactPersonName: e.target.value })}
+                      placeholder="e.g. Rahat Ahmed"
+                      className="bg-neutral-900 border-neutral-700 text-xs text-white"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-neutral-300">Contact Phone Number</Label>
+                    <Input
+                      value={formData.contactNumber}
+                      onChange={(e) => setFormData({ ...formData, contactNumber: e.target.value })}
+                      placeholder="e.g. +8801700000000"
+                      className="bg-neutral-900 border-neutral-700 text-xs text-white"
+                    />
+                  </div>
                 </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs">Contact Phone Number</Label>
-                  <Input
-                    value={formData.contactNumber}
-                    onChange={(e) =>
-                      setFormData({ ...formData, contactNumber: e.target.value })
-                    }
-                    placeholder="e.g. +8801700000000"
-                  />
-                </div>
-              </div>
 
-              <div className="space-y-1.5">
-                <Label className="text-xs">Facebook Profile / Page URL (Optional)</Label>
-                <Input
-                  value={formData.facebookUrl}
-                  onChange={(e) =>
-                    setFormData({ ...formData, facebookUrl: e.target.value })
-                  }
-                  placeholder="https://facebook.com/..."
-                />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-neutral-300">Facebook Profile / Page URL (Optional)</Label>
+                    <Input
+                      value={formData.facebookUrl}
+                      onChange={(e) => setFormData({ ...formData, facebookUrl: e.target.value })}
+                      placeholder="https://facebook.com/..."
+                      className="bg-neutral-900 border-neutral-700 text-xs text-white"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-neutral-300">Team Logo URL (Optional)</Label>
+                    <Input
+                      value={formData.logoUrl}
+                      onChange={(e) => setFormData({ ...formData, logoUrl: e.target.value })}
+                      placeholder="https://..."
+                      className="bg-neutral-900 border-neutral-700 text-xs text-white"
+                    />
+                  </div>
+                </div>
               </div>
-            </div>
+            ) : (
+              /* Internal FC BBFF Squad Fields */
+              <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-4 space-y-4">
+                <p className="text-xs font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
+                  🟢 Internal Squad Info & Management
+                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-neutral-300">Manager / Head Coach</Label>
+                    <Input
+                      value={formData.manager}
+                      onChange={(e) => setFormData({ ...formData, manager: e.target.value })}
+                      placeholder="e.g. Tanvir Ahmed"
+                      className="bg-neutral-900 border-neutral-700 text-xs text-white"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-neutral-300">Team Logo URL (Optional)</Label>
+                    <Input
+                      value={formData.logoUrl}
+                      onChange={(e) => setFormData({ ...formData, logoUrl: e.target.value })}
+                      placeholder="https://..."
+                      className="bg-neutral-900 border-neutral-700 text-xs text-white"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="space-y-2">
-              <Label>Description</Label>
+              <Label>Description / Bio</Label>
               <Textarea
                 value={formData.description}
-                onChange={(e) =>
-                  setFormData({ ...formData, description: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 rows={2}
+                placeholder={formData.isExternal ? "Outsider club notes..." : "Internal team description..."}
               />
             </div>
+
             <div className="space-y-2">
               <Label>Status</Label>
               <Select
                 value={formData.status}
                 onValueChange={(v) => setFormData({ ...formData, status: v })}
               >
-                <SelectTrigger>
+                <SelectTrigger className="bg-neutral-900 border-neutral-700 text-white">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-neutral-900 border-neutral-700 text-white">
                   <SelectItem value="ACTIVE">Active</SelectItem>
                   <SelectItem value="INACTIVE">Inactive</SelectItem>
                 </SelectContent>
