@@ -388,7 +388,7 @@ export function CompetitionsClient({
                           >
                             <Users className="h-4 w-4 mr-1 text-emerald-500" /> Teams
                           </Button>
-                          <Button variant="ghost" size="sm" onClick={() => handleOpenEdit(comp)}>
+                          <Button variant="ghost" size="sm" onClick={() => handleOpenEdit(comp)} title="Edit Competition">
                             <Edit className="h-4 w-4" />
                           </Button>
                           <Button
@@ -398,6 +398,7 @@ export function CompetitionsClient({
                               setSelectedComp(comp);
                               setDeleteDialogOpen(true);
                             }}
+                            title="Delete Competition"
                             className="text-red-500 hover:text-red-600"
                           >
                             <Trash2 className="h-4 w-4" />

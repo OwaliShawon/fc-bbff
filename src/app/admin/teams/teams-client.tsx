@@ -757,8 +757,9 @@ export function TeamsClient({
             </div>
 
             <div className="space-y-2">
-              <Label>Team Name *</Label>
+              <Label htmlFor="teamName">Team Name *</Label>
               <Input
+                id="teamName"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder={formData.isExternal ? "e.g. Abahani Academy, Mohammedan SC..." : "e.g. FC BBFF Red, FC BBFF Alpha..."}

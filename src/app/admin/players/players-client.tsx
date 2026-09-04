@@ -443,6 +443,7 @@ export function PlayersClient({
                           size="icon"
                           onClick={() => openEdit(player)}
                           className="h-8 w-8"
+                          title="Edit Player"
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
@@ -451,6 +452,7 @@ export function PlayersClient({
                           size="icon"
                           onClick={() => openDelete(player.id)}
                           className="h-8 w-8 text-red-500 hover:text-red-700"
+                          title="Delete Player"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -511,8 +513,9 @@ export function PlayersClient({
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label>First Name *</Label>
+              <Label htmlFor="firstName">First Name *</Label>
               <Input
+                id="firstName"
                 value={formData.firstName}
                 onChange={(e) =>
                   setFormData({ ...formData, firstName: e.target.value })
@@ -520,8 +523,9 @@ export function PlayersClient({
               />
             </div>
             <div className="space-y-2">
-              <Label>Last Name *</Label>
+              <Label htmlFor="lastName">Last Name *</Label>
               <Input
+                id="lastName"
                 value={formData.lastName}
                 onChange={(e) =>
                   setFormData({ ...formData, lastName: e.target.value })
@@ -529,8 +533,9 @@ export function PlayersClient({
               />
             </div>
             <div className="space-y-2">
-              <Label>Jersey Number</Label>
+              <Label htmlFor="jerseyNumber">Jersey Number</Label>
               <Input
+                id="jerseyNumber"
                 type="number"
                 min={1}
                 max={99}
@@ -585,8 +590,9 @@ export function PlayersClient({
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Current City</Label>
+              <Label htmlFor="currentCity">Current City</Label>
               <Input
+                id="currentCity"
                 placeholder="e.g., Dhaka, London"
                 value={formData.currentCity}
                 onChange={(e) =>
