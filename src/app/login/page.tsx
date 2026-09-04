@@ -136,27 +136,47 @@ export default function LoginPage() {
             </Button>
           </form>
 
-          <div className="mt-6 rounded-lg border border-neutral-800 bg-neutral-800/50 p-3">
-            <p className="mb-2 text-xs font-medium text-neutral-400">
-              Development Credentials:
-            </p>
-            <div className="space-y-1 text-xs text-neutral-500">
-              <p>
-                Super Admin:{" "}
-                <code className="text-emerald-400">
-                  superadmin@bbfffc.com
-                </code>
+          {process.env.NODE_ENV === "development" && (
+            <div className="mt-6 rounded-lg border border-neutral-800 bg-neutral-800/50 p-3">
+              <p className="mb-2 text-xs font-medium text-neutral-400">
+                Development Credentials:
               </p>
-              <p>
-                Admin:{" "}
-                <code className="text-emerald-400">admin@bbfffc.com</code>
-              </p>
-              <p>
-                Password:{" "}
-                <code className="text-emerald-400">password123</code>
-              </p>
+              <div className="space-y-1 text-xs text-neutral-500">
+                <p>
+                  Super Admin:{" "}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEmail("superadmin@bbfffc.com");
+                      setPassword("password123");
+                    }}
+                    className="font-mono text-emerald-400 hover:underline"
+                    title="Click to fill"
+                  >
+                    superadmin@bbfffc.com
+                  </button>
+                </p>
+                <p>
+                  Admin:{" "}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEmail("admin@bbfffc.com");
+                      setPassword("password123");
+                    }}
+                    className="font-mono text-emerald-400 hover:underline"
+                    title="Click to fill"
+                  >
+                    admin@bbfffc.com
+                  </button>
+                </p>
+                <p>
+                  Password:{" "}
+                  <code className="text-emerald-400">password123</code>
+                </p>
+              </div>
             </div>
-          </div>
+          )}
         </CardContent>
       </Card>
     </div>

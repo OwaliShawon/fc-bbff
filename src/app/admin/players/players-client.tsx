@@ -414,22 +414,19 @@ export function PlayersClient({
                     <TableCell className="text-sm">
                       {(() => {
                         const teamPlayers = (player as any).teamPlayers || [];
-                        if (teamPlayers.length === 0) {
-                          return <span className="text-xs text-neutral-400">Free Agent</span>;
-                        }
+                        const fcBbffTeamPlayer = teamPlayers.find(
+                          (tp: any) => tp.team?.name?.trim().toUpperCase() === "FC BBFF"
+                        );
+                        const isCaptain = fcBbffTeamPlayer?.isCaptain;
+                        const isViceCaptain = fcBbffTeamPlayer?.isViceCaptain;
                         return (
-                          <div className="flex flex-wrap items-center gap-1.5 max-w-[200px]">
-                            {teamPlayers.map((tp: any) => (
-                              <Badge
-                                key={tp.id || tp.teamId}
-                                variant="outline"
-                                className="font-medium bg-neutral-50 dark:bg-neutral-900 border-neutral-300 dark:border-neutral-700 text-xs"
-                              >
-                                {tp.team?.name || "Team"}
-                                {tp.isCaptain ? " 👑" : tp.isViceCaptain ? " 🛡️" : ""}
-                              </Badge>
-                            ))}
-                          </div>
+                          <Badge
+                            variant="outline"
+                            className="font-semibold bg-emerald-500/10 border-emerald-500/30 text-emerald-400 text-xs"
+                          >
+                            FC BBFF
+                            {isCaptain ? " 👑" : isViceCaptain ? " 🛡️" : ""}
+                          </Badge>
                         );
                       })()}
                     </TableCell>

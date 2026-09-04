@@ -12,10 +12,14 @@ export default async function PlayerPage({ params }: { params: Promise<{ slug: s
   const player = await getPlayerBySlug(slug);
   if (!player) notFound();
 
-  const currentTeam = player.teamPlayers?.[0];
+  const fcBbffTeamPlayer = player.teamPlayers?.find(
+    (tp: any) => tp.team?.name?.trim().toUpperCase() === "FC BBFF"
+  );
+  const isCaptain = fcBbffTeamPlayer?.isCaptain ?? false;
+  const isViceCaptain = fcBbffTeamPlayer?.isViceCaptain ?? false;
 
   const details = [
-    { icon: Shield, label: "Current Team", value: currentTeam?.team?.name },
+    { icon: Shield, label: "Current Team", value: "FC BBFF" },
     { icon: Calendar, label: "Date of Birth", value: player.dateOfBirth ? formatDate(player.dateOfBirth) : null },
     { icon: Building2, label: "Current City", value: player.currentCity },
     { icon: Ruler, label: "Height", value: player.height },
@@ -62,19 +66,15 @@ export default async function PlayerPage({ params }: { params: Promise<{ slug: s
                 </h1>
               </div>
               <div className="mt-3 flex flex-wrap items-center gap-3">
-                {currentTeam?.team && (
-                  <Link href={`/teams/${currentTeam.team.slug}`}>
-                    <Badge className="bg-emerald-600/20 border border-emerald-500/30 text-emerald-300 text-sm hover:bg-emerald-600/30 transition-colors">
-                      🛡️ {currentTeam.team.name}
-                    </Badge>
-                  </Link>
-                )}
-                {currentTeam?.isCaptain && (
+                <Badge className="bg-emerald-600/20 border border-emerald-500/30 text-emerald-300 text-sm">
+                  🛡️ FC BBFF
+                </Badge>
+                {isCaptain && (
                   <Badge className="bg-amber-500/20 border border-amber-500/30 text-amber-300 text-sm">
                     👑 Captain
                   </Badge>
                 )}
-                {currentTeam?.isViceCaptain && (
+                {isViceCaptain && (
                   <Badge className="bg-cyan-500/20 border border-cyan-500/30 text-cyan-300 text-sm">
                     🛡️ Vice-Captain
                   </Badge>
@@ -145,7 +145,7 @@ export default async function PlayerPage({ params }: { params: Promise<{ slug: s
             <div className="space-y-6">
               {/* Official Downloadable Player Card */}
               <div className="rounded-3xl border border-white/10 bg-white/[0.02] p-2 sm:p-4 flex items-center justify-center">
-                <DownloadablePlayerCard player={player} team={currentTeam} />
+                <DownloadablePlayerCard player={player} team={fcBbffTeamPlayer} />
               </div>
 
               <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
