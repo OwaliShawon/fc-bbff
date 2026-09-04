@@ -12,7 +12,10 @@ export function DownloadableH2HCard({ summary }: { summary: H2HSummary }) {
 
   const handleDownload = async () => {
     setIsExporting(true);
-    await exportElementAsJpeg(cardId, `fc-bbff-vs-${summary.opponentTeam.slug}-h2h.jpg`);
+    await exportElementAsJpeg(
+      cardId,
+      `${summary.fcBbffTeam?.slug || "fc-bbff"}-vs-${summary.opponentTeam?.slug || "opponent"}-h2h.jpg`
+    );
     setIsExporting(false);
   };
 
@@ -61,7 +64,7 @@ export function DownloadableH2HCard({ summary }: { summary: H2HSummary }) {
                 HEAD TO HEAD RECORD
               </p>
               <h3 className="text-sm font-black text-white uppercase tracking-tight">
-                FC BBFF VS {summary.opponentTeam.name}
+                {summary.fcBbffTeam?.name || "FC BBFF"} VS {summary.opponentTeam?.name}
               </h3>
             </div>
           </div>
@@ -72,12 +75,19 @@ export function DownloadableH2HCard({ summary }: { summary: H2HSummary }) {
 
         {/* Matchup Crest Comparison */}
         <div className="relative z-10 grid grid-cols-[1fr_auto_1fr] items-center gap-3 rounded-2xl bg-white/[0.03] border border-white/10 p-4 mb-4 text-center">
-          {/* FC BBFF */}
+          {/* FC BBFF / Team 1 */}
           <div className="flex flex-col items-center">
-            <div className="h-14 w-14 rounded-2xl bg-neutral-900/90 p-1.5 border-2 border-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.4)] mb-2">
-              <img src="/logo.png" alt="FC BBFF" className="h-full w-full object-contain" crossOrigin="anonymous" />
+            <div className="h-14 w-14 rounded-2xl bg-neutral-900/90 p-1.5 border-2 border-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.4)] mb-2 flex items-center justify-center">
+              <img
+                src={summary.fcBbffTeam?.logoUrl || "/logo.png"}
+                alt={summary.fcBbffTeam?.name || "FC BBFF"}
+                className="h-full w-full object-contain"
+                crossOrigin="anonymous"
+              />
             </div>
-            <p className="text-xs font-black text-white">FC BBFF</p>
+            <p className="text-xs font-black text-white truncate max-w-[100px]">
+              {summary.fcBbffTeam?.name || "FC BBFF"}
+            </p>
             <p className="text-[10px] text-emerald-400 font-mono font-bold">{summary.wins} Wins</p>
           </div>
 
