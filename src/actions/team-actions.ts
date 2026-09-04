@@ -74,7 +74,7 @@ export async function getTeamById(id: string) {
 }
 
 export async function getTeamBySlug(slug: string) {
-  return db.team.findUnique({
+  const team = await db.team.findUnique({
     where: { slug, deletedAt: null },
     include: {
       teamPlayers: {
@@ -93,6 +93,55 @@ export async function getTeamBySlug(slug: string) {
       },
     },
   });
+
+  if (!team) return null;
+
+  // If this is the main core FC BBFF team, ensure all active club players are present in its squad
+  const isMainFcBbff = !team.isExternal && team.name.toUpperCase().includes("BBFF");
+
+  if (isMainFcBbff) {
+    const allPlayers = await db.player.findMany({
+      where: { deletedAt: null },
+    });
+
+    const existingPlayerIds = new Set(team.teamPlayers.map((tp) => tp.playerId));
+    const missingPlayers = allPlayers.filter((p) => !existingPlayerIds.has(p.id));
+
+    if (missingPlayers.length > 0) {
+      await db.teamPlayer.createMany({
+        data: missingPlayers.map((p) => ({
+          teamId: team.id,
+          playerId: p.id,
+          isCaptain: false,
+          isViceCaptain: false,
+        })),
+        skipDuplicates: true,
+      });
+
+      // Refetch team with full squad list
+      return db.team.findUnique({
+        where: { id: team.id },
+        include: {
+          teamPlayers: {
+            include: { player: true },
+            orderBy: { player: { jerseyNumber: "asc" } },
+          },
+          homeMatches: {
+            include: { awayTeam: true, competition: true },
+            orderBy: { matchDate: "desc" },
+            take: 5,
+          },
+          awayMatches: {
+            include: { homeTeam: true, competition: true },
+            orderBy: { matchDate: "desc" },
+            take: 5,
+          },
+        },
+      });
+    }
+  }
+
+  return team;
 }
 
 export async function createTeam(data: unknown): Promise<ActionResponse<Team>> {
@@ -314,6 +363,77 @@ export async function togglePlayerViceCaptain(
 }
 
 export async function getTeamSquad(teamId: string) {
+  const team = await db.team.findUnique({ where: { id: teamId } });
+
+  // If this is the main core FC BBFF team, ensure Manager, Captain, Vice-Captain, and squad sync with current leadership
+  const isMainFcBbff = team && !team.isExternal && team.name.toUpperCase().includes("BBFF");
+
+  if (isMainFcBbff) {
+    // 1. Sync Manager name from active leadership
+    const currentManager = await db.managementMember.findFirst({
+      where: { role: "MANAGER", isCurrent: true, deletedAt: null },
+    });
+    if (currentManager?.name && team.manager !== currentManager.name) {
+      await db.team.update({
+        where: { id: teamId },
+        data: { manager: currentManager.name },
+      });
+    }
+
+    // 2. Sync Captain & Vice Captain from active leadership
+    const currentCaptain = await db.managementMember.findFirst({
+      where: { role: "CAPTAIN", isCurrent: true, deletedAt: null },
+    });
+    const currentViceCaptain = await db.managementMember.findFirst({
+      where: { role: "VICE_CAPTAIN", isCurrent: true, deletedAt: null },
+    });
+
+    if (currentCaptain?.playerId) {
+      await db.teamPlayer.updateMany({
+        where: { teamId, isCaptain: true, NOT: { playerId: currentCaptain.playerId } },
+        data: { isCaptain: false },
+      });
+      await db.teamPlayer.updateMany({
+        where: { teamId, playerId: currentCaptain.playerId },
+        data: { isCaptain: true },
+      });
+    }
+
+    if (currentViceCaptain?.playerId) {
+      await db.teamPlayer.updateMany({
+        where: { teamId, isViceCaptain: true, NOT: { playerId: currentViceCaptain.playerId } },
+        data: { isViceCaptain: false },
+      });
+      await db.teamPlayer.updateMany({
+        where: { teamId, playerId: currentViceCaptain.playerId },
+        data: { isViceCaptain: true },
+      });
+    }
+
+    // 3. Ensure all active club players are present in FC BBFF squad
+    const allPlayers = await db.player.findMany({
+      where: { deletedAt: null },
+    });
+
+    const existingTeamPlayers = await db.teamPlayer.findMany({
+      where: { teamId },
+    });
+    const existingPlayerIds = new Set(existingTeamPlayers.map((tp) => tp.playerId));
+
+    const missingPlayers = allPlayers.filter((p) => !existingPlayerIds.has(p.id));
+    if (missingPlayers.length > 0) {
+      await db.teamPlayer.createMany({
+        data: missingPlayers.map((p) => ({
+          teamId,
+          playerId: p.id,
+          isCaptain: false,
+          isViceCaptain: false,
+        })),
+        skipDuplicates: true,
+      });
+    }
+  }
+
   return db.teamPlayer.findMany({
     where: { teamId },
     include: {

@@ -401,7 +401,21 @@ async function main() {
     },
   ];
 
-  const createdTeams = [];
+  // 1. Create Main Core Team: FC BBFF
+  console.log("  Creating main core team: FC BBFF...");
+  const mainFcBbffTeam = await prisma.team.create({
+    data: {
+      name: "FC BBFF",
+      slug: "fc-bbff",
+      description: "The core main internal team of FC BBFF Club.",
+      logoUrl: "/logo.png",
+      manager: "Himel", // From current leadership
+      isExternal: false,
+      status: "ACTIVE",
+    },
+  });
+
+  const createdTeams = [mainFcBbffTeam];
   const createdPlayers = [];
 
   for (const pair of seedPairs) {
@@ -412,6 +426,7 @@ async function main() {
         slug: teamSlug,
         description: pair.team.description,
         manager: pair.team.manager,
+        isExternal: false,
         status: "ACTIVE",
       },
     });
@@ -431,13 +446,28 @@ async function main() {
     });
     createdPlayers.push(player);
 
-    // Assign player to their team as Captain
+    // Assign player to their sub-team
     await prisma.teamPlayer.create({
       data: {
         teamId: team.id,
         playerId: player.id,
         isCaptain: true,
         isViceCaptain: false,
+      },
+    });
+  }
+
+  // Assign ALL players to the main core FC BBFF squad with current leadership roles (Nakib = Captain, Utsho = Vice Captain)
+  for (const player of createdPlayers) {
+    const isCap = player.firstName === "Nakib";
+    const isVc = player.firstName === "Utsho";
+
+    await prisma.teamPlayer.create({
+      data: {
+        teamId: mainFcBbffTeam.id,
+        playerId: player.id,
+        isCaptain: isCap,
+        isViceCaptain: isVc,
       },
     });
   }
