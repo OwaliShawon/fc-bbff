@@ -113,8 +113,12 @@ export function DownloadableMatchdayCard({ match }: { match: any }) {
         <div className="relative z-10 my-3 grid grid-cols-[1fr_auto_1fr] items-center gap-3 rounded-2xl bg-white/[0.04] border border-white/10 p-4 text-center shadow-lg">
           {/* Home Team */}
           <div className="flex flex-col items-center">
-            <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-2xl bg-emerald-500/20 border-2 border-emerald-400 flex items-center justify-center font-black text-xl sm:text-2xl text-emerald-300 mb-2 shadow-[0_0_15px_rgba(16,185,129,0.35)]">
-              {match.homeTeam?.name?.charAt(0) || "H"}
+            <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-full bg-emerald-500/20 border-2 border-emerald-400 flex items-center justify-center font-black text-xl sm:text-2xl text-emerald-300 mb-2 shadow-[0_0_15px_rgba(16,185,129,0.35)] overflow-hidden">
+              {match.homeTeam?.logoUrl ? (
+                <img src={match.homeTeam.logoUrl} alt={match.homeTeam.name} className="h-full w-full object-cover" crossOrigin="anonymous" />
+              ) : (
+                match.homeTeam?.name?.charAt(0) || "H"
+              )}
             </div>
             <p className="text-xs font-black text-white line-clamp-2 uppercase tracking-wide">
               {match.homeTeam?.name}
@@ -134,8 +138,12 @@ export function DownloadableMatchdayCard({ match }: { match: any }) {
 
           {/* Away Team */}
           <div className="flex flex-col items-center">
-            <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-2xl bg-blue-500/20 border-2 border-blue-400 flex items-center justify-center font-black text-xl sm:text-2xl text-blue-300 mb-2 shadow-[0_0_15px_rgba(59,130,246,0.35)]">
-              {match.awayTeam?.name?.charAt(0) || "A"}
+            <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-full bg-blue-500/20 border-2 border-blue-400 flex items-center justify-center font-black text-xl sm:text-2xl text-blue-300 mb-2 shadow-[0_0_15px_rgba(59,130,246,0.35)] overflow-hidden">
+              {match.awayTeam?.logoUrl ? (
+                <img src={match.awayTeam.logoUrl} alt={match.awayTeam.name} className="h-full w-full object-cover" crossOrigin="anonymous" />
+              ) : (
+                match.awayTeam?.name?.charAt(0) || "A"
+              )}
             </div>
             <p className="text-xs font-black text-white line-clamp-2 uppercase tracking-wide">
               {match.awayTeam?.name}
