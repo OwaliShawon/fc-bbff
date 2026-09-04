@@ -17,9 +17,7 @@ export default async function PlayerPage({ params }: { params: Promise<{ slug: s
   const details = [
     { icon: Shield, label: "Current Team", value: currentTeam?.team?.name },
     { icon: Calendar, label: "Date of Birth", value: player.dateOfBirth ? formatDate(player.dateOfBirth) : null },
-    { icon: MapPin, label: "Nationality", value: player.nationality },
     { icon: Building2, label: "Current City", value: player.currentCity },
-    { icon: Shield, label: "Secondary Position", value: player.secondaryPosition },
     { icon: Ruler, label: "Height", value: player.height },
     { icon: Weight, label: "Weight", value: player.weight },
     { icon: Footprints, label: "Preferred Foot", value: player.preferredFoot },
@@ -84,14 +82,15 @@ export default async function PlayerPage({ params }: { params: Promise<{ slug: s
                 <Badge className={`${getPlayerPositionColor(player.position)} text-sm`}>
                   {player.position}
                 </Badge>
-                {player.secondaryPosition && (
-                  <Badge variant="outline" className="border-emerald-500/30 text-emerald-300 text-sm">
-                    Sec: {player.secondaryPosition}
-                  </Badge>
-                )}
                 <Badge className={player.status === "ACTIVE" ? "bg-emerald-500/10 text-emerald-400" : "bg-red-500/10 text-red-400"}>
                   {player.status}
                 </Badge>
+                {player.currentCity && (
+                  <Badge className="bg-amber-500/15 border border-amber-500/30 text-amber-300 text-sm flex items-center gap-1 font-semibold">
+                    <MapPin className="h-3.5 w-3.5 text-amber-400" />
+                    <span>{player.currentCity}</span>
+                  </Badge>
+                )}
                 {player.isFeatured && (
                   <Badge className="bg-amber-500/10 text-amber-400">
                     <Star className="mr-1 h-3 w-3" /> Featured

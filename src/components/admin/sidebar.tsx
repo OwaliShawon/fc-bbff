@@ -27,6 +27,7 @@ import {
   CalendarDays,
   TableProperties,
   Star,
+  MapPin,
   type LucideIcon,
 } from "lucide-react";
 import { useState } from "react";
@@ -78,13 +79,19 @@ const navGroups: { label: string; items: NavItem[] }[] = [
     ],
   },
   {
-    label: "Matches",
+    label: "Matches & Venues",
     items: [
       {
         title: "Fixtures & Results",
         href: "/admin/matches",
         icon: Swords,
         permission: PERMISSIONS.MATCHES_VIEW,
+      },
+      {
+        title: "Venues",
+        href: "/admin/venues",
+        icon: MapPin,
+        permission: PERMISSIONS.VENUES_VIEW,
       },
       {
         title: "Statistics",
@@ -204,7 +211,7 @@ export function AdminSidebar({
       >
         {/* Logo */}
         <div className="flex h-16 items-center gap-3 border-b border-neutral-200 px-6 dark:border-neutral-800">
-          <div className="relative h-9 w-9 overflow-hidden rounded-lg border border-neutral-200 bg-neutral-900 shadow-sm dark:border-neutral-800">
+          <div className="relative h-9 w-9 overflow-hidden rounded-full border border-neutral-200 bg-neutral-900 shadow-sm dark:border-neutral-800">
             <Image
               src="/logo.png"
               alt="FC BBFF Logo"

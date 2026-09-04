@@ -235,7 +235,7 @@ export function UsersClient({
                     <TableCell className="text-sm text-neutral-500">{formatDate(user.createdAt)}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
-                        <Button variant="ghost" size="sm" onClick={() => handleOpenEdit(user)}>
+                        <Button variant="ghost" size="sm" onClick={() => handleOpenEdit(user)} title="Edit User">
                           <Edit className="h-4 w-4" />
                         </Button>
                         <Button
@@ -246,6 +246,7 @@ export function UsersClient({
                             setDeleteDialogOpen(true);
                           }}
                           className="text-red-500 hover:text-red-600"
+                          title="Delete User"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>

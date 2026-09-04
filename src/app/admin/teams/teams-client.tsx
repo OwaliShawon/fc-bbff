@@ -96,6 +96,10 @@ export function TeamsClient({
     description: "",
     logoUrl: "",
     manager: "",
+    contactPersonName: "",
+    contactNumber: "",
+    facebookUrl: "",
+    isExternal: false,
     status: "ACTIVE",
   });
 
@@ -115,6 +119,10 @@ export function TeamsClient({
       description: "",
       logoUrl: "",
       manager: "",
+      contactPersonName: "",
+      contactNumber: "",
+      facebookUrl: "",
+      isExternal: false,
       status: "ACTIVE",
     });
     setShowDialog(true);
@@ -127,6 +135,10 @@ export function TeamsClient({
       description: team.description || "",
       logoUrl: team.logoUrl || "",
       manager: team.manager || "",
+      contactPersonName: (team as any).contactPersonName || "",
+      contactNumber: (team as any).contactNumber || "",
+      facebookUrl: (team as any).facebookUrl || "",
+      isExternal: (team as any).isExternal || false,
       status: team.status,
     });
     setShowDialog(true);
@@ -322,21 +334,56 @@ export function TeamsClient({
                   <TableRow key={team.id}>
                     <TableCell>
                       <div className="flex items-center gap-3">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-100 text-sm font-bold text-emerald-700 dark:bg-emerald-900/30">
-                          {team.name.charAt(0)}
-                        </div>
+                        {team.logoUrl ? (
+                          <img
+                            src={team.logoUrl}
+                            alt={team.name}
+                            className="h-9 w-9 rounded-full object-cover border border-neutral-200 dark:border-neutral-800"
+                          />
+                        ) : (
+                          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-100 text-sm font-bold text-emerald-700 dark:bg-emerald-900/30">
+                            {team.name.charAt(0)}
+                          </div>
+                        )}
                         <div>
-                          <p className="font-medium">{team.name}</p>
+                          <div className="flex items-center gap-2">
+                            <p className="font-medium">{team.name}</p>
+                            {team.isExternal ? (
+                              <Badge variant="outline" className="text-[10px] border-amber-500/40 text-amber-500 bg-amber-500/10 font-bold">
+                                Outsider Team
+                              </Badge>
+                            ) : (
+                              <Badge variant="outline" className="text-[10px] border-emerald-500/40 text-emerald-500 bg-emerald-500/10 font-bold">
+                                BBFF Squad
+                              </Badge>
+                            )}
+                          </div>
                           <p className="max-w-[300px] truncate text-xs text-neutral-500">{team.description || "—"}</p>
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell className="text-sm">{team.manager || "—"}</TableCell>
+                    <TableCell className="text-sm">
+                      <div>
+                        <p className="font-medium text-neutral-900 dark:text-neutral-200">{team.manager || "—"}</p>
+                        {team.contactPersonName && (
+                          <p className="text-xs text-neutral-500">
+                            Contact: <span className="text-emerald-400 font-semibold">{team.contactPersonName}</span>
+                            {team.contactNumber ? ` (${team.contactNumber})` : ""}
+                          </p>
+                        )}
+                      </div>
+                    </TableCell>
                     <TableCell>
-                      <Badge variant="secondary" className="gap-1 font-medium">
-                        <UsersRound className="h-3 w-3 text-emerald-600" />
-                        {team._count?.teamPlayers || 0} players
-                      </Badge>
+                      {team.isExternal ? (
+                        <Badge variant="outline" className="border-amber-500/30 text-amber-400 bg-amber-500/10 text-xs">
+                          Outsider Club
+                        </Badge>
+                      ) : (
+                        <Badge variant="secondary" className="gap-1 font-medium">
+                          <UsersRound className="h-3 w-3 text-emerald-600" />
+                          {team._count?.teamPlayers || 0} players
+                        </Badge>
+                      )}
                     </TableCell>
                     <TableCell>
                       <Badge className={team.status === "ACTIVE" ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" : ""}>
@@ -345,15 +392,17 @@ export function TeamsClient({
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1.5">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => openSquad(team)}
-                          className="h-8 gap-1.5 border-emerald-500/30 bg-emerald-50/50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950/30 dark:text-emerald-300 dark:hover:bg-emerald-900/50 text-xs font-semibold"
-                        >
-                          <UsersRound className="h-3.5 w-3.5" />
-                          Manage Squad
-                        </Button>
+                        {!team.isExternal && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => openSquad(team)}
+                            className="h-8 gap-1.5 border-emerald-500/30 bg-emerald-50/50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950/30 dark:text-emerald-300 dark:hover:bg-emerald-900/50 text-xs font-semibold"
+                          >
+                            <UsersRound className="h-3.5 w-3.5" />
+                            Manage Squad
+                          </Button>
+                        )}
                         <Button
                           variant="ghost"
                           size="icon"
@@ -414,7 +463,7 @@ export function TeamsClient({
       {/* SQUAD / ROSTER MANAGEMENT DIALOG                                         */}
       {/* ========================================================================= */}
       <Dialog open={showSquadDialog} onOpenChange={setShowSquadDialog}>
-        <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
+        <DialogContent className="max-h-[90vh] w-[95vw] sm:max-w-4xl lg:max-w-5xl overflow-y-auto">
           <DialogHeader>
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 text-lg font-bold text-emerald-700 dark:bg-emerald-900/30">
@@ -580,7 +629,7 @@ export function TeamsClient({
                                   <p className="text-sm font-semibold text-neutral-900 dark:text-white flex items-center gap-1.5">
                                     #{p.jerseyNumber ?? "—"} {p.firstName} {p.lastName}
                                   </p>
-                                  <p className="text-xs text-neutral-400">{p.nationality || "Club Player"}</p>
+                                  <p className="text-xs text-neutral-400">{p.currentCity || "Club Player"}</p>
                                 </div>
                               </div>
                             </TableCell>
@@ -681,53 +730,142 @@ export function TeamsClient({
             <DialogTitle>{editingTeam ? "Edit Team" : "Add Team"}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
+            {/* Team Type Switcher / Indicator */}
+            <div className="flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.03] p-3">
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="isExternalTeam"
+                  checked={formData.isExternal}
+                  onCheckedChange={(checked) =>
+                    setFormData({ ...formData, isExternal: checked === true })
+                  }
+                />
+                <Label htmlFor="isExternalTeam" className="cursor-pointer text-xs font-bold text-white">
+                  Is External / Outsider Opponent Club?
+                </Label>
+              </div>
+              <Badge
+                variant="secondary"
+                className={
+                  formData.isExternal
+                    ? "bg-amber-500/20 text-amber-300 border-amber-500/40 text-[10px]"
+                    : "bg-emerald-500/20 text-emerald-300 border-emerald-500/40 text-[10px]"
+                }
+              >
+                {formData.isExternal ? "⚽ External Opponent" : "🟢 Internal Squad"}
+              </Badge>
+            </div>
+
             <div className="space-y-2">
-              <Label>Team Name *</Label>
+              <Label htmlFor="teamName">Team Name *</Label>
               <Input
+                id="teamName"
                 value={formData.name}
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                placeholder={formData.isExternal ? "e.g. Abahani Academy, Mohammedan SC..." : "e.g. FC BBFF Red, FC BBFF Alpha..."}
               />
             </div>
+
+            {/* Fields Specific to External vs Internal Teams */}
+            {formData.isExternal ? (
+              /* External / Outsider Opponent Fields */
+              <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 space-y-4">
+                <p className="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                  📞 Contact Person & Outsider Details
+                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-neutral-300">Contact Person Name</Label>
+                    <Input
+                      value={formData.contactPersonName}
+                      onChange={(e) => setFormData({ ...formData, contactPersonName: e.target.value })}
+                      placeholder="e.g. Rahat Ahmed"
+                      className="bg-neutral-900 border-neutral-700 text-xs text-white"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-neutral-300">Contact Phone Number</Label>
+                    <Input
+                      value={formData.contactNumber}
+                      onChange={(e) => setFormData({ ...formData, contactNumber: e.target.value })}
+                      placeholder="e.g. +8801700000000"
+                      className="bg-neutral-900 border-neutral-700 text-xs text-white"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-neutral-300">Facebook Profile / Page URL (Optional)</Label>
+                    <Input
+                      value={formData.facebookUrl}
+                      onChange={(e) => setFormData({ ...formData, facebookUrl: e.target.value })}
+                      placeholder="https://facebook.com/..."
+                      className="bg-neutral-900 border-neutral-700 text-xs text-white"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-neutral-300">Team Logo URL (Optional)</Label>
+                    <Input
+                      value={formData.logoUrl}
+                      onChange={(e) => setFormData({ ...formData, logoUrl: e.target.value })}
+                      placeholder="https://..."
+                      className="bg-neutral-900 border-neutral-700 text-xs text-white"
+                    />
+                  </div>
+                </div>
+              </div>
+            ) : (
+              /* Internal FC BBFF Squad Fields */
+              <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-4 space-y-4">
+                <p className="text-xs font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
+                  🟢 Internal Squad Info & Management
+                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-neutral-300">Manager / Head Coach</Label>
+                    <Input
+                      value={formData.manager}
+                      onChange={(e) => setFormData({ ...formData, manager: e.target.value })}
+                      placeholder="e.g. Tanvir Ahmed"
+                      className="bg-neutral-900 border-neutral-700 text-xs text-white"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-neutral-300">Team Logo URL (Optional)</Label>
+                    <Input
+                      value={formData.logoUrl}
+                      onChange={(e) => setFormData({ ...formData, logoUrl: e.target.value })}
+                      placeholder="https://..."
+                      className="bg-neutral-900 border-neutral-700 text-xs text-white"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="space-y-2">
-              <Label>Manager</Label>
-              <Input
-                value={formData.manager}
-                onChange={(e) =>
-                  setFormData({ ...formData, manager: e.target.value })
-                }
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Logo URL</Label>
-              <Input
-                value={formData.logoUrl}
-                onChange={(e) =>
-                  setFormData({ ...formData, logoUrl: e.target.value })
-                }
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Description</Label>
+              <Label>Description / Bio</Label>
               <Textarea
                 value={formData.description}
-                onChange={(e) =>
-                  setFormData({ ...formData, description: e.target.value })
-                }
-                rows={3}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                rows={2}
+                placeholder={formData.isExternal ? "Outsider club notes..." : "Internal team description..."}
               />
             </div>
+
             <div className="space-y-2">
               <Label>Status</Label>
               <Select
                 value={formData.status}
                 onValueChange={(v) => setFormData({ ...formData, status: v })}
               >
-                <SelectTrigger>
+                <SelectTrigger className="bg-neutral-900 border-neutral-700 text-white">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-neutral-900 border-neutral-700 text-white">
                   <SelectItem value="ACTIVE">Active</SelectItem>
                   <SelectItem value="INACTIVE">Inactive</SelectItem>
                 </SelectContent>

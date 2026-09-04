@@ -54,6 +54,7 @@ import {
   Loader2,
   UserCircle,
   Filter,
+  MapPin,
 } from "lucide-react";
 import { getPlayerPositionColor } from "@/lib/utils";
 import type { PaginatedResponse, Player } from "@/types";
@@ -227,11 +228,19 @@ export function PlayersClient({
   function handleFilterChange(key: string, value: string) {
     const params = new URLSearchParams();
     if (searchInput) params.set("search", searchInput);
-    if (key === "status" && value) params.set("status", value);
-    else if (currentStatus) params.set("status", currentStatus);
-    if (key === "position" && value) params.set("position", value);
-    else if (currentPosition) params.set("position", currentPosition);
-    router.push(`/admin/players?${params.toString()}`);
+
+    const targetStatus = key === "status" ? value : currentStatus;
+    const targetPosition = key === "position" ? value : currentPosition;
+
+    if (targetStatus && targetStatus !== "all") {
+      params.set("status", targetStatus);
+    }
+    if (targetPosition && targetPosition !== "all") {
+      params.set("position", targetPosition);
+    }
+
+    const query = params.toString();
+    router.push(query ? `/admin/players?${query}` : "/admin/players");
   }
 
   return (
@@ -364,8 +373,9 @@ export function PlayersClient({
                           <p className="font-medium">
                             {player.firstName} {player.lastName}
                           </p>
-                          <p className="text-xs text-neutral-500">
-                            {[player.nationality, player.currentCity].filter(Boolean).join(" • ") || "—"}
+                          <p className="text-xs text-neutral-400 flex items-center gap-1 font-medium">
+                            {player.currentCity && <MapPin className="h-3 w-3 text-amber-400 shrink-0" />}
+                            <span>{player.currentCity || "—"}</span>
                           </p>
                         </div>
                       </div>
@@ -403,25 +413,22 @@ export function PlayersClient({
                     </TableCell>
                     <TableCell className="text-sm">
                       {(() => {
-                        const tp = (player as any).teamPlayers?.[0];
-                        if (!tp?.team) {
+                        const teamPlayers = (player as any).teamPlayers || [];
+                        if (teamPlayers.length === 0) {
                           return <span className="text-xs text-neutral-400">Free Agent</span>;
                         }
                         return (
-                          <div className="flex flex-wrap items-center gap-1.5">
-                            <Badge variant="outline" className="font-medium bg-neutral-50 dark:bg-neutral-900 border-neutral-300 dark:border-neutral-700">
-                              {tp.team.name}
-                            </Badge>
-                            {tp.isCaptain && (
-                              <Badge className="bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 text-[10px] px-1.5 py-0 border border-amber-300 dark:border-amber-700">
-                                👑 Captain
+                          <div className="flex flex-wrap items-center gap-1.5 max-w-[200px]">
+                            {teamPlayers.map((tp: any) => (
+                              <Badge
+                                key={tp.id || tp.teamId}
+                                variant="outline"
+                                className="font-medium bg-neutral-50 dark:bg-neutral-900 border-neutral-300 dark:border-neutral-700 text-xs"
+                              >
+                                {tp.team?.name || "Team"}
+                                {tp.isCaptain ? " 👑" : tp.isViceCaptain ? " 🛡️" : ""}
                               </Badge>
-                            )}
-                            {tp.isViceCaptain && (
-                              <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300 text-[10px] px-1.5 py-0 border border-blue-300 dark:border-blue-700">
-                                🛡️ Vice-Captain
-                              </Badge>
-                            )}
+                            ))}
                           </div>
                         );
                       })()}
@@ -436,6 +443,7 @@ export function PlayersClient({
                           size="icon"
                           onClick={() => openEdit(player)}
                           className="h-8 w-8"
+                          title="Edit Player"
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
@@ -444,6 +452,7 @@ export function PlayersClient({
                           size="icon"
                           onClick={() => openDelete(player.id)}
                           className="h-8 w-8 text-red-500 hover:text-red-700"
+                          title="Delete Player"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -504,8 +513,9 @@ export function PlayersClient({
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label>First Name *</Label>
+              <Label htmlFor="firstName">First Name *</Label>
               <Input
+                id="firstName"
                 value={formData.firstName}
                 onChange={(e) =>
                   setFormData({ ...formData, firstName: e.target.value })
@@ -513,8 +523,9 @@ export function PlayersClient({
               />
             </div>
             <div className="space-y-2">
-              <Label>Last Name *</Label>
+              <Label htmlFor="lastName">Last Name *</Label>
               <Input
+                id="lastName"
                 value={formData.lastName}
                 onChange={(e) =>
                   setFormData({ ...formData, lastName: e.target.value })
@@ -522,8 +533,9 @@ export function PlayersClient({
               />
             </div>
             <div className="space-y-2">
-              <Label>Jersey Number</Label>
+              <Label htmlFor="jerseyNumber">Jersey Number</Label>
               <Input
+                id="jerseyNumber"
                 type="number"
                 min={1}
                 max={99}
@@ -578,8 +590,9 @@ export function PlayersClient({
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Current City</Label>
+              <Label htmlFor="currentCity">Current City</Label>
               <Input
+                id="currentCity"
                 placeholder="e.g., Dhaka, London"
                 value={formData.currentCity}
                 onChange={(e) =>
@@ -710,7 +723,7 @@ export function PlayersClient({
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="NONE">No Team (Free Agent)</SelectItem>
-                      {teams.map((t) => (
+                      {teams.filter((t: any) => !t.isExternal).map((t) => (
                         <SelectItem key={t.id} value={t.id}>
                           {t.name}
                         </SelectItem>

@@ -65,6 +65,12 @@ export const PERMISSIONS = {
   MEDIA_VIEW: "media.view",
   MEDIA_UPLOAD: "media.upload",
   MEDIA_DELETE: "media.delete",
+
+  // Venues
+  VENUES_VIEW: "venues.view",
+  VENUES_CREATE: "venues.create",
+  VENUES_UPDATE: "venues.update",
+  VENUES_DELETE: "venues.delete",
 } as const;
 
 export type PermissionKey = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
@@ -109,6 +115,10 @@ export const ROLE_PERMISSIONS: Record<UserRole, PermissionKey[]> = {
     PERMISSIONS.MEDIA_UPLOAD,
     PERMISSIONS.MEDIA_DELETE,
     PERMISSIONS.SETTINGS_VIEW,
+    PERMISSIONS.VENUES_VIEW,
+    PERMISSIONS.VENUES_CREATE,
+    PERMISSIONS.VENUES_UPDATE,
+    PERMISSIONS.VENUES_DELETE,
   ],
 
   EDITOR: [
@@ -125,6 +135,9 @@ export const ROLE_PERMISSIONS: Record<UserRole, PermissionKey[]> = {
     PERMISSIONS.MEDIA_VIEW,
     PERMISSIONS.MEDIA_UPLOAD,
     PERMISSIONS.SETTINGS_VIEW,
+    PERMISSIONS.VENUES_VIEW,
+    PERMISSIONS.VENUES_CREATE,
+    PERMISSIONS.VENUES_UPDATE,
   ],
 
   VIEWER: [
@@ -136,6 +149,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, PermissionKey[]> = {
     PERMISSIONS.COMPETITIONS_VIEW,
     PERMISSIONS.MEDIA_VIEW,
     PERMISSIONS.SETTINGS_VIEW,
+    PERMISSIONS.VENUES_VIEW,
   ],
 };
 

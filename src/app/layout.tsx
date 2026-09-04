@@ -11,7 +11,7 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: "FC BBFF - Football Club Management",
+    default: "FC BBFF - Bhai Brother Football Federation",
     template: "%s | FC BBFF",
   },
   description:

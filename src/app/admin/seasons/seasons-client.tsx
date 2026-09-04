@@ -160,7 +160,7 @@ export function SeasonsClient({ initialSeasons }: { initialSeasons: Season[] }) 
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
-                        <Button variant="ghost" size="sm" onClick={() => handleOpenEdit(season)}>
+                        <Button variant="ghost" size="sm" onClick={() => handleOpenEdit(season)} title="Edit Season">
                           <Edit className="h-4 w-4" />
                         </Button>
                         <Button
@@ -170,6 +170,7 @@ export function SeasonsClient({ initialSeasons }: { initialSeasons: Season[] }) 
                             setSelectedSeason(season);
                             setDeleteDialogOpen(true);
                           }}
+                          title="Delete Season"
                           className="text-red-500 hover:text-red-600"
                         >
                           <Trash2 className="h-4 w-4" />

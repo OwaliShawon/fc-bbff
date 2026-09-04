@@ -30,7 +30,7 @@ export function PublicNavbar({ clubName }: { clubName: string }) {
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 lg:px-8">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-3">
-          <div className="relative h-10 w-10 overflow-hidden rounded-xl bg-neutral-900 border border-white/10 shadow-lg shadow-emerald-500/10">
+          <div className="relative h-10 w-10 overflow-hidden rounded-full bg-neutral-900 border border-white/10 shadow-lg shadow-emerald-500/10">
             <Image
               src="/logo.png"
               alt="FC BBFF Logo"

@@ -265,7 +265,7 @@ export function NewsClient({
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
-                        <Button variant="ghost" size="sm" onClick={() => handleOpenEdit(article)}>
+                        <Button variant="ghost" size="sm" onClick={() => handleOpenEdit(article)} title="Edit Article">
                           <Edit className="h-4 w-4" />
                         </Button>
                         <Button
@@ -275,6 +275,7 @@ export function NewsClient({
                             setSelectedArticle(article);
                             setDeleteDialogOpen(true);
                           }}
+                          title="Delete Article"
                           className="text-red-500 hover:text-red-600"
                         >
                           <Trash2 className="h-4 w-4" />

@@ -12,14 +12,20 @@ export function DownloadableH2HCard({ summary }: { summary: H2HSummary }) {
 
   const handleDownload = async () => {
     setIsExporting(true);
-    await exportElementAsJpeg(cardId, `fc-bbff-vs-${summary.opponentTeam.slug}-h2h.jpg`);
+    await exportElementAsJpeg(
+      cardId,
+      `${summary.fcBbffTeam?.slug || "fc-bbff"}-vs-${summary.opponentTeam?.slug || "opponent"}-h2h.jpg`
+    );
     setIsExporting(false);
   };
 
   return (
     <div className="space-y-4 w-full flex flex-col items-center justify-center">
-      {/* Download Action Button */}
-      <div className="flex justify-center w-full max-w-[480px]">
+      {/* Action Header */}
+      <div className="flex items-center justify-between gap-2 flex-wrap w-full max-w-[480px]">
+        <h3 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+          <Swords className="h-4 sm:h-5 w-4 sm:w-5 text-amber-400 shrink-0" /> Head-to-Head Card
+        </h3>
         <Button
           onClick={handleDownload}
           disabled={isExporting}
@@ -41,27 +47,45 @@ export function DownloadableH2HCard({ summary }: { summary: H2HSummary }) {
       {/* Printable / Exportable Head-to-Head Card */}
       <div
         id={cardId}
-        className="relative overflow-hidden rounded-3xl border-2 border-emerald-500/40 bg-gradient-to-b from-neutral-900 via-neutral-950 to-emerald-950/50 p-4 sm:p-6 shadow-2xl text-white w-full max-w-[480px] mx-auto min-h-[440px]"
+        className="relative overflow-hidden rounded-3xl border-2 border-emerald-500/40 bg-gradient-to-b from-neutral-900 via-neutral-950 to-emerald-950/60 p-5 sm:p-6 shadow-2xl text-white w-full max-w-[480px] mx-auto min-h-[460px] flex flex-col justify-between"
       >
-        {/* Ambient Glows */}
+        {/* Glow Accents */}
         <div className="absolute -right-20 -top-20 h-56 w-56 rounded-full bg-emerald-500/20 blur-3xl pointer-events-none" />
         <div className="absolute -left-20 -bottom-20 h-56 w-56 rounded-full bg-amber-500/15 blur-3xl pointer-events-none" />
 
-        {/* Large Crest Watermark */}
+        {/* Large Watermark Logo in Background */}
         <div className="absolute -right-8 -bottom-6 h-72 w-72 opacity-[0.06] pointer-events-none select-none">
           <img src="/logo.png" alt="Watermark" className="h-full w-full object-contain" crossOrigin="anonymous" />
         </div>
 
-        {/* Header */}
+        {/* Header with FC BBFF Crest Badge */}
         <div className="relative z-10 flex items-center justify-between border-b border-white/10 pb-3 mb-4">
-          <div className="flex items-center gap-2">
-            <Swords className="h-5 w-5 text-amber-400" />
+          <div className="flex items-center gap-3">
+            <div className="relative h-12 w-12 sm:h-14 sm:w-14 shrink-0 overflow-hidden rounded-full bg-neutral-900 border-2 border-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.45)] ring-2 ring-emerald-500/20">
+              <img
+                src={summary.fcBbffTeam?.logoUrl || "/logo.png"}
+                alt="FC BBFF Logo"
+                className="h-full w-full object-cover"
+                crossOrigin="anonymous"
+              />
+            </div>
             <div>
-              <p className="text-[10px] font-black tracking-widest text-emerald-400 uppercase">
-                HEAD TO HEAD RECORD
-              </p>
-              <h3 className="text-sm font-black text-white uppercase tracking-tight">
-                FC BBFF VS {summary.opponentTeam.name}
+              <div className="flex items-center gap-2 mb-0.5">
+                <p className="text-xs sm:text-sm font-black tracking-widest text-white uppercase drop-shadow">
+                  FC BBFF
+                </p>
+                {summary.opponentTeam?.isExternal ? (
+                  <span className="rounded-md bg-blue-500/20 border border-blue-400/40 px-1.5 py-0.5 text-[8px] font-bold text-blue-300 uppercase tracking-wide">
+                    🌐 Inter-Club
+                  </span>
+                ) : (
+                  <span className="rounded-md bg-amber-500/20 border border-amber-400/40 px-1.5 py-0.5 text-[8px] font-bold text-amber-300 uppercase tracking-wide">
+                    ⚔️ Intra-Club Derby
+                  </span>
+                )}
+              </div>
+              <h3 className="text-xs sm:text-sm font-bold text-emerald-300 uppercase tracking-tight">
+                H2H vs {summary.opponentTeam?.name}
               </h3>
             </div>
           </div>
@@ -72,12 +96,19 @@ export function DownloadableH2HCard({ summary }: { summary: H2HSummary }) {
 
         {/* Matchup Crest Comparison */}
         <div className="relative z-10 grid grid-cols-[1fr_auto_1fr] items-center gap-3 rounded-2xl bg-white/[0.03] border border-white/10 p-4 mb-4 text-center">
-          {/* FC BBFF */}
+          {/* FC BBFF / Team 1 */}
           <div className="flex flex-col items-center">
-            <div className="h-14 w-14 rounded-2xl bg-neutral-900/90 p-1.5 border-2 border-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.4)] mb-2">
-              <img src="/logo.png" alt="FC BBFF" className="h-full w-full object-contain" crossOrigin="anonymous" />
+            <div className="h-14 w-14 rounded-full bg-neutral-900/90 border-2 border-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.4)] mb-2 flex items-center justify-center overflow-hidden">
+              <img
+                src={summary.fcBbffTeam?.logoUrl || "/logo.png"}
+                alt={summary.fcBbffTeam?.name || "FC BBFF"}
+                className="h-full w-full object-cover"
+                crossOrigin="anonymous"
+              />
             </div>
-            <p className="text-xs font-black text-white">FC BBFF</p>
+            <p className="text-xs font-black text-white truncate max-w-[100px]">
+              {summary.fcBbffTeam?.name || "FC BBFF"}
+            </p>
             <p className="text-[10px] text-emerald-400 font-mono font-bold">{summary.wins} Wins</p>
           </div>
 
@@ -95,11 +126,11 @@ export function DownloadableH2HCard({ summary }: { summary: H2HSummary }) {
               <img
                 src={summary.opponentTeam.logoUrl}
                 alt={summary.opponentTeam.name}
-                className="h-14 w-14 rounded-2xl object-cover border-2 border-white/20 mb-2"
+                className="h-14 w-14 rounded-full object-cover border-2 border-white/20 mb-2"
                 crossOrigin="anonymous"
               />
             ) : (
-              <div className="h-14 w-14 rounded-2xl bg-white/10 border-2 border-white/20 flex items-center justify-center font-bold text-xl text-amber-400 mb-2">
+              <div className="h-14 w-14 rounded-full bg-white/10 border-2 border-white/20 flex items-center justify-center font-bold text-xl text-amber-400 mb-2">
                 {summary.opponentTeam.name.charAt(0)}
               </div>
             )}
@@ -151,10 +182,10 @@ export function DownloadableH2HCard({ summary }: { summary: H2HSummary }) {
         </div>
 
         {/* Footer Branding */}
-        <div className="relative z-10 flex items-center justify-between border-t border-white/10 pt-2.5 text-[10px] text-neutral-400">
+        <div className="relative z-10 flex items-center justify-between border-t border-white/10 pt-2.5 text-[10px] text-neutral-400 mt-auto">
           <div className="flex items-center gap-1.5">
             <img src="/logo.png" alt="logo" className="h-3.5 w-3.5 object-contain opacity-80" crossOrigin="anonymous" />
-            <span>Official FC BBFF Head-to-Head Record</span>
+            <span>Official Bhai Brother Football Federation Head-to-Head Record</span>
           </div>
           <span className="text-emerald-400 font-mono font-bold">#fcbbff</span>
         </div>

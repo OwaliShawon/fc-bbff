@@ -15,6 +15,7 @@ import type {
   AuditLog,
   SiteSetting,
   UserRole,
+  Venue,
 } from "@prisma/client";
 
 // ============================================================================
@@ -37,6 +38,7 @@ export type {
   AuditLog,
   SiteSetting,
   UserRole,
+  Venue,
 };
 
 // ============================================================================

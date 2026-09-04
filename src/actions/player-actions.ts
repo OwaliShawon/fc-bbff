@@ -309,7 +309,33 @@ export async function createPlayer(
       }
     }
 
-    if (teamId) {
+    // Always assign every newly created player to the main core FC BBFF squad
+    const mainFcBbffTeam =
+      (await db.team.findFirst({
+        where: {
+          isExternal: false,
+          OR: [
+            { name: { contains: "FC BBFF", mode: "insensitive" } },
+            { name: { contains: "BBFF", mode: "insensitive" } },
+          ],
+        },
+      })) || (await db.team.findFirst({ where: { isExternal: false } }));
+
+    if (mainFcBbffTeam) {
+      await db.teamPlayer.upsert({
+        where: { teamId_playerId: { teamId: mainFcBbffTeam.id, playerId: player.id } },
+        create: {
+          teamId: mainFcBbffTeam.id,
+          playerId: player.id,
+          isCaptain: teamId === mainFcBbffTeam.id ? (isCaptain || false) : false,
+          isViceCaptain: teamId === mainFcBbffTeam.id ? (isViceCaptain || false) : false,
+        },
+        update: {},
+      });
+    }
+
+    // If an additional specific internal team was selected, assign them to that team as well
+    if (teamId && mainFcBbffTeam && teamId !== mainFcBbffTeam.id) {
       const teamOps: any[] = [];
       if (isCaptain) {
         teamOps.push(

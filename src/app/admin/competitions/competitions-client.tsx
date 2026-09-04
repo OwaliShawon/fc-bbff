@@ -265,15 +265,18 @@ export function CompetitionsClient({
     });
   };
 
-  // List of teams not yet enrolled in managingComp
+  // List of teams not yet enrolled in managingComp (Internal teams only)
   const enrolledTeamIds = new Set(
     (managingComp?.competitionTeams || []).map((ct: any) => ct.teamId)
   );
-  const availableTeams = teams.filter((t) => !enrolledTeamIds.has(t.id));
+  const availableTeams = teams.filter((t) => !t.isExternal && !enrolledTeamIds.has(t.id));
 
-  // Teams enrolled in targetCompForMatch (fall back to all teams if < 2)
-  const compEnrolledTeams = (targetCompForMatch?.competitionTeams || []).map((ct: any) => ct.team).filter(Boolean);
-  const compTeams = compEnrolledTeams.length >= 2 ? compEnrolledTeams : teams;
+  // Internal teams enrolled in targetCompForMatch (fall back to all internal teams if < 2)
+  const internalTeams = teams.filter((t) => !t.isExternal);
+  const compEnrolledTeams = (targetCompForMatch?.competitionTeams || [])
+    .map((ct: any) => ct.team)
+    .filter((t: any) => t && !t.isExternal);
+  const compTeams = compEnrolledTeams.length >= 2 ? compEnrolledTeams : internalTeams;
 
   return (
     <div className="space-y-6">
@@ -385,7 +388,7 @@ export function CompetitionsClient({
                           >
                             <Users className="h-4 w-4 mr-1 text-emerald-500" /> Teams
                           </Button>
-                          <Button variant="ghost" size="sm" onClick={() => handleOpenEdit(comp)}>
+                          <Button variant="ghost" size="sm" onClick={() => handleOpenEdit(comp)} title="Edit Competition">
                             <Edit className="h-4 w-4" />
                           </Button>
                           <Button
@@ -395,6 +398,7 @@ export function CompetitionsClient({
                               setSelectedComp(comp);
                               setDeleteDialogOpen(true);
                             }}
+                            title="Delete Competition"
                             className="text-red-500 hover:text-red-600"
                           >
                             <Trash2 className="h-4 w-4" />

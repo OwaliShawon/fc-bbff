@@ -127,6 +127,19 @@ export async function createMatch(data: unknown): Promise<ActionResponse<Match>>
       return { success: false, error: "Home and away teams must be different" };
     }
 
+    if (validated.competitionId) {
+      const [homeTeam, awayTeam] = await Promise.all([
+        db.team.findUnique({ where: { id: validated.homeTeamId } }),
+        db.team.findUnique({ where: { id: validated.awayTeamId } }),
+      ]);
+      if (homeTeam?.isExternal || awayTeam?.isExternal) {
+        return {
+          success: false,
+          error: "Competitions are strictly for internal FC BBFF teams. External teams cannot participate in competition matches.",
+        };
+      }
+    }
+
     const match = await db.match.create({
       data: {
         ...validated,
@@ -156,6 +169,10 @@ export async function createMatch(data: unknown): Promise<ActionResponse<Match>>
 export async function createMatchWithOutsider(data: {
   fcBbffTeamId: string;
   outsiderTeamName: string;
+  outsiderContactPersonName?: string | null;
+  outsiderContactNumber?: string | null;
+  outsiderFacebookUrl?: string | null;
+  outsiderLogoUrl?: string | null;
   isFcBbffHome?: boolean;
   matchDate: string;
   venue?: string | null;
@@ -195,7 +212,24 @@ export async function createMatchWithOutsider(data: {
         data: {
           name: trimmedName,
           slug,
+          logoUrl: data.outsiderLogoUrl || null,
+          contactPersonName: data.outsiderContactPersonName || null,
+          contactNumber: data.outsiderContactNumber || null,
+          facebookUrl: data.outsiderFacebookUrl || null,
+          isExternal: true,
           status: "ACTIVE",
+        },
+      });
+    } else {
+      // Update outsider contact details if provided
+      await db.team.update({
+        where: { id: outsiderTeam.id },
+        data: {
+          isExternal: true,
+          ...(data.outsiderLogoUrl ? { logoUrl: data.outsiderLogoUrl } : {}),
+          ...(data.outsiderContactPersonName ? { contactPersonName: data.outsiderContactPersonName } : {}),
+          ...(data.outsiderContactNumber ? { contactNumber: data.outsiderContactNumber } : {}),
+          ...(data.outsiderFacebookUrl ? { facebookUrl: data.outsiderFacebookUrl } : {}),
         },
       });
     }
@@ -253,6 +287,58 @@ export async function createMatchWithOutsider(data: {
     return {
       success: false,
       error: error instanceof Error ? error.message : "Failed to create match vs outsider team",
+    };
+  }
+}
+
+export async function updateMatchLineup(
+  matchId: string,
+  lineup: {
+    playerId: string;
+    teamId: string;
+    type: "STARTING" | "SUBSTITUTE";
+    position?: string | null;
+    shirtNumber?: number | null;
+  }[]
+): Promise<ActionResponse> {
+  try {
+    await requirePermission(PERMISSIONS.MATCHES_UPDATE);
+
+    const match = await db.match.findUnique({ where: { id: matchId } });
+    if (!match) return { success: false, error: "Match not found" };
+
+    if (match.status === "COMPLETED") {
+      return { success: false, error: "Lineup cannot be edited after match is marked COMPLETED" };
+    }
+
+    await db.$transaction([
+      db.matchLineup.deleteMany({ where: { matchId } }),
+      db.matchLineup.createMany({
+        data: lineup.map((l) => ({
+          matchId,
+          playerId: l.playerId,
+          teamId: l.teamId,
+          type: l.type,
+          position: l.position || null,
+          shirtNumber: l.shirtNumber || null,
+        })),
+      }),
+    ]);
+
+    await createAuditLog({
+      action: "UPDATE",
+      module: "matches",
+      recordId: matchId,
+      description: `Updated match lineup (${lineup.length} players)`,
+    });
+
+    revalidatePath("/admin/matches");
+    revalidatePath(`/matches/${matchId}`);
+    return { success: true };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to update match lineup",
     };
   }
 }

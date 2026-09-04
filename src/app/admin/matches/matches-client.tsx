@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
   createMatch, createMatchWithOutsider, updateMatch, deleteMatch, updateMatchResult,
-  addMatchEvent, removeMatchEvent, getMatchById,
+  addMatchEvent, removeMatchEvent, getMatchById, updateMatchLineup,
 } from "@/actions/match-actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,7 +30,7 @@ import {
   Plus, Search, Edit, Trash2, ChevronLeft, ChevronRight, Loader2, Swords, Trophy, X, Globe, Users,
 } from "lucide-react";
 import { formatDateTime, getMatchStatusColor } from "@/lib/utils";
-import type { PaginatedResponse, Match, Season, Player } from "@/types";
+import type { PaginatedResponse, Match, Season, Player, Venue } from "@/types";
 import type { Team, Competition } from "@prisma/client";
 
 const EVENT_LABELS: Record<string, { label: string; icon: string; color: string }> = {
@@ -50,6 +50,7 @@ interface MatchesClientProps {
   seasons: Season[];
   competitions?: Competition[];
   allPlayers?: Player[];
+  venues?: Venue[];
   currentPage: number;
   currentStatus: string;
   currentSearch: string;
@@ -62,6 +63,7 @@ export function MatchesClient({
   seasons,
   competitions = [],
   allPlayers = [],
+  venues = [],
   currentPage,
   currentStatus,
   currentSearch,
@@ -86,14 +88,29 @@ export function MatchesClient({
   const [outsiderData, setOutsiderData] = useState<{
     fcBbffTeamId: string;
     outsiderTeamName: string;
+    outsiderContactPersonName: string;
+    outsiderContactNumber: string;
+    outsiderFacebookUrl: string;
+    outsiderLogoUrl: string;
     isFcBbffHome: boolean;
     selectedPlayerIds: string[];
   }>({
     fcBbffTeamId: fcBbffTeam?.id || "",
     outsiderTeamName: "",
+    outsiderContactPersonName: "",
+    outsiderContactNumber: "",
+    outsiderFacebookUrl: "",
+    outsiderLogoUrl: "",
     isFcBbffHome: true,
     selectedPlayerIds: [],
   });
+
+  // Lineup Editor Dialog State
+  const [showLineupDialog, setShowLineupDialog] = useState(false);
+  const [activeLineupMatch, setActiveLineupMatch] = useState<any>(null);
+  const [lineupSelections, setLineupSelections] = useState<
+    Record<string, { selected: boolean; type: "STARTING" | "SUBSTITUTE"; position: string; shirtNumber: number | null }>
+  >({});
 
   const [formData, setFormData] = useState({
     homeTeamId: "", awayTeamId: "", matchDate: "", venue: "", seasonId: "",
@@ -114,6 +131,10 @@ export function MatchesClient({
     setOutsiderData({
       fcBbffTeamId: fcBbffTeam?.id || teams[0]?.id || "",
       outsiderTeamName: "",
+      outsiderContactPersonName: "",
+      outsiderContactNumber: "",
+      outsiderFacebookUrl: "",
+      outsiderLogoUrl: "",
       isFcBbffHome: true,
       selectedPlayerIds: allPlayers.map((p) => p.id), // Pre-select all registered players by default
     });
@@ -130,6 +151,80 @@ export function MatchesClient({
       notes: "",
     });
     setShowDialog(true);
+  }
+
+  async function openLineupModal(match: any) {
+    setIsLoadingMatch(true);
+    setActiveLineupMatch(match);
+    setShowLineupDialog(true);
+
+    try {
+      const fullMatch = (await getMatchById(match.id)) as any;
+      if (!fullMatch) {
+        toast.error("Failed to load match lineup");
+        setShowLineupDialog(false);
+        return;
+      }
+
+      const existingMap: Record<string, any> = {};
+      (fullMatch.lineups || []).forEach((l: any) => {
+        existingMap[l.playerId] = {
+          selected: true,
+          type: l.type || "STARTING",
+          position: l.position || l.player?.position || "",
+          shirtNumber: l.shirtNumber ?? l.player?.jerseyNumber ?? null,
+        };
+      });
+
+      const initialMap: Record<string, any> = {};
+      allPlayers.forEach((p) => {
+        if (existingMap[p.id]) {
+          initialMap[p.id] = existingMap[p.id];
+        } else {
+          initialMap[p.id] = {
+            selected: (fullMatch.lineups || []).length === 0, // default selected if no lineup saved yet
+            type: "STARTING",
+            position: p.position || "",
+            shirtNumber: p.jerseyNumber ?? null,
+          };
+        }
+      });
+
+      setLineupSelections(initialMap);
+    } catch {
+      toast.error("Error loading lineup data");
+    } finally {
+      setIsLoadingMatch(false);
+    }
+  }
+
+  async function handleSaveLineup() {
+    if (!activeLineupMatch) return;
+
+    const fcBbffTeamId = activeLineupMatch.homeTeam?.name?.toUpperCase().includes("BBFF")
+      ? activeLineupMatch.homeTeamId
+      : activeLineupMatch.awayTeamId;
+
+    const lineupItems = Object.entries(lineupSelections)
+      .filter(([_, val]) => val.selected)
+      .map(([playerId, val]) => ({
+        playerId,
+        teamId: fcBbffTeamId,
+        type: val.type,
+        position: val.position || null,
+        shirtNumber: val.shirtNumber ? Number(val.shirtNumber) : null,
+      }));
+
+    startTransition(async () => {
+      const res = await updateMatchLineup(activeLineupMatch.id, lineupItems);
+      if (res.success) {
+        toast.success("Match lineup updated successfully!");
+        setShowLineupDialog(false);
+        router.refresh();
+      } else {
+        toast.error(res.error || "Failed to update lineup");
+      }
+    });
   }
 
   function openEdit(match: any) {
@@ -220,6 +315,10 @@ export function MatchesClient({
         result = await createMatchWithOutsider({
           fcBbffTeamId: outsiderData.fcBbffTeamId || fcBbffTeam?.id || "",
           outsiderTeamName: outsiderData.outsiderTeamName,
+          outsiderContactPersonName: outsiderData.outsiderContactPersonName || null,
+          outsiderContactNumber: outsiderData.outsiderContactNumber || null,
+          outsiderFacebookUrl: outsiderData.outsiderFacebookUrl || null,
+          outsiderLogoUrl: outsiderData.outsiderLogoUrl || null,
           isFcBbffHome: outsiderData.isFcBbffHome,
           selectedPlayerIds: outsiderData.selectedPlayerIds,
           matchDate: formData.matchDate,
@@ -454,6 +553,16 @@ export function MatchesClient({
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1">
+                        {match.status !== "COMPLETED" && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => openLineupModal(match)}
+                            className="h-8 text-xs text-cyan-400 hover:text-cyan-300 gap-1 font-semibold hover:bg-cyan-950/30"
+                          >
+                            <Users className="h-3.5 w-3.5" /> Lineup
+                          </Button>
+                        )}
                         {(match.status === "SCHEDULED" || match.status === "LIVE" || match.status === "COMPLETED") && (
                           <Button variant="ghost" size="sm" onClick={() => openResult(match)} className="h-8 text-xs">
                             <Trophy className="mr-1 h-3 w-3" /> Result
@@ -548,27 +657,146 @@ export function MatchesClient({
             {/* Outsider Team Form Fields */}
             {matchTypeMode === "outsider" && !editingMatch ? (
               <div className="col-span-full space-y-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 p-4">
-                <div className="flex items-center justify-between bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3">
-                  <div>
-                    <p className="text-xs font-bold text-emerald-400">⚽ Club Team: FC BBFF</p>
-                    <p className="text-[11px] text-neutral-400">Default FC BBFF team is selected automatically for outsider matches.</p>
+                <div className="space-y-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 p-3">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs font-bold text-emerald-400">Internal FC BBFF Team *</Label>
+                    <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/40 text-[10px]">
+                      Club Team
+                    </Badge>
                   </div>
-                  <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/40 text-[10px]">
-                    FC BBFF Default
-                  </Badge>
+                  <Select
+                    value={outsiderData.fcBbffTeamId || fcBbffTeam?.id || ""}
+                    onValueChange={(v) => setOutsiderData({ ...outsiderData, fcBbffTeamId: v })}
+                  >
+                    <SelectTrigger className="w-full bg-neutral-900 border-neutral-700 text-white font-semibold text-xs">
+                      <SelectValue placeholder="Select internal team..." />
+                    </SelectTrigger>
+                    <SelectContent className="bg-neutral-900 border-neutral-700 text-white">
+                      {teams.filter((t: any) => !t.isExternal).map((t) => (
+                        <SelectItem key={t.id} value={t.id}>
+                          🟢 {t.name} {t.id === fcBbffTeam?.id ? "(Main Team)" : ""}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-[11px] text-neutral-400">
+                    Main team FC BBFF plays external matches primarily, but any internal squad can also play vs external teams.
+                  </p>
                 </div>
 
-                <div className="space-y-2">
-                  <Label className="font-bold text-white">Outsider / External Team Name *</Label>
-                  <Input
-                    placeholder="e.g. Abahani Academy, Mohammedan SC, Dhaka Stars FC..."
-                    value={outsiderData.outsiderTeamName}
-                    onChange={(e) => setOutsiderData({ ...outsiderData, outsiderTeamName: e.target.value })}
-                    className="bg-neutral-900 border-neutral-700 text-white placeholder:text-neutral-500"
-                  />
-                  <p className="text-[11px] text-neutral-400">
-                    Type the opponent club name. If this team does not exist yet, it will be automatically registered!
+                {/* Outsider Team Selector Dropdown & Name */}
+                <div className="space-y-3 rounded-xl bg-amber-500/10 border border-amber-500/20 p-3">
+                  <div className="space-y-1">
+                    <Label className="font-bold text-amber-400 text-xs uppercase tracking-wider">
+                      Select Outsider / External Opponent Team *
+                    </Label>
+                    <Select
+                      onValueChange={(teamId) => {
+                        if (teamId === "NEW") {
+                          setOutsiderData({
+                            ...outsiderData,
+                            outsiderTeamName: "",
+                            outsiderContactPersonName: "",
+                            outsiderContactNumber: "",
+                            outsiderFacebookUrl: "",
+                            outsiderLogoUrl: "",
+                          });
+                        } else {
+                          const found = teams.filter((t: any) => t.isExternal).find((t: any) => t.id === teamId);
+                          if (found) {
+                            setOutsiderData({
+                              ...outsiderData,
+                              outsiderTeamName: found.name,
+                              outsiderContactPersonName: (found as any).contactPersonName || "",
+                              outsiderContactNumber: (found as any).contactNumber || "",
+                              outsiderFacebookUrl: (found as any).facebookUrl || "",
+                              outsiderLogoUrl: found.logoUrl || "",
+                            });
+                          }
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="w-full bg-neutral-900 border-neutral-700 text-white font-semibold text-xs">
+                        <SelectValue placeholder="Choose an existing outsider team or enter new..." />
+                      </SelectTrigger>
+                      <SelectContent className="bg-neutral-900 border-neutral-700 text-white">
+                        <SelectItem value="NEW" className="font-bold text-emerald-400">
+                          ➕ Register / Enter New Outsider Team
+                        </SelectItem>
+                        {teams.filter((t: any) => t.isExternal).length > 0 && (
+                          <div className="px-2 py-1 text-[10px] font-bold text-amber-400 uppercase border-t border-neutral-800 my-1">
+                            — Existing Outsider Opponent Teams —
+                          </div>
+                        )}
+                        {teams.filter((t: any) => t.isExternal).map((t: any) => (
+                          <SelectItem key={t.id} value={t.id}>
+                            ⚽ {t.name} {(t as any).contactPersonName ? `(Contact: ${(t as any).contactPersonName})` : ""}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-1 pt-1">
+                    <Label className="text-xs font-bold text-white">Outsider / External Team Name *</Label>
+                    <Input
+                      placeholder="e.g. Abahani Academy, Mohammedan SC, Dhaka Stars FC..."
+                      value={outsiderData.outsiderTeamName}
+                      onChange={(e) => setOutsiderData({ ...outsiderData, outsiderTeamName: e.target.value })}
+                      className="bg-neutral-900 border-neutral-700 text-white placeholder:text-neutral-500 text-xs"
+                    />
+                    <p className="text-[11px] text-neutral-400">
+                      Selecting an existing team above will automatically fill in its name, contact person, phone number, and logo.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Contact Person & Logo Fields for Outsider Team */}
+                <div className="rounded-xl border border-white/10 bg-white/[0.02] p-3 space-y-3">
+                  <p className="text-xs font-bold text-amber-400 uppercase tracking-wider">
+                    Outsider Team Details & Contact Person
                   </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <Label className="text-xs text-neutral-300">Contact Person Name</Label>
+                      <Input
+                        placeholder="e.g. Tanvir Ahmed"
+                        value={outsiderData.outsiderContactPersonName}
+                        onChange={(e) => setOutsiderData({ ...outsiderData, outsiderContactPersonName: e.target.value })}
+                        className="bg-neutral-900 border-neutral-700 text-xs text-white"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs text-neutral-300">Contact Phone Number</Label>
+                      <Input
+                        placeholder="e.g. +8801700000000"
+                        value={outsiderData.outsiderContactNumber}
+                        onChange={(e) => setOutsiderData({ ...outsiderData, outsiderContactNumber: e.target.value })}
+                        className="bg-neutral-900 border-neutral-700 text-xs text-white"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <Label className="text-xs text-neutral-300">Facebook Profile / ID URL (Optional)</Label>
+                      <Input
+                        placeholder="https://facebook.com/..."
+                        value={outsiderData.outsiderFacebookUrl}
+                        onChange={(e) => setOutsiderData({ ...outsiderData, outsiderFacebookUrl: e.target.value })}
+                        className="bg-neutral-900 border-neutral-700 text-xs text-white"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs text-neutral-300">Team Logo URL (Optional)</Label>
+                      <Input
+                        placeholder="https://..."
+                        value={outsiderData.outsiderLogoUrl}
+                        onChange={(e) => setOutsiderData({ ...outsiderData, outsiderLogoUrl: e.target.value })}
+                        className="bg-neutral-900 border-neutral-700 text-xs text-white"
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 <div className="space-y-2">
@@ -582,7 +810,7 @@ export function MatchesClient({
                         onChange={() => setOutsiderData({ ...outsiderData, isFcBbffHome: true })}
                         className="accent-emerald-500 h-4 w-4"
                       />
-                      FC BBFF is Home Team
+                      {teams.find((t) => t.id === outsiderData.fcBbffTeamId)?.name || "Internal Team"} is Home Team
                     </label>
                     <label className="flex items-center gap-2 text-xs font-semibold text-white cursor-pointer">
                       <input
@@ -592,7 +820,7 @@ export function MatchesClient({
                         onChange={() => setOutsiderData({ ...outsiderData, isFcBbffHome: false })}
                         className="accent-emerald-500 h-4 w-4"
                       />
-                      FC BBFF is Away Team
+                      {teams.find((t) => t.id === outsiderData.fcBbffTeamId)?.name || "Internal Team"} is Away Team
                     </label>
                   </div>
                 </div>
@@ -678,14 +906,18 @@ export function MatchesClient({
                   <Label>Home Team *</Label>
                   <Select value={formData.homeTeamId} onValueChange={(v) => setFormData({ ...formData, homeTeamId: v })}>
                     <SelectTrigger className="w-full bg-neutral-900 border-neutral-700 text-white"><SelectValue placeholder="Select home team" /></SelectTrigger>
-                    <SelectContent className="bg-neutral-900 border-neutral-700 text-white">{teams.map((t) => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}</SelectContent>
+                    <SelectContent className="bg-neutral-900 border-neutral-700 text-white">
+                      {teams.filter((t: any) => !t.isExternal).map((t) => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
+                    </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
                   <Label>Away Team *</Label>
                   <Select value={formData.awayTeamId} onValueChange={(v) => setFormData({ ...formData, awayTeamId: v })}>
                     <SelectTrigger className="w-full bg-neutral-900 border-neutral-700 text-white"><SelectValue placeholder="Select away team" /></SelectTrigger>
-                    <SelectContent className="bg-neutral-900 border-neutral-700 text-white">{teams.map((t) => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}</SelectContent>
+                    <SelectContent className="bg-neutral-900 border-neutral-700 text-white">
+                      {teams.filter((t: any) => !t.isExternal).map((t) => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
+                    </SelectContent>
                   </Select>
                 </div>
               </>
@@ -696,7 +928,47 @@ export function MatchesClient({
             </div>
             <div className="space-y-2">
               <Label>Venue</Label>
-              <Input value={formData.venue} onChange={(e) => setFormData({ ...formData, venue: e.target.value })} />
+              {venues && venues.length > 0 ? (
+                <Select
+                  value={
+                    venues.some((v) => v.name === formData.venue)
+                      ? formData.venue
+                      : formData.venue
+                      ? "custom"
+                      : "none"
+                  }
+                  onValueChange={(val) => {
+                    if (val === "none") {
+                      setFormData({ ...formData, venue: "" });
+                    } else if (val !== "custom") {
+                      setFormData({ ...formData, venue: val });
+                    }
+                  }}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select venue..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">No venue selected</SelectItem>
+                    {venues.map((v) => (
+                      <SelectItem key={v.id} value={v.name}>
+                        {v.name} {v.city ? `(${v.city})` : ""} {v.isHomeVenue ? "🏠 [Home Ground]" : ""}
+                      </SelectItem>
+                    ))}
+                    <SelectItem value="custom">Custom / Other Venue...</SelectItem>
+                  </SelectContent>
+                </Select>
+              ) : null}
+              {(!venues ||
+                venues.length === 0 ||
+                !venues.some((v) => v.name === formData.venue)) && (
+                <Input
+                  placeholder="Type custom venue name..."
+                  value={formData.venue}
+                  onChange={(e) => setFormData({ ...formData, venue: e.target.value })}
+                  className={venues && venues.length > 0 ? "mt-2" : ""}
+                />
+              )}
             </div>
             <div className="space-y-2">
               <Label>Season</Label>
@@ -970,6 +1242,167 @@ export function MatchesClient({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Lineup Editor Dialog */}
+      <Dialog open={showLineupDialog} onOpenChange={setShowLineupDialog}>
+        <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold flex items-center gap-2">
+              <Users className="h-5 w-5 text-emerald-400" />
+              Manage Match Lineup
+            </DialogTitle>
+            {activeLineupMatch && (
+              <p className="text-xs text-neutral-400 mt-0.5">
+                {activeLineupMatch.homeTeam?.name} vs {activeLineupMatch.awayTeam?.name} ({formatDateTime(activeLineupMatch.matchDate)})
+              </p>
+            )}
+          </DialogHeader>
+
+          {isLoadingMatch ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-emerald-500" />
+              <span className="ml-3 text-neutral-400">Loading squad lineup...</span>
+            </div>
+          ) : (
+            <div className="space-y-4 pt-2">
+              <div className="flex items-center justify-between bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3">
+                <p className="text-xs text-emerald-300 font-medium">
+                  Select players to include in starting XI or substitute bench for this match. You can edit this lineup anytime before match completion.
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const updated = { ...lineupSelections };
+                      allPlayers.forEach((p) => {
+                        updated[p.id] = { ...(updated[p.id] || { position: p.position }), selected: true, type: updated[p.id]?.type || "STARTING" };
+                      });
+                      setLineupSelections(updated);
+                    }}
+                    className="text-[11px] font-bold text-emerald-400 hover:underline"
+                  >
+                    Select All
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const updated = { ...lineupSelections };
+                      allPlayers.forEach((p) => {
+                        if (updated[p.id]) updated[p.id].selected = false;
+                      });
+                      setLineupSelections(updated);
+                    }}
+                    className="text-[11px] text-neutral-400 hover:underline"
+                  >
+                    Deselect All
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-2 max-h-[420px] overflow-y-auto pr-1">
+                {allPlayers.map((player) => {
+                  const sel = lineupSelections[player.id] || {
+                    selected: false,
+                    type: "STARTING",
+                    position: player.position || "",
+                    shirtNumber: player.jerseyNumber ?? null,
+                  };
+
+                  return (
+                    <div
+                      key={player.id}
+                      className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-xl border transition-all ${
+                        sel.selected
+                          ? "bg-emerald-950/30 border-emerald-500/40 text-white"
+                          : "bg-neutral-900/50 border-neutral-800 text-neutral-400"
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="checkbox"
+                          checked={sel.selected}
+                          onChange={(e) => {
+                            setLineupSelections({
+                              ...lineupSelections,
+                              [player.id]: { ...sel, selected: e.target.checked },
+                            });
+                          }}
+                          className="accent-emerald-500 h-4 w-4 rounded cursor-pointer"
+                        />
+                        <div>
+                          <p className="text-sm font-semibold text-white">
+                            {player.firstName} {player.lastName}
+                          </p>
+                          <p className="text-xs text-neutral-400">
+                            Jersey #{player.jerseyNumber ?? "—"} • {player.position}
+                          </p>
+                        </div>
+                      </div>
+
+                      {sel.selected && (
+                        <div className="flex items-center gap-3 pl-7 sm:pl-0">
+                          <Select
+                            value={sel.type}
+                            onValueChange={(val: "STARTING" | "SUBSTITUTE") => {
+                              setLineupSelections({
+                                ...lineupSelections,
+                                [player.id]: { ...sel, type: val },
+                              });
+                            }}
+                          >
+                            <SelectTrigger className="h-8 w-28 bg-neutral-900 border-neutral-700 text-xs text-white">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="bg-neutral-900 border-neutral-700 text-white">
+                              <SelectItem value="STARTING">Starting XI</SelectItem>
+                              <SelectItem value="SUBSTITUTE">Substitute</SelectItem>
+                            </SelectContent>
+                          </Select>
+
+                          <div className="w-16">
+                            <Input
+                              type="number"
+                              placeholder="#"
+                              value={sel.shirtNumber ?? ""}
+                              onChange={(e) => {
+                                const num = e.target.value ? parseInt(e.target.value) : null;
+                                setLineupSelections({
+                                  ...lineupSelections,
+                                  [player.id]: { ...sel, shirtNumber: num },
+                                });
+                              }}
+                              className="h-8 text-xs bg-neutral-900 border-neutral-700 text-white"
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="mt-4 border-t pt-4">
+            <Button variant="outline" onClick={() => setShowLineupDialog(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSaveLineup}
+              disabled={isPending || isLoadingMatch}
+              className="bg-emerald-600 hover:bg-emerald-700 text-xs font-semibold"
+            >
+              {isPending ? (
+                <>
+                  <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> Saving Lineup...
+                </>
+              ) : (
+                "Save Match Lineup"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

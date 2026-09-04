@@ -50,7 +50,7 @@ export default function LoginPage() {
 
       <Card className="relative w-full max-w-md border-neutral-800 bg-neutral-900/90 shadow-2xl backdrop-blur-sm">
         <CardHeader className="space-y-4 text-center">
-          <div className="relative mx-auto h-20 w-20 overflow-hidden rounded-2xl border border-white/10 bg-neutral-950 shadow-xl shadow-emerald-600/20">
+          <div className="relative mx-auto h-20 w-20 overflow-hidden rounded-full border border-white/10 bg-neutral-950 shadow-xl shadow-emerald-600/20">
             <Image
               src="/logo.png"
               alt="FC BBFF Logo"

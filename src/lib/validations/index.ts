@@ -90,6 +90,10 @@ export const createTeamSchema = z.object({
   description: z.string().optional().nullable(),
   logoUrl: z.string().optional().nullable(),
   manager: z.string().optional().nullable(),
+  contactPersonName: z.string().optional().nullable(),
+  contactNumber: z.string().optional().nullable(),
+  facebookUrl: z.string().optional().nullable(),
+  isExternal: z.boolean().default(false),
   status: z.enum(["ACTIVE", "INACTIVE"]).default("ACTIVE"),
 });
 
@@ -291,6 +295,26 @@ export const siteSettingsSchema = z.object({
   vision: z.string().optional(),
   clubValues: z.string().optional(),
 });
+
+// ============================================================================
+// VENUES
+// ============================================================================
+
+export const createVenueSchema = z.object({
+  name: z.string().min(1, "Venue name is required"),
+  city: z.string().optional().nullable().or(z.literal("").transform(() => null)),
+  address: z.string().optional().nullable().or(z.literal("").transform(() => null)),
+  turfType: z.string().optional().nullable().or(z.literal("").transform(() => null)),
+  capacity: z.preprocess(
+    (val) => (val === "" || val === null || val === undefined || Number.isNaN(Number(val)) ? null : Number(val)),
+    z.number().int().min(0, "Capacity must be positive").nullable().optional()
+  ),
+  photoUrl: z.string().optional().nullable().or(z.literal("").transform(() => null)),
+  notes: z.string().optional().nullable().or(z.literal("").transform(() => null)),
+  isHomeVenue: z.boolean().default(false),
+});
+
+export const updateVenueSchema = createVenueSchema.partial();
 
 // ============================================================================
 // SEARCH & PAGINATION

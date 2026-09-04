@@ -45,9 +45,15 @@ import {
 } from "@/components/ui/table";
 import { Plus, Search, Edit, Trash2, Calendar, Clock, MapPin } from "lucide-react";
 import { formatDate } from "@/lib/utils";
-import type { Event, PaginatedResponse } from "@/types";
+import type { Event, PaginatedResponse, Venue } from "@/types";
 
-export function EventsClient({ initialData }: { initialData: PaginatedResponse<Event> }) {
+export function EventsClient({
+  initialData,
+  venues = [],
+}: {
+  initialData: PaginatedResponse<Event>;
+  venues?: Venue[];
+}) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
@@ -241,7 +247,7 @@ export function EventsClient({ initialData }: { initialData: PaginatedResponse<E
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
-                        <Button variant="ghost" size="sm" onClick={() => handleOpenEdit(event)}>
+                        <Button variant="ghost" size="sm" onClick={() => handleOpenEdit(event)} title="Edit Event">
                           <Edit className="h-4 w-4" />
                         </Button>
                         <Button
@@ -251,6 +257,7 @@ export function EventsClient({ initialData }: { initialData: PaginatedResponse<E
                             setSelectedEvent(event);
                             setDeleteDialogOpen(true);
                           }}
+                          title="Delete Event"
                           className="text-red-500 hover:text-red-600"
                         >
                           <Trash2 className="h-4 w-4" />
@@ -362,12 +369,48 @@ export function EventsClient({ initialData }: { initialData: PaginatedResponse<E
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="venue">Venue</Label>
-                  <Input
-                    id="venue"
-                    placeholder="e.g. BBFF Stadium"
-                    value={formData.venue}
-                    onChange={(e) => setFormData({ ...formData, venue: e.target.value })}
-                  />
+                  {venues && venues.length > 0 ? (
+                    <Select
+                      value={
+                        venues.some((v) => v.name === formData.venue)
+                          ? formData.venue
+                          : formData.venue
+                          ? "custom"
+                          : "none"
+                      }
+                      onValueChange={(val) => {
+                        if (val === "none") {
+                          setFormData({ ...formData, venue: "" });
+                        } else if (val !== "custom") {
+                          setFormData({ ...formData, venue: val });
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select venue..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">No venue selected</SelectItem>
+                        {venues.map((v) => (
+                          <SelectItem key={v.id} value={v.name}>
+                            {v.name} {v.city ? `(${v.city})` : ""} {v.isHomeVenue ? "🏠 [Home]" : ""}
+                          </SelectItem>
+                        ))}
+                        <SelectItem value="custom">Custom / Other Venue...</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  ) : null}
+                  {(!venues ||
+                    venues.length === 0 ||
+                    !venues.some((v) => v.name === formData.venue)) && (
+                    <Input
+                      id="venue"
+                      placeholder="e.g. BBFF Stadium"
+                      value={formData.venue}
+                      onChange={(e) => setFormData({ ...formData, venue: e.target.value })}
+                      className={venues && venues.length > 0 ? "mt-2" : ""}
+                    />
+                  )}
                 </div>
 
                 <div>
