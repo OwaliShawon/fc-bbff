@@ -137,7 +137,6 @@ export default async function StatisticsPage() {
                     <TableHead className="w-12 text-center text-neutral-400">#</TableHead>
                     <TableHead className="text-neutral-400">Player</TableHead>
                     <TableHead className="text-neutral-400">Position</TableHead>
-                    <TableHead className="text-center text-neutral-400">Team</TableHead>
                     <TableHead className="text-center text-neutral-400">Apps</TableHead>
                     <TableHead className="text-center font-bold text-amber-400">⚽ Goals</TableHead>
                     <TableHead className="text-center font-bold text-blue-400">🅰️ Assists</TableHead>
@@ -187,9 +186,6 @@ export default async function StatisticsPage() {
                         >
                           {p.position}
                         </Badge>
-                      </TableCell>
-                      <TableCell className="text-center text-xs text-neutral-400">
-                        {p.teamName || "—"}
                       </TableCell>
                       <TableCell className="text-center font-mono text-xs text-neutral-300">
                         {p.matchesPlayed}
