@@ -228,11 +228,19 @@ export function PlayersClient({
   function handleFilterChange(key: string, value: string) {
     const params = new URLSearchParams();
     if (searchInput) params.set("search", searchInput);
-    if (key === "status" && value) params.set("status", value);
-    else if (currentStatus) params.set("status", currentStatus);
-    if (key === "position" && value) params.set("position", value);
-    else if (currentPosition) params.set("position", currentPosition);
-    router.push(`/admin/players?${params.toString()}`);
+
+    const targetStatus = key === "status" ? value : currentStatus;
+    const targetPosition = key === "position" ? value : currentPosition;
+
+    if (targetStatus && targetStatus !== "all") {
+      params.set("status", targetStatus);
+    }
+    if (targetPosition && targetPosition !== "all") {
+      params.set("position", targetPosition);
+    }
+
+    const query = params.toString();
+    router.push(query ? `/admin/players?${query}` : "/admin/players");
   }
 
   return (
