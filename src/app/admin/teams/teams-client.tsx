@@ -463,7 +463,7 @@ export function TeamsClient({
       {/* SQUAD / ROSTER MANAGEMENT DIALOG                                         */}
       {/* ========================================================================= */}
       <Dialog open={showSquadDialog} onOpenChange={setShowSquadDialog}>
-        <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
+        <DialogContent className="max-h-[90vh] w-[95vw] sm:max-w-4xl lg:max-w-5xl overflow-y-auto">
           <DialogHeader>
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 text-lg font-bold text-emerald-700 dark:bg-emerald-900/30">

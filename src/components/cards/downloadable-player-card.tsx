@@ -9,6 +9,7 @@ import { getPlayerPositionColor } from "@/lib/utils";
 
 export function DownloadablePlayerCard({ player, team }: { player: any; team?: any }) {
   const [isExporting, setIsExporting] = useState(false);
+  const [imgError, setImgError] = useState(false);
   const cardId = `player-card-${player.id}`;
 
   const handleDownload = async () => {
@@ -106,12 +107,13 @@ export function DownloadablePlayerCard({ player, team }: { player: any; team?: a
 
         {/* Player Image / Silhouette */}
         <div className="relative z-10 mx-auto mb-3 sm:mb-4 h-48 sm:h-52 w-full overflow-hidden rounded-2xl border-2 border-white/10 bg-neutral-900 flex items-center justify-center shadow-2xl">
-          {player.photoUrl ? (
+          {player.photoUrl && !imgError ? (
             <img
               src={player.photoUrl}
               alt={`${player.firstName} ${player.lastName}`}
               className="h-full w-full object-cover object-top"
-              crossOrigin="anonymous"
+              crossOrigin={player.photoUrl.startsWith("http") ? "anonymous" : undefined}
+              onError={() => setImgError(true)}
             />
           ) : (
             <div className="flex flex-col items-center justify-center text-center p-4">

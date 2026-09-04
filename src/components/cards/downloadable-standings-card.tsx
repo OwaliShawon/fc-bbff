@@ -103,36 +103,36 @@ export function DownloadableStandingsCard({
           </div>
         </div>
 
-        {/* Points Table Grid with responsive wrapper */}
-        <div className="relative z-10 rounded-2xl bg-white/[0.03] border-2 border-white/10 p-2 sm:p-3.5 mb-3 sm:mb-4 overflow-x-auto shadow-inner">
+        {/* Points Table Grid with High-Contrast White Background & Black Text */}
+        <div className="relative z-10 rounded-2xl bg-white p-2.5 sm:p-3 mb-3 sm:mb-4 shadow-xl border border-neutral-200">
           {leagueTable.length === 0 ? (
-            <p className="py-6 text-center text-xs text-neutral-400 font-medium">No standings data recorded yet.</p>
+            <p className="py-6 text-center text-xs text-neutral-600 font-medium">No standings data recorded yet.</p>
           ) : (
-            <div className="min-w-[400px]">
-              <Table>
+            <div className="w-full">
+              <Table className="w-full">
                 <TableHeader>
-                  <TableRow className="border-white/10 hover:bg-transparent text-[9px] sm:text-[10px]">
-                    <TableHead className="w-8 text-neutral-400 p-1 sm:p-1.5 text-center font-bold">Pos</TableHead>
-                    <TableHead className="text-neutral-400 p-1 sm:p-1.5 font-bold">Club</TableHead>
-                    <TableHead className="text-center text-neutral-400 p-1 sm:p-1.5 font-bold">P</TableHead>
-                    <TableHead className="text-center text-neutral-400 p-1 sm:p-1.5 font-bold">W</TableHead>
-                    <TableHead className="text-center text-neutral-400 p-1 sm:p-1.5 font-bold">D</TableHead>
-                    <TableHead className="text-center text-neutral-400 p-1 sm:p-1.5 font-bold">L</TableHead>
-                    <TableHead className="text-center text-neutral-400 p-1 sm:p-1.5 font-bold">GD</TableHead>
-                    <TableHead className="text-center font-black text-white p-1 sm:p-1.5">PTS</TableHead>
+                  <TableRow className="border-neutral-200 hover:bg-transparent text-[10px]">
+                    <TableHead className="w-7 text-neutral-800 p-1 text-center font-black">Pos</TableHead>
+                    <TableHead className="text-neutral-800 p-1 font-black">Club</TableHead>
+                    <TableHead className="text-center text-neutral-800 p-1 font-bold">P</TableHead>
+                    <TableHead className="text-center text-neutral-800 p-1 font-bold">W</TableHead>
+                    <TableHead className="text-center text-neutral-800 p-1 font-bold">D</TableHead>
+                    <TableHead className="text-center text-neutral-800 p-1 font-bold">L</TableHead>
+                    <TableHead className="text-center text-neutral-800 p-1 font-bold">GD</TableHead>
+                    <TableHead className="text-center font-black text-black p-1">PTS</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {leagueTable.map((row) => (
                     <TableRow
                       key={row.teamId}
-                      className={`border-white/5 text-xs transition-colors ${
+                      className={`border-neutral-200 text-xs transition-colors ${
                         row.teamName.includes("FC BBFF")
-                          ? "bg-emerald-950/70 border-emerald-500/30 font-bold"
-                          : "hover:bg-transparent"
+                          ? "bg-emerald-100/90 font-bold text-emerald-950 border-emerald-300"
+                          : "hover:bg-neutral-50 text-neutral-900"
                       }`}
                     >
-                      <TableCell className="p-1 sm:p-1.5 text-center font-mono text-neutral-300 font-bold">
+                      <TableCell className="p-1 text-center font-mono font-black text-black">
                         {row.position === 1 ? (
                           <span className="text-xs sm:text-sm">🥇</span>
                         ) : row.position === 2 ? (
@@ -143,24 +143,24 @@ export function DownloadableStandingsCard({
                           row.position
                         )}
                       </TableCell>
-                      <TableCell className="p-1 sm:p-1.5">
-                        <div className="flex items-center gap-1.5 sm:gap-2">
-                          <div className="flex h-5 w-5 items-center justify-center rounded bg-white/10 text-[9px] font-bold text-white shrink-0 border border-white/10">
+                      <TableCell className="p-1">
+                        <div className="flex items-center gap-1.5">
+                          <div className="flex h-5 w-5 items-center justify-center rounded bg-neutral-900 text-[9px] font-bold text-white shrink-0">
                             {row.teamName.charAt(0)}
                           </div>
-                          <span className={`truncate text-xs ${row.teamName.includes("FC BBFF") ? "text-emerald-300 font-bold" : "text-white"}`}>
+                          <span className={`truncate text-xs ${row.teamName.includes("FC BBFF") ? "text-emerald-950 font-black" : "text-black font-semibold"}`}>
                             {row.teamName}
                           </span>
                         </div>
                       </TableCell>
-                      <TableCell className="p-1 sm:p-1.5 text-center font-mono text-neutral-300">{row.played}</TableCell>
-                      <TableCell className="p-1 sm:p-1.5 text-center font-mono text-neutral-300">{row.won}</TableCell>
-                      <TableCell className="p-1 sm:p-1.5 text-center font-mono text-neutral-300">{row.drawn}</TableCell>
-                      <TableCell className="p-1 sm:p-1.5 text-center font-mono text-neutral-300">{row.lost}</TableCell>
-                      <TableCell className="p-1 sm:p-1.5 text-center font-mono text-neutral-300 font-semibold">
+                      <TableCell className="p-1 text-center font-mono text-black font-semibold">{row.played}</TableCell>
+                      <TableCell className="p-1 text-center font-mono text-black font-semibold">{row.won}</TableCell>
+                      <TableCell className="p-1 text-center font-mono text-black font-semibold">{row.drawn}</TableCell>
+                      <TableCell className="p-1 text-center font-mono text-black font-semibold">{row.lost}</TableCell>
+                      <TableCell className="p-1 text-center font-mono font-bold text-black">
                         {row.goalDifference > 0 ? `+${row.goalDifference}` : row.goalDifference}
                       </TableCell>
-                      <TableCell className="p-1 sm:p-1.5 text-center font-mono font-black text-emerald-300 text-xs sm:text-sm">
+                      <TableCell className="p-1 text-center font-mono font-black text-emerald-900 text-xs sm:text-sm">
                         {row.points}
                       </TableCell>
                     </TableRow>
