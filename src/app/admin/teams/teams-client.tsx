@@ -534,15 +534,9 @@ export function TeamsClient({
                               <span>#{p.jerseyNumber ?? "—"}</span>
                               <span className="font-medium">{p.firstName} {p.lastName}</span>
                               <span className="text-[11px] text-neutral-400">({p.position})</span>
-                              {currentTeamName ? (
-                                <span className="text-[10px] text-amber-600 dark:text-amber-400 font-semibold">
-                                  [Currently: {currentTeamName}]
-                                </span>
-                              ) : (
-                                <span className="text-[10px] text-emerald-600 dark:text-emerald-400">
-                                  [Free Agent]
-                                </span>
-                              )}
+                              <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">
+                                [FC BBFF]
+                              </span>
                             </div>
                           </SelectItem>
                         );

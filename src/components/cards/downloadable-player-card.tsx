@@ -132,11 +132,15 @@ export function DownloadablePlayerCard({ player, team }: { player: any; team?: a
               {player.position}
             </Badge>
           </div>
-          {team?.isCaptain && (
+          {team?.isCaptain ? (
             <div className="absolute top-2.5 right-2.5 bg-amber-400 text-neutral-950 font-black text-[10px] px-2.5 py-0.5 rounded-full shadow-lg flex items-center gap-1 border border-amber-300 z-20">
               <Crown className="h-3 w-3 fill-neutral-950" /> CAPTAIN
             </div>
-          )}
+          ) : team?.isViceCaptain ? (
+            <div className="absolute top-2.5 right-2.5 bg-cyan-400 text-neutral-950 font-black text-[10px] px-2.5 py-0.5 rounded-full shadow-lg flex items-center gap-1 border border-cyan-300 z-20">
+              <Crown className="h-3 w-3 fill-neutral-950" /> VICE-CAPTAIN
+            </div>
+          ) : null}
         </div>
 
         {/* Player Name & City */}
