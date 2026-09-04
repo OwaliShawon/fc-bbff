@@ -20,7 +20,7 @@ export default async function H2HPage() {
             <Swords className="h-3.5 w-3.5" /> Head-to-Head Track Record
           </span>
           <h1 className="text-4xl font-black text-white md:text-6xl tracking-tight">
-            FC BBFF vs Opponents
+            BBFF vs Opponents
           </h1>
           <p className="mt-4 text-neutral-400 max-w-2xl mx-auto text-sm sm:text-base">
             Complete historical track record, head-to-head statistics, win rates, and match logs across internal FC BBFF teams and external outsider opponents.

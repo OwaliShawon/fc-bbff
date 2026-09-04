@@ -6,7 +6,7 @@ test.describe("Head-to-Head (H2H) Analytics E2E Tests", () => {
   });
 
   test("should render H2H hero section and title", async ({ page }) => {
-    await expect(page.locator("h1").first()).toContainText("FC BBFF vs Opponents");
+    await expect(page.locator("h1").first()).toContainText("BBFF vs Opponents");
     await expect(page.getByText("Head-to-Head Comparison Matrix").first()).toBeVisible();
   });
 
