@@ -195,7 +195,7 @@ export function DownloadableMatchCard({ match }: { match: any }) {
         <div className="relative z-10 flex items-center justify-between border-t border-white/10 pt-2.5 sm:pt-3 text-[10px] text-neutral-400">
           <div className="flex items-center gap-1.5">
             <img src="/logo.png" alt="logo" className="h-3.5 w-3.5 object-contain opacity-80" crossOrigin="anonymous" />
-            <span>Official FC BBFF Match Card</span>
+            <span>Official Bhai Brother Football Federation Match Card</span>
           </div>
           <span className="text-emerald-400 font-mono font-bold">#fcbbff</span>
         </div>
