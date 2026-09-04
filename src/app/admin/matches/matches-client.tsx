@@ -655,14 +655,31 @@ export function MatchesClient({
             {/* Outsider Team Form Fields */}
             {matchTypeMode === "outsider" && !editingMatch ? (
               <div className="col-span-full space-y-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 p-4">
-                <div className="flex items-center justify-between bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3">
-                  <div>
-                    <p className="text-xs font-bold text-emerald-400">⚽ Club Team: FC BBFF</p>
-                    <p className="text-[11px] text-neutral-400">Default FC BBFF team is selected automatically for outsider matches.</p>
+                <div className="space-y-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 p-3">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs font-bold text-emerald-400">Internal FC BBFF Team *</Label>
+                    <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/40 text-[10px]">
+                      Club Team
+                    </Badge>
                   </div>
-                  <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/40 text-[10px]">
-                    FC BBFF Default
-                  </Badge>
+                  <Select
+                    value={outsiderData.fcBbffTeamId || fcBbffTeam?.id || ""}
+                    onValueChange={(v) => setOutsiderData({ ...outsiderData, fcBbffTeamId: v })}
+                  >
+                    <SelectTrigger className="w-full bg-neutral-900 border-neutral-700 text-white font-semibold text-xs">
+                      <SelectValue placeholder="Select internal team..." />
+                    </SelectTrigger>
+                    <SelectContent className="bg-neutral-900 border-neutral-700 text-white">
+                      {teams.filter((t: any) => !t.isExternal).map((t) => (
+                        <SelectItem key={t.id} value={t.id}>
+                          🟢 {t.name} {t.id === fcBbffTeam?.id ? "(Main Team)" : ""}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-[11px] text-neutral-400">
+                    Main team FC BBFF plays external matches primarily, but any internal squad can also play vs external teams.
+                  </p>
                 </div>
 
                 <div className="space-y-2">
@@ -737,7 +754,7 @@ export function MatchesClient({
                         onChange={() => setOutsiderData({ ...outsiderData, isFcBbffHome: true })}
                         className="accent-emerald-500 h-4 w-4"
                       />
-                      FC BBFF is Home Team
+                      {teams.find((t) => t.id === outsiderData.fcBbffTeamId)?.name || "Internal Team"} is Home Team
                     </label>
                     <label className="flex items-center gap-2 text-xs font-semibold text-white cursor-pointer">
                       <input
@@ -747,7 +764,7 @@ export function MatchesClient({
                         onChange={() => setOutsiderData({ ...outsiderData, isFcBbffHome: false })}
                         className="accent-emerald-500 h-4 w-4"
                       />
-                      FC BBFF is Away Team
+                      {teams.find((t) => t.id === outsiderData.fcBbffTeamId)?.name || "Internal Team"} is Away Team
                     </label>
                   </div>
                 </div>

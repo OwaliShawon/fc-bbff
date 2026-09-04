@@ -52,7 +52,7 @@ export function DownloadableH2HCard({ summary }: { summary: H2HSummary }) {
 
         {/* Large Crest Watermark */}
         <div className="absolute -right-8 -bottom-6 h-72 w-72 opacity-[0.06] pointer-events-none select-none">
-          <img src="/logo.png" alt="Watermark" className="h-full w-full object-contain" crossOrigin="anonymous" />
+          <img src={summary.fcBbffTeam?.logoUrl || "/logo.png"} alt="Watermark" className="h-full w-full object-contain" crossOrigin="anonymous" />
         </div>
 
         {/* Header */}
