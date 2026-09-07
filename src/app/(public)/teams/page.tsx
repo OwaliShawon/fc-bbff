@@ -3,8 +3,18 @@ import { getTeams } from "@/actions/team-actions";
 import { Badge } from "@/components/ui/badge";
 import { UsersRound, User, ArrowRight } from "lucide-react";
 
-export default async function TeamsPage() {
-  const { data: teams } = await getTeams({ pageSize: 50, status: "ACTIVE", isExternal: false });
+export default async function TeamsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ type?: string }>;
+}) {
+  const { type = "internal" } = await searchParams;
+
+  let isExternal: boolean | undefined = undefined;
+  if (type === "internal") isExternal = false;
+  if (type === "external") isExternal = true;
+
+  const { data: teams } = await getTeams({ pageSize: 50, status: "ACTIVE", isExternal });
 
   // Always put the main team "FC BBFF" at the top row / first card
   const sortedTeams = [...teams].sort((a: any, b: any) => {
@@ -24,8 +34,42 @@ export default async function TeamsPage() {
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-400">
             <UsersRound className="h-8 w-8" />
           </div>
-          <h1 className="text-4xl font-black text-white md:text-6xl">Our Teams</h1>
-          <p className="mt-4 text-neutral-400">First XI, Reserves, and Youth Squads representing FC BBFF</p>
+          <h1 className="text-4xl font-black text-white md:text-6xl">Our Teams & Squads</h1>
+          <p className="mt-4 text-neutral-400">First XI, Reserves, Sub-Squads, and Rival Clubs</p>
+
+          {/* Filter Tabs */}
+          <div className="mt-8 flex flex-wrap justify-center gap-2">
+            <Link
+              href="/teams?type=internal"
+              className={`rounded-full px-5 py-2 text-xs font-bold transition-all ${
+                type === "internal"
+                  ? "bg-emerald-600 text-white shadow-lg shadow-emerald-950"
+                  : "bg-white/5 text-neutral-300 hover:bg-white/10"
+              }`}
+            >
+              🟢 FC BBFF Squads
+            </Link>
+            <Link
+              href="/teams?type=external"
+              className={`rounded-full px-5 py-2 text-xs font-bold transition-all ${
+                type === "external"
+                  ? "bg-amber-600 text-white shadow-lg shadow-amber-950"
+                  : "bg-white/5 text-neutral-300 hover:bg-white/10"
+              }`}
+            >
+              ⚽ Opponent Clubs
+            </Link>
+            <Link
+              href="/teams?type=all"
+              className={`rounded-full px-5 py-2 text-xs font-bold transition-all ${
+                type === "all"
+                  ? "bg-neutral-800 text-white border border-neutral-700"
+                  : "bg-white/5 text-neutral-300 hover:bg-white/10"
+              }`}
+            >
+              🌐 All Teams ({teams.length})
+            </Link>
+          </div>
         </div>
       </section>
 
