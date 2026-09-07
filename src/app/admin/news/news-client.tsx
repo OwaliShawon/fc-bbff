@@ -43,9 +43,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Search, Edit, Trash2, Newspaper, Star, Calendar } from "lucide-react";
+import { Plus, Search, Edit, Trash2, Newspaper, Star, Calendar, Download } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import type { News, NewsCategory, PaginatedResponse } from "@/types";
+import { DownloadableNewsCard } from "@/components/cards/downloadable-news-card";
 
 export function NewsClient({
   initialData,
@@ -60,6 +61,7 @@ export function NewsClient({
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [cardDialogOpen, setCardDialogOpen] = useState(false);
   const [selectedArticle, setSelectedArticle] = useState<News | null>(null);
   const [searchInput, setSearchInput] = useState(searchParams.get("search") || "");
 
@@ -265,6 +267,18 @@ export function NewsClient({
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedArticle(article);
+                            setCardDialogOpen(true);
+                          }}
+                          title="Download News Card"
+                          className="text-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10"
+                        >
+                          <Download className="h-4 w-4" />
+                        </Button>
                         <Button variant="ghost" size="sm" onClick={() => handleOpenEdit(article)} title="Edit Article">
                           <Edit className="h-4 w-4" />
                         </Button>
@@ -434,6 +448,16 @@ export function NewsClient({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* News Card Preview & Download Dialog */}
+      <Dialog open={cardDialogOpen} onOpenChange={setCardDialogOpen}>
+        <DialogContent className="max-w-xl bg-neutral-950 border-neutral-800 text-white p-4 sm:p-6 overflow-y-auto max-h-[90vh]">
+          <DialogHeader className="mb-2">
+            <DialogTitle className="text-white text-lg font-bold">News Release Graphic Card</DialogTitle>
+          </DialogHeader>
+          {selectedArticle && <DownloadableNewsCard news={selectedArticle} />}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

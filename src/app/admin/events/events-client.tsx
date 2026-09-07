@@ -43,9 +43,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Search, Edit, Trash2, Calendar, Clock, MapPin } from "lucide-react";
+import { Plus, Search, Edit, Trash2, Calendar, Clock, MapPin, Download } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import type { Event, PaginatedResponse, Venue } from "@/types";
+import { DownloadableEventCard } from "@/components/cards/downloadable-event-card";
 
 export function EventsClient({
   initialData,
@@ -60,6 +61,7 @@ export function EventsClient({
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [cardDialogOpen, setCardDialogOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [searchInput, setSearchInput] = useState(searchParams.get("search") || "");
 
@@ -247,6 +249,18 @@ export function EventsClient({
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedEvent(event);
+                            setCardDialogOpen(true);
+                          }}
+                          title="Download Event Card"
+                          className="text-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10"
+                        >
+                          <Download className="h-4 w-4" />
+                        </Button>
                         <Button variant="ghost" size="sm" onClick={() => handleOpenEdit(event)} title="Edit Event">
                           <Edit className="h-4 w-4" />
                         </Button>
@@ -486,6 +500,16 @@ export function EventsClient({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Event Card Preview & Download Dialog */}
+      <Dialog open={cardDialogOpen} onOpenChange={setCardDialogOpen}>
+        <DialogContent className="max-w-xl bg-neutral-950 border-neutral-800 text-white p-4 sm:p-6 overflow-y-auto max-h-[90vh]">
+          <DialogHeader className="mb-2">
+            <DialogTitle className="text-white text-lg font-bold">Event Graphic Card Preview</DialogTitle>
+          </DialogHeader>
+          {selectedEvent && <DownloadableEventCard event={selectedEvent} />}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
