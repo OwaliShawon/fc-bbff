@@ -111,6 +111,16 @@ export async function getPlayerById(id: string) {
           },
         },
       },
+      relatedEvents: {
+        include: {
+          match: {
+            include: {
+              homeTeam: true,
+              awayTeam: true,
+            },
+          },
+        },
+      },
       playerOfMatch: {
         include: {
           homeTeam: true,
@@ -142,6 +152,16 @@ export async function getPlayerBySlug(slug: string) {
         take: 10,
       },
       matchEvents: {
+        include: {
+          match: {
+            include: {
+              homeTeam: true,
+              awayTeam: true,
+            },
+          },
+        },
+      },
+      relatedEvents: {
         include: {
           match: {
             include: {

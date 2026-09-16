@@ -155,6 +155,10 @@ export async function getPlayerStatistics(params?: {
         where: { match: matchWhere },
         include: { match: true },
       },
+      relatedEvents: {
+        where: { match: matchWhere },
+        include: { match: true },
+      },
       matchLineups: {
         where: { match: matchWhere },
         include: { match: true },
@@ -169,9 +173,16 @@ export async function getPlayerStatistics(params?: {
     const goals = player.matchEvents.filter(
       (e) => e.eventType === "GOAL" || e.eventType === "PENALTY"
     ).length;
-    const assists = player.matchEvents.filter(
-      (e) => e.eventType === "ASSIST"
-    ).length;
+
+    const directAssists = player.matchEvents.filter((e) => e.eventType === "ASSIST");
+    const relatedAssists = player.relatedEvents.filter(
+      (e) => e.eventType === "GOAL" || e.eventType === "PENALTY" || e.eventType === "ASSIST"
+    );
+    const assistEventIds = new Set([
+      ...directAssists.map((e) => e.id),
+      ...relatedAssists.map((e) => e.id),
+    ]);
+    const assists = assistEventIds.size;
     const yellowCards = player.matchEvents.filter(
       (e) => e.eventType === "YELLOW_CARD"
     ).length;
