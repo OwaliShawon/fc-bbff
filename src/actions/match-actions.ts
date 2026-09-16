@@ -30,10 +30,12 @@ export async function getMatches(params?: {
   competitionId?: string;
   seasonId?: string;
   teamId?: string;
+  sortOrder?: "asc" | "desc";
 }): Promise<PaginatedResponse<Match>> {
   const page = params?.page || 1;
   const pageSize = params?.pageSize || 10;
   const skip = (page - 1) * pageSize;
+  const sortOrder = params?.sortOrder || (params?.status === "SCHEDULED" ? "asc" : "desc");
 
   const where: Record<string, unknown> = {};
 
@@ -69,7 +71,7 @@ export async function getMatches(params?: {
       where,
       skip,
       take: pageSize,
-      orderBy: { matchDate: "desc" },
+      orderBy: { matchDate: sortOrder },
       include: {
         homeTeam: true,
         awayTeam: true,

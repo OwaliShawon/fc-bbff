@@ -26,12 +26,14 @@ export default async function MatchesPage({
     getCompetitions({ pageSize: 100 }),
     getMatches({
       status: "SCHEDULED",
-      pageSize: 50,
+      pageSize: 100,
+      sortOrder: "asc",
       competitionId: competitionIdParam || undefined,
     }),
     getMatches({
       status: "COMPLETED",
-      pageSize: 50,
+      pageSize: 100,
+      sortOrder: "desc",
       competitionId: competitionIdParam || undefined,
     }),
   ]);
