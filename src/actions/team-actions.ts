@@ -34,7 +34,12 @@ export async function getTeams(params?: {
     where.isExternal = params.isExternal;
   }
   if (params?.search) {
-    where.name = { contains: params.search, mode: "insensitive" };
+    where.OR = [
+      { name: { contains: params.search, mode: "insensitive" } },
+      { manager: { contains: params.search, mode: "insensitive" } },
+      { contactPersonName: { contains: params.search, mode: "insensitive" } },
+      { description: { contains: params.search, mode: "insensitive" } },
+    ];
   }
   if (params?.status) {
     where.status = params.status;

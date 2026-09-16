@@ -11,9 +11,14 @@ export default async function TeamsPage({
   const page = Number(params.page) || 1;
   const search = (params.search as string) || "";
   const status = (params.status as string) || "";
+  const type = (params.type as string) || "";
+
+  let isExternal: boolean | undefined = undefined;
+  if (type === "internal") isExternal = false;
+  if (type === "external") isExternal = true;
 
   const [teamsData, allPlayers] = await Promise.all([
-    getTeams({ page, pageSize: 10, search, status }),
+    getTeams({ page, pageSize: 10, search, status, isExternal }),
     getAllActivePlayers(),
   ]);
 
@@ -24,6 +29,7 @@ export default async function TeamsPage({
       currentPage={page}
       currentSearch={search}
       currentStatus={status}
+      currentType={type}
     />
   );
 }

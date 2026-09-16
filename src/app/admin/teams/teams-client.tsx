@@ -67,6 +67,9 @@ import {
   UserPlus,
   UserMinus,
   UserCircle,
+  RotateCcw,
+  Filter,
+  X,
 } from "lucide-react";
 import { getPlayerPositionColor } from "@/lib/utils";
 import type { PaginatedResponse, Team } from "@/types";
@@ -77,12 +80,14 @@ export function TeamsClient({
   currentPage,
   currentSearch,
   currentStatus,
+  currentType = "",
 }: {
   initialData: PaginatedResponse<Team>;
   allPlayers: any[];
   currentPage: number;
   currentSearch: string;
   currentStatus: string;
+  currentType?: string;
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -269,7 +274,31 @@ export function TeamsClient({
     const params = new URLSearchParams();
     if (searchInput) params.set("search", searchInput);
     if (currentStatus) params.set("status", currentStatus);
+    if (currentType) params.set("type", currentType);
     router.push(`/admin/teams?${params.toString()}`);
+  }
+
+  function handleFilterChange(key: string, value: string) {
+    const params = new URLSearchParams();
+    if (searchInput) params.set("search", searchInput);
+
+    const targetStatus = key === "status" ? value : currentStatus;
+    const targetType = key === "type" ? value : currentType;
+
+    if (targetStatus && targetStatus !== "all") {
+      params.set("status", targetStatus);
+    }
+    if (targetType && targetType !== "all") {
+      params.set("type", targetType);
+    }
+
+    const query = params.toString();
+    router.push(query ? `/admin/teams?${query}` : "/admin/teams");
+  }
+
+  function handleClearFilters() {
+    setSearchInput("");
+    router.push("/admin/teams");
   }
 
   // Players available to add (exclude players already in this squad)
@@ -277,6 +306,8 @@ export function TeamsClient({
   const availablePlayersToAdd = (allPlayers || []).filter(
     (p) => !squadPlayerIds.has(p.id)
   );
+
+  const hasActiveFilters = Boolean(currentSearch || (currentStatus && currentStatus !== "all") || (currentType && currentType !== "all"));
 
   return (
     <div className="space-y-6">
@@ -290,13 +321,14 @@ export function TeamsClient({
         </Button>
       </div>
 
+      {/* Filter Options Bar */}
       <Card className="border-neutral-200 dark:border-neutral-800">
-        <CardContent className="flex gap-4 p-4">
+        <CardContent className="flex flex-col gap-4 p-4 md:flex-row md:items-center">
           <form onSubmit={handleSearch} className="flex flex-1 gap-2">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
               <Input
-                placeholder="Search teams..."
+                placeholder="Search teams by name, manager, or contact..."
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 className="pl-9"
@@ -306,6 +338,51 @@ export function TeamsClient({
               Search
             </Button>
           </form>
+
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Team Type Filter */}
+            <Select
+              value={currentType || "all"}
+              onValueChange={(v) => handleFilterChange("type", v === "all" ? "" : v)}
+            >
+              <SelectTrigger className="w-[170px]">
+                <SelectValue placeholder="Team Type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Team Types</SelectItem>
+                <SelectItem value="internal">🟢 BBFF Internal Squads</SelectItem>
+                <SelectItem value="external">⚽ External Opponents</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {/* Status Filter */}
+            <Select
+              value={currentStatus || "all"}
+              onValueChange={(v) => handleFilterChange("status", v === "all" ? "" : v)}
+            >
+              <SelectTrigger className="w-[140px]">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="ACTIVE">Active</SelectItem>
+                <SelectItem value="INACTIVE">Inactive</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {/* Reset Filters */}
+            {hasActiveFilters && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleClearFilters}
+                className="gap-1.5 text-xs text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white"
+              >
+                <RotateCcw className="h-3.5 w-3.5" />
+                Reset
+              </Button>
+            )}
+          </div>
         </CardContent>
       </Card>
 
