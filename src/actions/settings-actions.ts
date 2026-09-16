@@ -174,9 +174,11 @@ export async function getPlayerStatistics(params?: {
       (e) => e.eventType === "GOAL" || e.eventType === "PENALTY"
     ).length;
 
-    const directAssists = player.matchEvents.filter((e) => e.eventType === "ASSIST");
     const relatedAssists = player.relatedEvents.filter(
       (e) => e.eventType === "GOAL" || e.eventType === "PENALTY" || e.eventType === "ASSIST"
+    );
+    const directAssists = player.matchEvents.filter(
+      (e) => e.eventType === "ASSIST" && (!e.relatedPlayerId || e.relatedPlayerId === player.id)
     );
     const assistEventIds = new Set([
       ...directAssists.map((e) => e.id),

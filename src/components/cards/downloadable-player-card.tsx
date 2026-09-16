@@ -26,7 +26,9 @@ export function DownloadablePlayerCard({ player, team }: { player: any; team?: a
     (e: any) => e.eventType === "GOAL" || e.eventType === "PENALTY"
   ).length;
 
-  const directAssists = (player.matchEvents || []).filter((e: any) => e.eventType === "ASSIST");
+  const directAssists = (player.matchEvents || []).filter(
+    (e: any) => e.eventType === "ASSIST" && (!e.relatedPlayerId || e.relatedPlayerId === player.id)
+  );
   const relatedAssists = (player.relatedEvents || []).filter(
     (e: any) => e.eventType === "GOAL" || e.eventType === "PENALTY" || e.eventType === "ASSIST"
   );

@@ -7,10 +7,40 @@ import { Flame, Star, ShieldAlert, Award } from "lucide-react";
 export default async function AdminStatisticsPage() {
   const stats = await getPlayerStatistics();
 
-  const topScorers = [...stats].filter((s) => s.goals > 0).sort((a, b) => b.goals - a.goals).slice(0, 10);
-  const topAssists = [...stats].filter((s) => s.assists > 0).sort((a, b) => b.assists - a.assists).slice(0, 10);
-  const topPotm = [...stats].filter((s) => s.playerOfMatchAwards > 0).sort((a, b) => b.playerOfMatchAwards - a.playerOfMatchAwards).slice(0, 10);
-  const topCards = [...stats].filter((s) => s.yellowCards > 0 || s.redCards > 0).sort((a, b) => (b.yellowCards + b.redCards * 3) - (a.yellowCards + a.redCards * 3)).slice(0, 10);
+  const topScorers = [...stats]
+    .filter((s) => s.goals > 0)
+    .sort((a, b) => {
+      if (b.goals !== a.goals) return b.goals - a.goals;
+      if (b.assists !== a.assists) return b.assists - a.assists;
+      if (b.playerOfMatchAwards !== a.playerOfMatchAwards) return b.playerOfMatchAwards - a.playerOfMatchAwards;
+      return a.matchesPlayed - b.matchesPlayed;
+    })
+    .slice(0, 10);
+
+  const topAssists = [...stats]
+    .filter((s) => s.assists > 0)
+    .sort((a, b) => {
+      if (b.assists !== a.assists) return b.assists - a.assists;
+      if (b.goals !== a.goals) return b.goals - a.goals;
+      if (b.playerOfMatchAwards !== a.playerOfMatchAwards) return b.playerOfMatchAwards - a.playerOfMatchAwards;
+      return a.matchesPlayed - b.matchesPlayed;
+    })
+    .slice(0, 10);
+
+  const topPotm = [...stats]
+    .filter((s) => s.playerOfMatchAwards > 0)
+    .sort((a, b) => {
+      if (b.playerOfMatchAwards !== a.playerOfMatchAwards) return b.playerOfMatchAwards - a.playerOfMatchAwards;
+      if (b.goals !== a.goals) return b.goals - a.goals;
+      if (b.assists !== a.assists) return b.assists - a.assists;
+      return a.matchesPlayed - b.matchesPlayed;
+    })
+    .slice(0, 10);
+
+  const topCards = [...stats]
+    .filter((s) => s.yellowCards > 0 || s.redCards > 0)
+    .sort((a, b) => (b.yellowCards + b.redCards * 3) - (a.yellowCards + a.redCards * 3))
+    .slice(0, 10);
 
   return (
     <div className="space-y-8">
