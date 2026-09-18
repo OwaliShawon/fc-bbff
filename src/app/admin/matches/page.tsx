@@ -15,9 +15,10 @@ export default async function MatchesPage({
   const status = (params.status as string) || "";
   const search = (params.search as string) || "";
   const competitionId = (params.competitionId as string) || "";
+  const sortOrder = (params.sortOrder as "asc" | "desc" | "immediate") || "immediate";
 
   const [matchesData, teams, seasons, competitionsData, playersData, venues] = await Promise.all([
-    getMatches({ page, pageSize: 10, status, search, competitionId }),
+    getMatches({ page, pageSize: 10, status, search, competitionId, sortOrder }),
     getAllActiveTeams(),
     getSeasons(),
     getCompetitions({ pageSize: 100 }),
@@ -37,6 +38,8 @@ export default async function MatchesPage({
       currentStatus={status}
       currentSearch={search}
       currentCompetitionId={competitionId}
+      currentSortOrder={sortOrder}
     />
   );
 }
+

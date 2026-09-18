@@ -55,6 +55,7 @@ interface MatchesClientProps {
   currentStatus: string;
   currentSearch: string;
   currentCompetitionId?: string;
+  currentSortOrder?: string;
 }
 
 export function MatchesClient({
@@ -68,6 +69,7 @@ export function MatchesClient({
   currentStatus,
   currentSearch,
   currentCompetitionId = "",
+  currentSortOrder = "immediate",
 }: MatchesClientProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -498,6 +500,23 @@ export function MatchesClient({
               <SelectItem value="COMPLETED">Completed</SelectItem>
               <SelectItem value="POSTPONED">Postponed</SelectItem>
               <SelectItem value="CANCELLED">Cancelled</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {/* Sort Order */}
+          <Select value={currentSortOrder || "immediate"} onValueChange={(v) => {
+            const p = new URLSearchParams();
+            if (currentStatus) p.set("status", currentStatus);
+            if (currentCompetitionId) p.set("competitionId", currentCompetitionId);
+            if (searchInput) p.set("search", searchInput);
+            if (v !== "immediate") p.set("sortOrder", v);
+            router.push(`/admin/matches?${p.toString()}`);
+          }}>
+            <SelectTrigger className="w-[180px]"><SelectValue placeholder="Sort Order" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="immediate">⚡ Immediate Matches</SelectItem>
+              <SelectItem value="asc">📅 Date: Earliest First</SelectItem>
+              <SelectItem value="desc">📅 Date: Latest First</SelectItem>
             </SelectContent>
           </Select>
         </CardContent>
