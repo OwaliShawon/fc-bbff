@@ -11,7 +11,7 @@ import {
   matchEventSchema,
 } from "@/lib/validations";
 import { createAuditLog } from "@/services/audit-log";
-import { slugify } from "@/lib/utils";
+import { slugify, parseMatchDate } from "@/lib/utils";
 import type { ActionResponse, PaginatedResponse, Match } from "@/types";
 
 async function requirePermission(permission: string) {
@@ -21,6 +21,8 @@ async function requirePermission(permission: string) {
     throw new Error("Insufficient permissions");
   return session;
 }
+
+
 
 export async function getMatches(params?: {
   page?: number;
@@ -145,7 +147,7 @@ export async function createMatch(data: unknown): Promise<ActionResponse<Match>>
     const match = await db.match.create({
       data: {
         ...validated,
-        matchDate: new Date(validated.matchDate),
+        matchDate: parseMatchDate(validated.matchDate),
       },
     });
 
@@ -248,7 +250,7 @@ export async function createMatchWithOutsider(data: {
       data: {
         homeTeamId,
         awayTeamId,
-        matchDate: new Date(data.matchDate),
+        matchDate: parseMatchDate(data.matchDate),
         venue: data.venue || null,
         competitionId: data.competitionId || null,
         seasonId: data.seasonId || null,
@@ -358,7 +360,7 @@ export async function updateMatch(
 
     const updateData: Record<string, unknown> = { ...validated };
     if (validated.matchDate) {
-      updateData.matchDate = new Date(validated.matchDate);
+      updateData.matchDate = parseMatchDate(validated.matchDate as string | Date);
     }
 
     const match = await db.match.update({ where: { id }, data: updateData });

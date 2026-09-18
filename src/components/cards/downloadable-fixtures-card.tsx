@@ -25,16 +25,17 @@ export function DownloadableFixturesCard({
 
   const formatShortMatchDate = (dateStrOrObj: Date | string) => {
     const d = new Date(dateStrOrObj);
-    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    const day = d.getDate();
-    const month = months[d.getMonth()];
-    let hours = d.getHours();
-    const minutes = d.getMinutes();
-    const ampm = hours >= 12 ? "PM" : "AM";
-    hours = hours % 12 || 12;
-    const minStr = minutes < 10 ? `0${minutes}` : minutes;
-    return `${day}-${month} ${hours}:${minStr}${ampm}`;
+    if (isNaN(d.getTime())) return "";
+    return d.toLocaleString("en-US", {
+      day: "numeric",
+      month: "short",
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+      timeZone: "Asia/Dhaka",
+    });
   };
+
 
   const leg1Matches = matches.filter((m) => m.notes?.includes("Leg 1") || m.matchDay <= 15);
   const leg2Matches = matches.filter((m) => m.notes?.includes("Leg 2") || m.matchDay > 15);

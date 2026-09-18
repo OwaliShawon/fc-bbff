@@ -51,7 +51,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Plus, Edit, Trash2, Trophy, Calendar, Shield, X, Users, Loader2, Swords } from "lucide-react";
-import { formatDate } from "@/lib/utils";
+import { formatDate, toDateTimeLocalString } from "@/lib/utils";
 import type { Competition, Season, Team, PaginatedResponse } from "@/types";
 
 export function CompetitionsClient({
@@ -147,7 +147,7 @@ export function CompetitionsClient({
     setMatchFormData({
       homeTeamId: "",
       awayTeamId: "",
-      matchDate: new Date().toISOString().slice(0, 16),
+      matchDate: toDateTimeLocalString(new Date()),
       venue: "",
       seasonId: comp.seasonId || "",
       matchDay: "",

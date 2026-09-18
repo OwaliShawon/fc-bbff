@@ -29,7 +29,7 @@ import {
 import {
   Plus, Search, Edit, Trash2, ChevronLeft, ChevronRight, Loader2, Swords, Trophy, X, Globe, Users,
 } from "lucide-react";
-import { formatDateTime, getMatchStatusColor } from "@/lib/utils";
+import { formatDateTime, getMatchStatusColor, toDateTimeLocalString } from "@/lib/utils";
 import type { PaginatedResponse, Match, Season, Player, Venue } from "@/types";
 import type { Team, Competition } from "@prisma/client";
 
@@ -141,7 +141,7 @@ export function MatchesClient({
     setFormData({
       homeTeamId: fcBbffTeam?.id || teams[0]?.id || "",
       awayTeamId: "",
-      matchDate: new Date().toISOString().slice(0, 16),
+      matchDate: toDateTimeLocalString(new Date()),
       venue: "",
       seasonId: "",
       competitionId: "",
@@ -232,7 +232,7 @@ export function MatchesClient({
     setMatchTypeMode("internal");
     setFormData({
       homeTeamId: match.homeTeamId, awayTeamId: match.awayTeamId,
-      matchDate: new Date(match.matchDate).toISOString().slice(0, 16),
+      matchDate: toDateTimeLocalString(match.matchDate),
       venue: match.venue || "", seasonId: match.seasonId || "",
       competitionId: match.competitionId || "", matchDay: match.matchDay?.toString() || "",
       referee: match.referee || "", status: match.status, notes: match.notes || "",
