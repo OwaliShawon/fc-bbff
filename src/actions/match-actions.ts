@@ -11,7 +11,7 @@ import {
   matchEventSchema,
 } from "@/lib/validations";
 import { createAuditLog } from "@/services/audit-log";
-import { slugify } from "@/lib/utils";
+import { slugify, parseMatchDate } from "@/lib/utils";
 import type { ActionResponse, PaginatedResponse, Match } from "@/types";
 
 async function requirePermission(permission: string) {
@@ -22,6 +22,8 @@ async function requirePermission(permission: string) {
   return session;
 }
 
+
+
 export async function getMatches(params?: {
   page?: number;
   pageSize?: number;
@@ -30,12 +32,12 @@ export async function getMatches(params?: {
   competitionId?: string;
   seasonId?: string;
   teamId?: string;
-  sortOrder?: "asc" | "desc";
+  sortOrder?: "asc" | "desc" | "immediate";
 }): Promise<PaginatedResponse<Match>> {
   const page = params?.page || 1;
   const pageSize = params?.pageSize || 10;
   const skip = (page - 1) * pageSize;
-  const sortOrder = params?.sortOrder || (params?.status === "SCHEDULED" ? "asc" : "desc");
+  const sortOrder = params?.sortOrder || "immediate";
 
   const where: Record<string, unknown> = {};
 
@@ -66,12 +68,52 @@ export async function getMatches(params?: {
     ];
   }
 
+  if (sortOrder === "immediate" && !params?.status) {
+    const [allMatches, total] = await Promise.all([
+      db.match.findMany({
+        where,
+        include: {
+          homeTeam: true,
+          awayTeam: true,
+          competition: true,
+          season: true,
+          playerOfMatch: true,
+          _count: { select: { matchEvents: true } },
+        },
+      }),
+      db.match.count({ where }),
+    ]);
+
+    const now = new Date().getTime();
+    const upcoming = allMatches
+      .filter((m) => m.status === "SCHEDULED" || m.status === "LIVE" || new Date(m.matchDate).getTime() >= now)
+      .sort((a, b) => new Date(a.matchDate).getTime() - new Date(b.matchDate).getTime());
+
+    const past = allMatches
+      .filter((m) => !(m.status === "SCHEDULED" || m.status === "LIVE" || new Date(m.matchDate).getTime() >= now))
+      .sort((a, b) => new Date(b.matchDate).getTime() - new Date(a.matchDate).getTime());
+
+    const sorted = [...upcoming, ...past];
+    const data = sorted.slice(skip, skip + pageSize);
+
+    return {
+      data,
+      total,
+      page,
+      pageSize,
+      totalPages: Math.ceil(total / pageSize),
+    };
+  }
+
+  const effectiveSortOrder: "asc" | "desc" =
+    sortOrder === "asc" ? "asc" : sortOrder === "desc" ? "desc" : params?.status === "SCHEDULED" ? "asc" : "desc";
+
   const [matches, total] = await Promise.all([
     db.match.findMany({
       where,
       skip,
       take: pageSize,
-      orderBy: { matchDate: sortOrder },
+      orderBy: { matchDate: effectiveSortOrder },
       include: {
         homeTeam: true,
         awayTeam: true,
@@ -92,6 +134,7 @@ export async function getMatches(params?: {
     totalPages: Math.ceil(total / pageSize),
   };
 }
+
 
 export async function getMatchById(id: string) {
   return db.match.findUnique({
@@ -145,7 +188,7 @@ export async function createMatch(data: unknown): Promise<ActionResponse<Match>>
     const match = await db.match.create({
       data: {
         ...validated,
-        matchDate: new Date(validated.matchDate),
+        matchDate: parseMatchDate(validated.matchDate),
       },
     });
 
@@ -248,7 +291,7 @@ export async function createMatchWithOutsider(data: {
       data: {
         homeTeamId,
         awayTeamId,
-        matchDate: new Date(data.matchDate),
+        matchDate: parseMatchDate(data.matchDate),
         venue: data.venue || null,
         competitionId: data.competitionId || null,
         seasonId: data.seasonId || null,
@@ -358,7 +401,7 @@ export async function updateMatch(
 
     const updateData: Record<string, unknown> = { ...validated };
     if (validated.matchDate) {
-      updateData.matchDate = new Date(validated.matchDate);
+      updateData.matchDate = parseMatchDate(validated.matchDate as string | Date);
     }
 
     const match = await db.match.update({ where: { id }, data: updateData });

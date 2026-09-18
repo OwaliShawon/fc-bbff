@@ -29,7 +29,7 @@ import {
 import {
   Plus, Search, Edit, Trash2, ChevronLeft, ChevronRight, Loader2, Swords, Trophy, X, Globe, Users,
 } from "lucide-react";
-import { formatDateTime, getMatchStatusColor } from "@/lib/utils";
+import { formatDateTime, getMatchStatusColor, toDateTimeLocalString } from "@/lib/utils";
 import type { PaginatedResponse, Match, Season, Player, Venue } from "@/types";
 import type { Team, Competition } from "@prisma/client";
 
@@ -55,6 +55,7 @@ interface MatchesClientProps {
   currentStatus: string;
   currentSearch: string;
   currentCompetitionId?: string;
+  currentSortOrder?: string;
 }
 
 export function MatchesClient({
@@ -68,6 +69,7 @@ export function MatchesClient({
   currentStatus,
   currentSearch,
   currentCompetitionId = "",
+  currentSortOrder = "immediate",
 }: MatchesClientProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -141,7 +143,7 @@ export function MatchesClient({
     setFormData({
       homeTeamId: fcBbffTeam?.id || teams[0]?.id || "",
       awayTeamId: "",
-      matchDate: new Date().toISOString().slice(0, 16),
+      matchDate: toDateTimeLocalString(new Date()),
       venue: "",
       seasonId: "",
       competitionId: "",
@@ -232,7 +234,7 @@ export function MatchesClient({
     setMatchTypeMode("internal");
     setFormData({
       homeTeamId: match.homeTeamId, awayTeamId: match.awayTeamId,
-      matchDate: new Date(match.matchDate).toISOString().slice(0, 16),
+      matchDate: toDateTimeLocalString(match.matchDate),
       venue: match.venue || "", seasonId: match.seasonId || "",
       competitionId: match.competitionId || "", matchDay: match.matchDay?.toString() || "",
       referee: match.referee || "", status: match.status, notes: match.notes || "",
@@ -498,6 +500,23 @@ export function MatchesClient({
               <SelectItem value="COMPLETED">Completed</SelectItem>
               <SelectItem value="POSTPONED">Postponed</SelectItem>
               <SelectItem value="CANCELLED">Cancelled</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {/* Sort Order */}
+          <Select value={currentSortOrder || "immediate"} onValueChange={(v) => {
+            const p = new URLSearchParams();
+            if (currentStatus) p.set("status", currentStatus);
+            if (currentCompetitionId) p.set("competitionId", currentCompetitionId);
+            if (searchInput) p.set("search", searchInput);
+            if (v !== "immediate") p.set("sortOrder", v);
+            router.push(`/admin/matches?${p.toString()}`);
+          }}>
+            <SelectTrigger className="w-[180px]"><SelectValue placeholder="Sort Order" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="immediate">⚡ Immediate Matches</SelectItem>
+              <SelectItem value="asc">📅 Date: Earliest First</SelectItem>
+              <SelectItem value="desc">📅 Date: Latest First</SelectItem>
             </SelectContent>
           </Select>
         </CardContent>
