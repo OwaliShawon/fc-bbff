@@ -26,9 +26,17 @@ export function DownloadablePlayerCard({ player, team }: { player: any; team?: a
     (e: any) => e.eventType === "GOAL" || e.eventType === "PENALTY"
   ).length;
 
-  const assistsCount = (player.relatedEvents || []).filter(
-    (e: any) => e.eventType === "GOAL" || e.eventType === "PENALTY"
-  ).length;
+  const directAssists = (player.matchEvents || []).filter(
+    (e: any) => e.eventType === "ASSIST" && (!e.relatedPlayerId || e.relatedPlayerId === player.id)
+  );
+  const relatedAssists = (player.relatedEvents || []).filter(
+    (e: any) => e.eventType === "GOAL" || e.eventType === "PENALTY" || e.eventType === "ASSIST"
+  );
+  const assistEventIds = new Set([
+    ...directAssists.map((e: any) => e.id),
+    ...relatedAssists.map((e: any) => e.id),
+  ]);
+  const assistsCount = assistEventIds.size;
 
   const appsCount = (player.matchLineups || []).length;
   const potmCount = (player.playerOfMatch || []).length;

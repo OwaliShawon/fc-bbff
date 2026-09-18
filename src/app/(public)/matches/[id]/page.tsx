@@ -15,15 +15,24 @@ export default async function MatchDetailPage({ params }: { params: Promise<{ id
 
   const events = match.matchEvents || [];
   const goals = events.filter((e: any) => e.eventType === "GOAL" || e.eventType === "PENALTY" || e.eventType === "OWN_GOAL");
-  const assists = events.filter((e: any) => e.eventType === "ASSIST");
   const cards = events.filter((e: any) => e.eventType === "YELLOW_CARD" || e.eventType === "RED_CARD");
+  const standaloneAssists = events
+    .filter((e: any) => e.eventType === "ASSIST")
+    .map((e: any) => ({
+      ...e,
+      player: e.relatedPlayer || e.player,
+      eventType: "ASSIST" as const,
+    }));
 
-  // Also extract assist providers from goal events with relatedPlayer
   const goalAssists = events
     .filter((e: any) => (e.eventType === "GOAL" || e.eventType === "PENALTY") && e.relatedPlayer)
     .map((e: any) => ({ ...e, player: e.relatedPlayer, eventType: "ASSIST" as const }));
 
-  const allAssists = [...assists, ...goalAssists];
+  const assistMap = new Map<string, any>();
+  for (const a of [...standaloneAssists, ...goalAssists]) {
+    assistMap.set(a.id, a);
+  }
+  const allAssists = Array.from(assistMap.values());
 
   return (
     <div className="min-h-screen bg-neutral-950">

@@ -17,11 +17,26 @@ export default async function StatisticsPage() {
   });
 
   // Top Scorers
-  const topScorers = [...stats].sort((a, b) => b.goals - a.goals);
+  const topScorers = [...stats].sort((a, b) => {
+    if (b.goals !== a.goals) return b.goals - a.goals;
+    if (b.assists !== a.assists) return b.assists - a.assists;
+    if (b.playerOfMatchAwards !== a.playerOfMatchAwards) return b.playerOfMatchAwards - a.playerOfMatchAwards;
+    return a.matchesPlayed - b.matchesPlayed;
+  });
   // Top Assists
-  const topAssists = [...stats].sort((a, b) => b.assists - a.assists);
+  const topAssists = [...stats].sort((a, b) => {
+    if (b.assists !== a.assists) return b.assists - a.assists;
+    if (b.goals !== a.goals) return b.goals - a.goals;
+    if (b.playerOfMatchAwards !== a.playerOfMatchAwards) return b.playerOfMatchAwards - a.playerOfMatchAwards;
+    return a.matchesPlayed - b.matchesPlayed;
+  });
   // Most Player of the Match awards
-  const topAwards = [...stats].sort((a, b) => b.playerOfMatchAwards - a.playerOfMatchAwards);
+  const topAwards = [...stats].sort((a, b) => {
+    if (b.playerOfMatchAwards !== a.playerOfMatchAwards) return b.playerOfMatchAwards - a.playerOfMatchAwards;
+    if (b.goals !== a.goals) return b.goals - a.goals;
+    if (b.assists !== a.assists) return b.assists - a.assists;
+    return a.matchesPlayed - b.matchesPlayed;
+  });
 
   return (
     <div className="min-h-screen">

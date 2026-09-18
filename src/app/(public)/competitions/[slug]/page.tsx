@@ -6,6 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Trophy, Calendar, ArrowLeft, Swords, Clock, MapPin } from "lucide-react";
 import { formatDateTime, getMatchStatusColor } from "@/lib/utils";
 import { DownloadableStandingsCard } from "@/components/cards/downloadable-standings-card";
+import { DownloadableFixturesCard } from "@/components/cards/downloadable-fixtures-card";
 
 export default async function CompetitionDetailPage({
   params,
@@ -54,6 +55,13 @@ export default async function CompetitionDetailPage({
       {/* Main Content */}
       <section className="bg-neutral-950 py-12">
         <div className="mx-auto max-w-7xl px-4 lg:px-8 space-y-12">
+          {/* Official Facebook Fixture Graphic & Exporter */}
+          {competition.matches && competition.matches.length > 0 && (
+            <div className="rounded-3xl border border-white/10 bg-white/[0.02] p-4 sm:p-6 flex items-center justify-center">
+              <DownloadableFixturesCard competition={competition} matches={competition.matches} />
+            </div>
+          )}
+
           {/* Official Downloadable Standings Card */}
           <div className="rounded-3xl border border-white/10 bg-white/[0.02] p-4 sm:p-6 flex items-center justify-center">
             <DownloadableStandingsCard competition={competition} leagueTable={leagueTable} />

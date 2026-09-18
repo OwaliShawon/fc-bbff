@@ -20,7 +20,9 @@ export function DownloadableMotmCard({ match, player }: { match?: any; player?: 
     (e: any) => e.playerId === targetPlayer.id && (e.eventType === "GOAL" || e.eventType === "PENALTY")
   );
   const playerAssists = (match?.matchEvents || []).filter(
-    (e: any) => e.playerId === targetPlayer.id && e.eventType === "ASSIST"
+    (e: any) =>
+      (e.playerId === targetPlayer.id && e.eventType === "ASSIST") ||
+      (e.relatedPlayerId === targetPlayer.id && (e.eventType === "GOAL" || e.eventType === "PENALTY" || e.eventType === "ASSIST"))
   );
 
   const handleDownload = async () => {
