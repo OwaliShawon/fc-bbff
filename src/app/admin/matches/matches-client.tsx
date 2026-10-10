@@ -110,6 +110,45 @@ export function MatchesClient({
   // Lineup Editor Dialog State
   const [showLineupDialog, setShowLineupDialog] = useState(false);
   const [activeLineupMatch, setActiveLineupMatch] = useState<any>(null);
+  const [lineupCandidates, setLineupCandidates] = useState<any[]>([]);
+
+  /**
+   * Build the roster for one side of a match using ONLY that team's squad.
+   * Priority: active squad members (TeamPlayer without leftAt) → saved lineup for
+   * that team → (internal team with no squad at all) all club players as fallback.
+   */
+  function buildSideRoster(fullMatch: any, side: "home" | "away") {
+    const team = side === "home" ? fullMatch.homeTeam : fullMatch.awayTeam;
+    const teamId = side === "home" ? fullMatch.homeTeamId : fullMatch.awayTeamId;
+    if (!team) return [];
+
+    const decorate = (p: any) => ({ ...p, teamId, teamName: team.name, teamSide: side });
+
+    const squad = (team.teamPlayers || [])
+      .filter((tp: any) => !tp.leftAt && tp.player && !tp.player.deletedAt)
+      .map((tp: any) => decorate(tp.player));
+    if (squad.length > 0) return squad;
+
+    const lineup = (fullMatch.lineups || [])
+      .filter((l: any) => l.teamId === teamId && l.player)
+      .map((l: any) => decorate(l.player));
+    if (lineup.length > 0) return lineup;
+
+    // Internal club team without any squad assigned — fall back to all club players
+    if (!team.isExternal) return allPlayers.map(decorate);
+    return [];
+  }
+
+  function buildMatchRoster(fullMatch: any) {
+    const seen = new Set<string>();
+    return [...buildSideRoster(fullMatch, "home"), ...buildSideRoster(fullMatch, "away")]
+      .filter((p: any) => {
+        if (!p?.id || seen.has(p.id)) return false;
+        seen.add(p.id);
+        return true;
+      })
+      .sort((a: any, b: any) => (a.jerseyNumber ?? 999) - (b.jerseyNumber ?? 999));
+  }
   const [lineupSelections, setLineupSelections] = useState<
     Record<string, { selected: boolean; type: "STARTING" | "SUBSTITUTE"; position: string; shirtNumber: number | null }>
   >({});
@@ -178,8 +217,11 @@ export function MatchesClient({
         };
       });
 
+      const candidates = buildMatchRoster(fullMatch);
+      setLineupCandidates(candidates);
+
       const initialMap: Record<string, any> = {};
-      allPlayers.forEach((p) => {
+      candidates.forEach((p: any) => {
         if (existingMap[p.id]) {
           initialMap[p.id] = existingMap[p.id];
         } else {
@@ -206,12 +248,13 @@ export function MatchesClient({
     const fcBbffTeamId = activeLineupMatch.homeTeam?.name?.toUpperCase().includes("BBFF")
       ? activeLineupMatch.homeTeamId
       : activeLineupMatch.awayTeamId;
+    const candidateTeam = new Map<string, string>(lineupCandidates.map((c: any) => [c.id, c.teamId]));
 
     const lineupItems = Object.entries(lineupSelections)
-      .filter(([_, val]) => val.selected)
+      .filter(([playerId, val]) => val.selected && candidateTeam.has(playerId))
       .map(([playerId, val]) => ({
         playerId,
-        teamId: fcBbffTeamId,
+        teamId: candidateTeam.get(playerId) || fcBbffTeamId,
         type: val.type,
         position: val.position || null,
         shirtNumber: val.shirtNumber ? Number(val.shirtNumber) : null,
@@ -258,33 +301,8 @@ export function MatchesClient({
 
       setSelectedMatch(fullMatch);
 
-      // Collect all players from both teams
-      let homePlayers = (fullMatch.homeTeam?.teamPlayers || []).map((tp: any) => ({
-        ...tp.player,
-        teamName: fullMatch.homeTeam?.name,
-        teamSide: "home",
-      }));
-      let awayPlayers = (fullMatch.awayTeam?.teamPlayers || []).map((tp: any) => ({
-        ...tp.player,
-        teamName: fullMatch.awayTeam?.name,
-        teamSide: "away",
-      }));
-
-      // Collect lineups if explicitly created
-      const lineupPlayers = (fullMatch.lineups || []).map((l: any) => ({
-        ...l.player,
-        teamName: "FC BBFF",
-        teamSide: fullMatch.homeTeamId === l.teamId ? "home" : "away",
-      }));
-
-      // Always include ALL club players for FC BBFF in match roster so any player can score goals/assists/cards
-      const clubPlayers = allPlayers.map((p: any) => ({
-        ...p,
-        teamName: "FC BBFF",
-        teamSide: fullMatch.homeTeam?.name?.toUpperCase().includes("BBFF") ? "home" : "away",
-      }));
-
-      setMatchPlayers([...lineupPlayers, ...clubPlayers, ...homePlayers, ...awayPlayers]);
+      // Only the two teams' squad members are selectable in player dropdowns
+      setMatchPlayers(buildMatchRoster(fullMatch));
 
       // Load existing events
       setMatchEvents(fullMatch.matchEvents || []);
@@ -1174,7 +1192,12 @@ export function MatchesClient({
                         <SelectTrigger className="h-9 text-xs"><SelectValue placeholder="Optional" /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="NONE">None</SelectItem>
-                          {matchPlayers.map((p: any) => (
+                          {matchPlayers
+                            .filter((p: any) => {
+                              const primary = matchPlayers.find((mp: any) => mp.id === newEvent.playerId);
+                              return p.id !== newEvent.playerId && (!primary || p.teamSide === primary.teamSide);
+                            })
+                            .map((p: any) => (
                             <SelectItem key={p.id} value={p.id}>
                               {p.jerseyNumber ? `#${p.jerseyNumber} ` : ""}{p.firstName} {p.lastName}
                             </SelectItem>
@@ -1293,7 +1316,7 @@ export function MatchesClient({
                     type="button"
                     onClick={() => {
                       const updated = { ...lineupSelections };
-                      allPlayers.forEach((p) => {
+                      lineupCandidates.forEach((p: any) => {
                         updated[p.id] = { ...(updated[p.id] || { position: p.position }), selected: true, type: updated[p.id]?.type || "STARTING" };
                       });
                       setLineupSelections(updated);
@@ -1306,7 +1329,7 @@ export function MatchesClient({
                     type="button"
                     onClick={() => {
                       const updated = { ...lineupSelections };
-                      allPlayers.forEach((p) => {
+                      lineupCandidates.forEach((p: any) => {
                         if (updated[p.id]) updated[p.id].selected = false;
                       });
                       setLineupSelections(updated);
@@ -1319,7 +1342,12 @@ export function MatchesClient({
               </div>
 
               <div className="space-y-2 max-h-[420px] overflow-y-auto pr-1">
-                {allPlayers.map((player) => {
+                {lineupCandidates.length === 0 && (
+                  <p className="py-8 text-center text-sm text-neutral-500">
+                    No squad members found for these teams. Assign players to the team squads first.
+                  </p>
+                )}
+                {lineupCandidates.map((player: any) => {
                   const sel = lineupSelections[player.id] || {
                     selected: false,
                     type: "STARTING",
@@ -1353,7 +1381,7 @@ export function MatchesClient({
                             {player.firstName} {player.lastName}
                           </p>
                           <p className="text-xs text-neutral-400">
-                            Jersey #{player.jerseyNumber ?? "—"} • {player.position}
+                            Jersey #{player.jerseyNumber ?? "—"} • {player.position} • {player.teamName}
                           </p>
                         </div>
                       </div>
