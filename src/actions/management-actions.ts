@@ -8,10 +8,11 @@ import { z } from "zod";
 import { createAuditLog } from "@/services/audit-log";
 import type { ActionResponse } from "@/types";
 import type { ManagementRole } from "@prisma/client";
+import { MANAGEMENT_ROLES } from "@/lib/management-roles";
 
 const managementSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
-  role: z.enum(["PRESIDENT", "MANAGER", "CAPTAIN", "VICE_CAPTAIN"]),
+  role: z.enum(MANAGEMENT_ROLES),
   tenure: z.string().min(2, "Tenure is required (e.g., 2014 - 2025)"),
   isCurrent: z.boolean().default(false),
   bio: z.string().optional(),

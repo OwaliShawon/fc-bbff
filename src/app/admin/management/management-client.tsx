@@ -50,11 +50,17 @@ import {
 } from "@/components/ui/table";
 import { Plus, Edit, Trash2, UserCheck, Crown, ShieldAlert, Calendar } from "lucide-react";
 import type { Player } from "@/types";
+import {
+  MANAGEMENT_ROLES,
+  MANAGEMENT_ROLE_LABELS,
+  MANAGEMENT_ROLE_BADGE,
+  type ManagementRoleValue,
+} from "@/lib/management-roles";
 
 type Member = {
   id: string;
   name: string;
-  role: "PRESIDENT" | "MANAGER" | "CAPTAIN" | "VICE_CAPTAIN";
+  role: ManagementRoleValue;
   tenure: string;
   isCurrent: boolean;
   bio?: string | null;
@@ -88,7 +94,7 @@ export function ManagementClient({
 
   const [formData, setFormData] = useState({
     name: "",
-    role: "PRESIDENT" as "PRESIDENT" | "MANAGER" | "CAPTAIN" | "VICE_CAPTAIN",
+    role: "PRESIDENT" as ManagementRoleValue,
     tenure: "",
     isCurrent: false,
     bio: "",
@@ -168,18 +174,9 @@ export function ManagementClient({
   };
 
   const getRoleBadge = (role: string) => {
-    switch (role) {
-      case "PRESIDENT":
-        return <Badge className="bg-purple-500/20 text-purple-300">President</Badge>;
-      case "MANAGER":
-        return <Badge className="bg-emerald-500/20 text-emerald-300">Manager</Badge>;
-      case "CAPTAIN":
-        return <Badge className="bg-amber-500/20 text-amber-300">Captain (C)</Badge>;
-      case "VICE_CAPTAIN":
-        return <Badge className="bg-blue-500/20 text-blue-300">Vice-Captain (VC)</Badge>;
-      default:
-        return <Badge>{role}</Badge>;
-    }
+    const badge = MANAGEMENT_ROLE_BADGE[role as ManagementRoleValue];
+    if (!badge) return <Badge>{role}</Badge>;
+    return <Badge className={badge.className}>{badge.label}</Badge>;
   };
 
   return (
@@ -191,7 +188,7 @@ export function ManagementClient({
             Club Management & Leadership
           </h1>
           <p className="text-sm text-neutral-500 dark:text-neutral-400">
-            Manage Managers, Captains, and Vice-Captains (historical and active).
+            Manage the President, officers, managers, captains and vice-captains (historical and active).
           </p>
         </div>
         <Button onClick={handleOpenCreate} className="bg-emerald-600 hover:bg-emerald-500">
@@ -312,7 +309,7 @@ export function ManagementClient({
                   <Label htmlFor="role">Role *</Label>
                   <Select
                     value={formData.role}
-                    onValueChange={(v: "PRESIDENT" | "MANAGER" | "CAPTAIN" | "VICE_CAPTAIN") =>
+                    onValueChange={(v: ManagementRoleValue) =>
                       setFormData({ ...formData, role: v })
                     }
                   >
@@ -320,10 +317,9 @@ export function ManagementClient({
                       <SelectValue placeholder="Select role" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="PRESIDENT">President</SelectItem>
-                      <SelectItem value="MANAGER">Manager</SelectItem>
-                      <SelectItem value="CAPTAIN">Captain</SelectItem>
-                      <SelectItem value="VICE_CAPTAIN">Vice-Captain</SelectItem>
+                      {MANAGEMENT_ROLES.map((r) => (
+                        <SelectItem key={r} value={r}>{MANAGEMENT_ROLE_LABELS[r]}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
